@@ -22,7 +22,21 @@
       },
       {
         "tab": "API reference",
-        "openapi": "openapi.json"
+        "openapi": "openapi.json",
+        "groups": [
+          {
+            "group": "Accounts",
+            "pages": ["GET /accounts"]
+          },
+          {
+            "group": "Signals",
+            "pages": ["GET /signals", "POST /signals"]
+          },
+          {
+            "group": "Ingest",
+            "pages": ["POST /events", "POST /metric-events"]
+          }
+        ]
       }
     ]
   },
