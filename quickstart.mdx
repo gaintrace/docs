@@ -1,47 +1,120 @@
 ---
 title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+description: "Make your first GainTrace API call in a couple of minutes."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
-
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+  <Step title="Get an API key">
+    In GainTrace, go to **Settings → API Keys**, create a key, and grant the
+    scopes you need (for example `read:accounts`, `write:events`). Copy the key —
+    it's shown once.
+  </Step>
+  <Step title="Read your accounts">
+    Call the accounts endpoint with your key as a Bearer token.
 
-    ```bash
-    npm install your-package
+    <CodeGroup>
+
+    ```bash cURL
+    curl "https://app.gaintrace.com/api/v1/accounts?limit=5" \
+      -H "Authorization: Bearer gt_live_your_key_here"
+    ```
+
+    ```javascript Node
+    const res = await fetch("https://app.gaintrace.com/api/v1/accounts?limit=5", {
+      headers: { Authorization: "Bearer gt_live_your_key_here" },
+    });
+    const { data, meta } = await res.json();
+    console.log(meta.count, "accounts");
+    ```
+
+    ```python Python
+    import requests
+
+    res = requests.get(
+        "https://app.gaintrace.com/api/v1/accounts",
+        headers={"Authorization": "Bearer gt_live_your_key_here"},
+        params={"limit": 5},
+    )
+    print(res.json()["meta"]["count"], "accounts")
+    ```
+
+    </CodeGroup>
+
+    ```json Response
+    {
+      "data": [
+        { "id": "…", "name": "Acme Corp", "healthScore": 82, "healthStatus": "Healthy", "arr": 4800000, "plan": "Scale" }
+      ],
+      "meta": { "limit": 5, "offset": 0, "count": 1 }
+    }
     ```
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
+  <Step title="Send a product event">
+    Push a usage event so it flows into health, signals, and activation. Identify
+    the account with `account_id` (its external id or UUID).
 
-    ```bash
-    your-cli init
+    <CodeGroup>
+
+    ```bash cURL
+    curl -X POST "https://app.gaintrace.com/api/v1/events" \
+      -H "Authorization: Bearer gt_live_your_key_here" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "events": [
+          {
+            "event_name": "report_exported",
+            "account_id": "acme-corp",
+            "user_id": "u_123",
+            "timestamp": "2026-07-05T12:00:00Z",
+            "source_event_id": "evt_abc123",
+            "properties": { "format": "pdf" }
+          }
+        ]
+      }'
     ```
-  </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
 
-    ```bash
-    your-cli start
+    ```javascript Node
+    await fetch("https://app.gaintrace.com/api/v1/events", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer gt_live_your_key_here",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        events: [
+          {
+            event_name: "report_exported",
+            account_id: "acme-corp",
+            user_id: "u_123",
+            timestamp: new Date().toISOString(),
+            source_event_id: "evt_abc123",
+            properties: { format: "pdf" },
+          },
+        ],
+      }),
+    });
+    ```
+
+    </CodeGroup>
+
+    ```json Response
+    { "data": { "inserted": 1, "duplicates": 0, "linked": 1, "errors": 0 } }
     ```
   </Step>
 </Steps>
 
 <Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
-
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+  Ingest is idempotent on the id you provide (`source_event_id` for `/events`,
+  `externalId` for `/metric-events`), so retries never double-count.
 </Tip>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Key types, scopes, and error codes.
+  </Card>
+  <Card title="API reference" icon="code">
+    Open the **API reference** tab for every endpoint, request, and response.
+  </Card>
+</Columns>

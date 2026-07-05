@@ -1,0 +1,53 @@
+---
+title: "Authentication"
+description: "Authenticate with a Bearer API key, scoped to a workspace."
+---
+
+Every request must include an API key as a Bearer token:
+
+```bash
+curl https://app.gaintrace.com/api/v1/accounts \
+  -H "Authorization: Bearer gt_live_your_key_here"
+```
+
+Create and manage keys in **Settings → API Keys**. A key is shown once at creation — store it securely.
+
+## Key types
+
+<Columns cols={2}>
+  <Card title="Secret keys — gt_live_" icon="key">
+    Full server-side keys. Use only from your backend, never in a browser. Gated
+    by the workspace's API-v1 entitlement.
+  </Card>
+  <Card title="Publishable keys — gt_pub_" icon="globe">
+    Client-safe, write-only keys for browser ingest. Origin-pinned and
+    CORS-enabled, with only the `write:ingest` scope. Safe to ship in front-end code.
+  </Card>
+</Columns>
+
+## Scopes
+
+Each key is granted a set of scopes. A request needs the scope its endpoint requires, or it returns `403 Insufficient scope`. A key with the `*` scope passes any check.
+
+| Endpoint | Method | Required scope |
+| --- | --- | --- |
+| `/accounts` | GET | `read:accounts` |
+| `/signals` | GET | `read:signals` |
+| `/signals` | POST | `write:signals` |
+| `/events` | POST | `write:events` or `write:ingest` |
+| `/metric-events` | POST | `write:events` |
+
+Other read and write scopes exist for future endpoints — for example `read:contacts`, `read:deals`, `read:revenue`, `read:health`, `write:accounts`, `write:data`. Grant only what a key needs.
+
+## Errors
+
+| Status | Meaning |
+| --- | --- |
+| `401` | Missing `Authorization` header, or an expired, revoked, or invalid key. |
+| `403` | The key lacks the required scope, or API v1 is not enabled for the workspace. |
+| `429` | The key's rate limit was exceeded. Back off and retry. |
+
+<Warning>
+  Treat `gt_live_` keys like passwords. If one leaks, revoke it in **Settings →
+  API Keys** — validation checks revocation on every request.
+</Warning>

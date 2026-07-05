@@ -1,55 +1,31 @@
-# Mintlify Starter Kit
+# GainTrace docs
 
-Use the starter kit to get your docs deployed and ready to customize.
+Public documentation for the [GainTrace](https://gaintrace.com) API, built with [Mintlify](https://mintlify.com).
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+## Structure
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+- `docs.json` — site config (navigation, theme, branding)
+- `openapi.json` — OpenAPI 3.1 spec; the **API reference** tab is auto-generated from it. Keep it in sync with the `/api/v1/*` handlers in `gaintrace-app`.
+- `index.mdx`, `quickstart.mdx`, `authentication.mdx` — guide pages
+- `logo/`, `favicon.svg` — brand assets
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
+## Local development
 
-## AI-assisted writing
-
-Set up your AI coding tool to work with Mintlify:
+The Mintlify CLI needs an LTS Node version (it refuses Node 25+):
 
 ```bash
-npx skills add https://mintlify.com/docs
-```
-
-This command installs Mintlify's documentation skill for your configured AI tools like Claude Code, Cursor, Windsurf, and others. The skill includes component reference, writing standards, and workflow guidance.
-
-See the [AI tools guides](/ai-tools) for tool-specific setup.
-
-## Development
-
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
-
-```
+nvm use 20
 npm i -g mint
+mint dev            # preview at http://localhost:3000
+mint broken-links   # validate internal links
 ```
 
-Run the following command at the root of your documentation, where your `docs.json` is located:
+Validate the OpenAPI spec on any Node version:
 
+```bash
+npx @redocly/cli@latest lint openapi.json
 ```
-mint dev
-```
 
-View your local preview at `http://localhost:3000`.
+## Deployment
 
-## Publishing changes
-
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
-
-## Need help?
-
-### Troubleshooting
-
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
-
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
+Mintlify deploys automatically on every push to the connected branch.

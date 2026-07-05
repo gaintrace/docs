@@ -1,0 +1,368 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "GainTrace API",
+    "version": "1.0.0",
+    "description": "The GainTrace REST API (v1). Read your customer data and push product-usage events, metric events, and signals into GainTrace.\n\nAll endpoints are authenticated with a Bearer API key and scoped to a single workspace."
+  },
+  "servers": [
+    { "url": "https://app.gaintrace.com/api/v1", "description": "Production" }
+  ],
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/accounts": {
+      "get": {
+        "operationId": "listAccounts",
+        "summary": "List accounts",
+        "description": "Returns the workspace's accounts, most-recently-updated first.\n\n**Scope:** `read:accounts`",
+        "tags": ["Accounts"],
+        "parameters": [
+          { "$ref": "#/components/parameters/limit" },
+          { "$ref": "#/components/parameters/offset" }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of accounts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Account" } },
+                    "meta": { "$ref": "#/components/schemas/Meta" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/signals": {
+      "get": {
+        "operationId": "listSignals",
+        "summary": "List signals",
+        "description": "Returns non-dismissed signals for the workspace, most-recent first.\n\n**Scope:** `read:signals`",
+        "tags": ["Signals"],
+        "parameters": [
+          { "$ref": "#/components/parameters/limit" },
+          { "$ref": "#/components/parameters/offset" }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of signals.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Signal" } },
+                    "meta": { "$ref": "#/components/schemas/Meta" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      },
+      "post": {
+        "operationId": "createSignal",
+        "summary": "Create a signal",
+        "description": "Records a signal against an account in the workspace.\n\n**Scope:** `write:signals`",
+        "tags": ["Signals"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SignalCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Signal created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "data": { "type": "object", "properties": { "id": { "type": "string", "format": "uuid" } } } }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/events": {
+      "post": {
+        "operationId": "ingestProductEvents",
+        "summary": "Ingest product events",
+        "description": "Ingests a batch of product-usage events (Segment-style). Feeds health, signals, and activation recompute.\n\nAccepts server keys (`gt_live_`, scope `write:events`) or client-safe browser keys (`gt_pub_`, scope `write:ingest`). Public ingest is CORS-enabled.\n\n**Scope:** `write:events` or `write:ingest` · **Max 1000 events per request.**",
+        "tags": ["Ingest"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["events"],
+                "properties": {
+                  "events": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 1000,
+                    "items": { "$ref": "#/components/schemas/ProductEvent" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Events accepted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "inserted": { "type": "integer" },
+                        "duplicates": { "type": "integer" },
+                        "linked": { "type": "integer" },
+                        "errors": { "type": "integer" }
+                      }
+                    },
+                    "validation_errors": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/EventValidationError" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/metric-events": {
+      "post": {
+        "operationId": "ingestMetricEvents",
+        "summary": "Ingest metric events",
+        "description": "Ingests a batch of typed metric events into the metrics engine (feeds daily snapshots that calc metrics evaluate). Idempotent on `(source, externalId)`; duplicates are skipped silently. Returns a per-event outcome.\n\n**Scope:** `write:events` · **1–500 events per request.**",
+        "tags": ["Ingest"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MetricEventBatch" }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Batch processed. See `outcomes` for per-event status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "received": { "type": "integer" },
+                        "ingested": { "type": "integer" },
+                        "duplicate": { "type": "integer" },
+                        "rejected": { "type": "integer" }
+                      }
+                    },
+                    "outcomes": { "type": "array", "items": { "$ref": "#/components/schemas/MetricEventOutcome" } }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Bearer API key. Secret server keys start with `gt_live_`; client-safe browser keys start with `gt_pub_` (write-only, origin-pinned). Create and scope keys in Settings → API Keys."
+      }
+    },
+    "parameters": {
+      "limit": {
+        "name": "limit",
+        "in": "query",
+        "description": "Max rows to return. Default 50, max 100.",
+        "schema": { "type": "integer", "default": 50, "maximum": 100, "minimum": 1 }
+      },
+      "offset": {
+        "name": "offset",
+        "in": "query",
+        "description": "Rows to skip (pagination).",
+        "schema": { "type": "integer", "default": 0, "minimum": 0 }
+      }
+    },
+    "responses": {
+      "BadRequest": { "description": "Invalid request body or parameters.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "Unauthorized": { "description": "Missing or invalid API key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "Forbidden": { "description": "Insufficient scope, or API v1 is not enabled for the workspace.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "NotFound": { "description": "Referenced resource not found in this workspace.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "RateLimited": { "description": "Per-key rate limit exceeded.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+    },
+    "schemas": {
+      "Meta": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer" },
+          "offset": { "type": "integer" },
+          "count": { "type": "integer", "description": "Number of rows in this page." }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string", "description": "Human-readable, safe error message." },
+          "detail": { "type": "string" },
+          "code": { "type": "string" }
+        },
+        "required": ["error"]
+      },
+      "Account": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "domain": { "type": ["string", "null"] },
+          "industry": { "type": ["string", "null"] },
+          "healthScore": { "type": ["integer", "null"], "description": "0–100 composite health score." },
+          "healthStatus": { "type": ["string", "null"], "description": "e.g. Healthy, At risk, Critical." },
+          "arr": { "type": ["integer", "null"], "description": "Annual recurring revenue, in minor units." },
+          "plan": { "type": ["string", "null"] },
+          "ownerId": { "type": ["string", "null"], "format": "uuid" }
+        }
+      },
+      "Signal": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "accountId": { "type": "string", "format": "uuid" },
+          "type": { "$ref": "#/components/schemas/SignalType" },
+          "severity": { "$ref": "#/components/schemas/SignalSeverity" },
+          "title": { "type": "string" },
+          "description": { "type": ["string", "null"] },
+          "occurredAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "SignalCreate": {
+        "type": "object",
+        "required": ["accountId", "type", "severity", "title"],
+        "properties": {
+          "accountId": { "type": "string", "format": "uuid", "description": "Must belong to your workspace." },
+          "type": { "$ref": "#/components/schemas/SignalType" },
+          "severity": { "$ref": "#/components/schemas/SignalSeverity" },
+          "title": { "type": "string", "maxLength": 500 },
+          "description": { "type": "string", "maxLength": 5000 },
+          "metadata": { "type": "object", "description": "Arbitrary JSON, max 10KB serialized.", "additionalProperties": true }
+        }
+      },
+      "SignalType": {
+        "type": "string",
+        "enum": ["usage_drop", "usage_spike", "feature_adoption", "support_ticket", "payment_failed", "expansion_signal", "nps_response", "contract_renewal", "login_inactive", "champion_left"]
+      },
+      "SignalSeverity": { "type": "string", "enum": ["info", "warning", "critical"] },
+      "ProductEvent": {
+        "type": "object",
+        "required": ["event_name", "timestamp"],
+        "properties": {
+          "event_name": { "type": "string", "maxLength": 255, "description": "The event identifier, e.g. `report_exported`." },
+          "timestamp": { "type": "string", "format": "date-time", "description": "ISO 8601 event time." },
+          "account_id": { "type": "string", "description": "Company/account external id or UUID." },
+          "user_id": { "type": "string", "description": "End-user id." },
+          "anonymous_id": { "type": "string" },
+          "session_id": { "type": "string" },
+          "event_category": { "type": "string" },
+          "feature_name": { "type": "string" },
+          "source": { "type": "string" },
+          "source_event_id": { "type": "string", "description": "Idempotency key for dedup." },
+          "value": { "type": "number" },
+          "unit": { "type": "string" },
+          "is_programmatic": { "type": "boolean" },
+          "properties": { "type": "object", "description": "Arbitrary JSON, max 10KB serialized.", "additionalProperties": true }
+        }
+      },
+      "EventValidationError": {
+        "type": "object",
+        "properties": {
+          "index": { "type": "integer", "description": "Index of the offending event in the batch." },
+          "error": { "type": "string" }
+        }
+      },
+      "MetricEventBatch": {
+        "type": "object",
+        "required": ["events"],
+        "properties": {
+          "source": { "type": "string", "enum": ["script", "api", "segment", "pendo", "mixpanel", "import", "system"], "default": "api" },
+          "strict": { "type": "boolean", "default": false, "description": "When true, reject events whose `eventName` is not registered in event definitions." },
+          "events": { "type": "array", "minItems": 1, "maxItems": 500, "items": { "$ref": "#/components/schemas/MetricEvent" } }
+        }
+      },
+      "MetricEvent": {
+        "type": "object",
+        "required": ["eventName", "occurredAt"],
+        "description": "Provide exactly one company key (`companyId` OR `companyExternalId`). Contact attribution is optional.",
+        "properties": {
+          "companyId": { "type": "string", "format": "uuid", "description": "Account UUID. Provide this or `companyExternalId`." },
+          "companyExternalId": { "type": "string", "description": "Account slug/CRM id; resolves to a company. Provide this or `companyId`." },
+          "enduserId": { "type": "string", "format": "uuid" },
+          "enduserEmail": { "type": "string", "format": "email" },
+          "eventName": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "occurredAt": { "type": "string", "format": "date-time" },
+          "properties": { "type": "object", "additionalProperties": true, "description": "Optionally shape-validated against the event definition." },
+          "externalId": { "type": "string", "maxLength": 200, "description": "Idempotency key; repeats are skipped silently." }
+        }
+      },
+      "MetricEventOutcome": {
+        "type": "object",
+        "properties": {
+          "index": { "type": "integer" },
+          "status": { "type": "string", "enum": ["ingested", "duplicate", "rejected"] },
+          "error": { "type": "string" },
+          "eventLogId": { "type": "integer" }
+        }
+      }
+    }
+  },
+  "tags": [
+    { "name": "Accounts", "description": "Read the workspace's customer accounts." },
+    { "name": "Signals", "description": "Read and create buyer / risk signals." },
+    { "name": "Ingest", "description": "Push product-usage and metric events into GainTrace." }
+  ]
+}
