@@ -1,0 +1,121 @@
+---
+title: "MCP server"
+description: "Connect Claude, Cursor, and any MCP client to your GainTrace workspace."
+---
+
+GainTrace runs a hosted [Model Context Protocol](https://modelcontextprotocol.io) server. Connect an MCP client — Claude, Cursor, Claude Code, or your own — and it can read your accounts, contacts, health, signals, revenue, and more, and take audited actions, all scoped to your workspace.
+
+## Endpoint
+
+```
+https://app.gaintrace.com/api/v1/mcp
+```
+
+Transport is streamable HTTP: `POST` for JSON-RPC, `GET` for the resumable SSE stream. The server is stateless — each request is bound to your auth context.
+
+## Connect
+
+Two ways to authenticate, depending on your client.
+
+<Tabs>
+  <Tab title="OAuth (Claude, Cursor)">
+    Most MCP clients handle auth over OAuth — you add the server URL and approve access in your browser. GainTrace advertises its OAuth flow at `/.well-known/oauth-protected-resource`, so compliant clients discover it automatically.
+
+    **Claude Code**
+    ```bash
+    claude mcp add --transport http gaintrace https://app.gaintrace.com/api/v1/mcp
+    ```
+    Run a tool once and Claude Code opens a browser to authorize.
+
+    **Claude (desktop / web)**
+
+    Settings → Connectors → **Add custom connector** → paste the endpoint URL, then approve access.
+
+    **Cursor** (`~/.cursor/mcp.json`)
+    ```json
+    {
+      "mcpServers": {
+        "gaintrace": { "url": "https://app.gaintrace.com/api/v1/mcp" }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="API key (programmatic)">
+    Clients that support custom headers can authenticate with a `gt_live_` server key ([Settings → API Keys](/authentication)) instead of OAuth:
+
+    ```json
+    {
+      "mcpServers": {
+        "gaintrace": {
+          "url": "https://app.gaintrace.com/api/v1/mcp",
+          "headers": { "Authorization": "Bearer gt_live_your_key_here" }
+        }
+      }
+    }
+    ```
+
+    The key's scopes decide which tools are available and whether writes are allowed. Use a `gt_live_` (server) key, never a `gt_pub_` key.
+  </Tab>
+</Tabs>
+
+## Tools
+
+The server exposes **88 tools** in three tiers. Clients discover them automatically; you rarely name them yourself.
+
+<CardGroup cols={3}>
+  <Card title="Tier C — workflows" icon="wand-magic-sparkles">
+    One-shot answers to CS-shaped questions. Prefer these first.
+  </Card>
+  <Card title="Tier B — namespaced" icon="layer-group">
+    Precise reads and writes per resource (`gt_<namespace>_*`).
+  </Card>
+  <Card title="Tier A — data platform" icon="database">
+    Address any data model directly when a workflow tool can't.
+  </Card>
+</CardGroup>
+
+### Tier C — workflow tools
+
+High-level tools that answer a customer-success question in one call:
+
+`gt_ask` · `gt_my_day` · `gt_brief_account` · `gt_brief_team` · `gt_at_risk_accounts` · `gt_expansion_opportunities` · `gt_renewal_pipeline` · `gt_what_changed` · `gt_explain_health` · `gt_recommend_action` · `gt_compose_outreach` · `gt_attribution_story` · `gt_simulate_playbook` · `gt_data_health_report`
+
+### Tier A — data platform
+
+For novel queries the workflow tools can't satisfy:
+
+`gt_models_list` · `gt_model_schema` · `gt_search` · `gt_query_compile` · `gt_query_run`
+
+### Tier B — namespaced tools
+
+Precise CRUD grouped by resource. Expand a namespace to see its tools.
+
+<AccordionGroup>
+  <Accordion title="Accounts, contacts, activities">
+    `gt_account_list`, `gt_account_get`, `gt_account_search`, `gt_account_update_traits`, `gt_account_assign_csm`, `gt_account_timeline` · `gt_contact_list`, `gt_contact_get`, `gt_contact_search` · `gt_activity_list`, `gt_activity_get`
+  </Accordion>
+  <Accordion title="Health, signals, Trace AI">
+    `gt_health_score`, `gt_health_history`, `gt_health_profiles_list`, `gt_health_set_override` · `gt_signal_list`, `gt_signal_get`, `gt_signal_dismiss`, `gt_signal_snooze`, `gt_signal_record_outcome` · `gt_cortex_predictions`, `gt_cortex_narrative`, `gt_cortex_blind_spots`, `gt_cortex_confirm_intervention`
+  </Accordion>
+  <Accordion title="Revenue, deals, surveys">
+    `gt_revenue_event_list`, `gt_revenue_change_analysis`, `gt_revenue_change_history` · `gt_deal_list`, `gt_deal_get` · `gt_survey_list`, `gt_survey_get`, `gt_survey_responses` · `gt_success_plan_list`, `gt_success_plan_get`
+  </Accordion>
+  <Accordion title="Flows, views, comms, portals">
+    `gt_flow_list`, `gt_flow_get`, `gt_flow_runs`, `gt_flow_apply`, `gt_flow_test_run` · `gt_view_list`, `gt_view_get`, `gt_view_run`, `gt_view_create`, `gt_view_delete` · `gt_comm_emails_list`, `gt_comm_meetings_list`, `gt_comm_meeting_get` · `gt_portal_list`, `gt_portal_get`, `gt_portal_template_list`
+  </Accordion>
+  <Accordion title="Data, identity, sync, governance">
+    `gt_data_completeness`, `gt_data_freshness`, `gt_data_conflicts`, `gt_data_lineage` · `gt_identity_match_candidates`, `gt_identity_match_confirm`, `gt_identity_match_reject`, `gt_identity_source_authority` · `gt_sync_connections_list`, `gt_sync_streams_list`, `gt_sync_status` · `gt_governance_audit_log`, `gt_governance_retention_policies`, `gt_governance_custom_roles`, `gt_governance_ip_allowlist`, `gt_governance_api_keys`
+  </Accordion>
+</AccordionGroup>
+
+## Permissions and limits
+
+- **Scopes** — each tool requires a scope (for example `read:accounts`, `write:signals`). Your OAuth grant or API key decides which tools are available. Read tools need a `read:` scope; writes need the matching `write:` scope.
+- **Audited writes** — every write is recorded in the workspace audit log with the acting identity.
+- **Rate limits** — 60 read calls and 20 write calls per minute, per identity. A `429` means back off and retry.
+- **Workspace isolation** — the server only ever sees the one workspace your token belongs to.
+
+<Note>
+  V1 exposes tools only (no prompts or resources yet). Point your client at the
+  endpoint and it will list the tools it's allowed to use.
+</Note>

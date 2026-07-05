@@ -17,6 +17,10 @@
           {
             "group": "Get started",
             "pages": ["index", "quickstart", "authentication"]
+          },
+          {
+            "group": "Integrations",
+            "pages": ["mcp"]
           }
         ]
       },
