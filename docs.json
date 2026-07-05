@@ -56,6 +56,16 @@
       "website": "https://gaintrace.com"
     }
   },
+  "api": {
+    "playground": {
+      "display": "interactive",
+      "proxy": true
+    },
+    "examples": {
+      "languages": ["bash", "javascript", "python"],
+      "prefill": true
+    }
+  },
   "contextual": {
     "options": ["copy", "view", "chatgpt", "claude"]
   }
