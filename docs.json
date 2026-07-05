@@ -4,9 +4,9 @@
   "name": "GainTrace",
   "description": "GainTrace API documentation",
   "colors": {
-    "primary": "#FFC800",
-    "light": "#FFC800",
-    "dark": "#FFC800"
+    "primary": "#FFAC00",
+    "light": "#FFAC00",
+    "dark": "#FFAC00"
   },
   "favicon": "/favicon.svg",
   "navigation": {
