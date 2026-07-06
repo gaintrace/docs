@@ -95,7 +95,7 @@
       },
       {
         "tab": "MCP",
-        "icon": "plug",
+        "icon": "/logo/mcp.svg",
         "pages": [
           "mcp-server"
         ]
