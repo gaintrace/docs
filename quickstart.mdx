@@ -6,36 +6,36 @@ description: "Make your first GainTrace API call in a couple of minutes."
 <Steps>
   <Step title="Get an API key">
     In GainTrace, go to **Settings → API Keys**, create a key, and grant the
-    scopes you need (for example `read:accounts`, `write:events`). Copy the key —
+    scopes you need (for example `read:companies`, `write:events`). Copy the key —
     it's shown once.
   </Step>
-  <Step title="Read your accounts">
-    Call the accounts endpoint with your key as a Bearer token.
+  <Step title="Read your companies">
+    Call the companies endpoint with your key as a Bearer token.
 
     <CodeGroup>
 
     ```bash cURL
-    curl "https://app.gaintrace.com/api/v1/accounts?limit=5" \
+    curl "https://app.gaintrace.com/api/v1/companies?limit=5" \
       -H "Authorization: Bearer gt_live_your_key_here"
     ```
 
     ```javascript Node
-    const res = await fetch("https://app.gaintrace.com/api/v1/accounts?limit=5", {
+    const res = await fetch("https://app.gaintrace.com/api/v1/companies?limit=5", {
       headers: { Authorization: "Bearer gt_live_your_key_here" },
     });
     const { data, meta } = await res.json();
-    console.log(meta.count, "accounts");
+    console.log(meta.count, "companies");
     ```
 
     ```python Python
     import requests
 
     res = requests.get(
-        "https://app.gaintrace.com/api/v1/accounts",
+        "https://app.gaintrace.com/api/v1/companies",
         headers={"Authorization": "Bearer gt_live_your_key_here"},
         params={"limit": 5},
     )
-    print(res.json()["meta"]["count"], "accounts")
+    print(res.json()["meta"]["count"], "companies")
     ```
 
     </CodeGroup>

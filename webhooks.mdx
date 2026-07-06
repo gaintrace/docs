@@ -11,12 +11,12 @@ Subscribe to any of these, or to `*` for all of them.
 
 | Event | Fires when |
 | --- | --- |
-| `account.created` | An account is created via the API |
-| `account.updated` | An account is updated or upserted |
+| `company.created` | A company is created via the API |
+| `company.updated` | A company is updated or upserted |
 | `contact.created` | A contact is created |
 | `contact.updated` | A contact is updated |
 | `contact.deleted` | A contact is deleted |
-| `signal.created` | A signal is recorded against an account |
+| `signal.created` | A signal is recorded against a company |
 | `member.invited` | A teammate is invited to the workspace |
 | `member.joined` | An invited teammate joins |
 
@@ -30,7 +30,7 @@ curl -X POST https://app.gaintrace.com/api/v1/webhooks \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://example.com/hooks/gaintrace",
-    "events": ["signal.created", "account.updated"],
+    "events": ["signal.created", "company.updated"],
     "description": "Prod ingest"
   }'
 ```
@@ -40,7 +40,7 @@ curl -X POST https://app.gaintrace.com/api/v1/webhooks \
   "data": {
     "id": "6f1c...",
     "url": "https://example.com/hooks/gaintrace",
-    "events": ["signal.created", "account.updated"],
+    "events": ["signal.created", "company.updated"],
     "active": true,
     "secret": "whsec_9a2f...",
     "secretPrefix": "whsec_9a2f0...",

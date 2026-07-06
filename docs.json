@@ -99,12 +99,12 @@
         "openapi": "openapi.json",
         "groups": [
           {
-            "group": "Accounts",
+            "group": "Companies",
             "pages": [
-              "GET /accounts",
-              "POST /accounts",
-              "GET /accounts/{id}",
-              "PATCH /accounts/{id}"
+              "GET /companies",
+              "POST /companies",
+              "GET /companies/{id}",
+              "PATCH /companies/{id}"
             ]
           },
           {

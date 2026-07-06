@@ -17,13 +17,13 @@
     }
   ],
   "paths": {
-    "/accounts": {
+    "/companies": {
       "get": {
-        "operationId": "listAccounts",
-        "summary": "List accounts",
-        "description": "Returns the workspace's accounts, most-recently-updated first.\n\n**Scope:** `read:accounts`",
+        "operationId": "listCompanies",
+        "summary": "List companies",
+        "description": "Returns the workspace's companies, most-recently-updated first.\n\n**Scope:** `read:companies`",
         "tags": [
-          "Accounts"
+          "Companies"
         ],
         "parameters": [
           {
@@ -69,7 +69,7 @@
         ],
         "responses": {
           "200": {
-            "description": "A page of accounts.",
+            "description": "A page of companies.",
             "content": {
               "application/json": {
                 "schema": {
@@ -78,7 +78,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/Account"
+                        "$ref": "#/components/schemas/Company"
                       }
                     },
                     "meta": {
@@ -101,32 +101,32 @@
         }
       },
       "post": {
-        "operationId": "upsertAccount",
-        "summary": "Create or update an account",
+        "operationId": "upsertCompany",
+        "summary": "Create or update a company",
         "tags": [
-          "Accounts"
+          "Companies"
         ],
-        "description": "Creates an account, or updates the existing one with the same `externalId` (upsert).\n\n**Scope:** `write:accounts`",
+        "description": "Creates a company, or updates the existing one with the same `externalId` (upsert).\n\n**Scope:** `write:companies`",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AccountUpsert"
+                "$ref": "#/components/schemas/CompanyUpsert"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Existing account updated.",
+            "description": "Existing company updated.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/Account"
+                      "$ref": "#/components/schemas/Company"
                     }
                   }
                 }
@@ -134,14 +134,14 @@
             }
           },
           "201": {
-            "description": "Account created.",
+            "description": "Company created.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/Account"
+                      "$ref": "#/components/schemas/Company"
                     }
                   }
                 }
@@ -215,7 +215,7 @@
       "post": {
         "operationId": "createSignal",
         "summary": "Create a signal",
-        "description": "Records a signal against an account in the workspace.\n\n**Scope:** `write:signals`",
+        "description": "Records a signal against a company in the workspace.\n\n**Scope:** `write:signals`",
         "tags": [
           "Signals"
         ],
@@ -423,14 +423,14 @@
         }
       }
     },
-    "/accounts/{id}": {
+    "/companies/{id}": {
       "get": {
-        "operationId": "getAccount",
-        "summary": "Get an account",
+        "operationId": "getCompany",
+        "summary": "Get a company",
         "tags": [
-          "Accounts"
+          "Companies"
         ],
-        "description": "Fetch one account by UUID or `ext:<externalId>`.\n\n**Scope:** `read:accounts`",
+        "description": "Fetch one company by UUID or `ext:<externalId>`.\n\n**Scope:** `read:companies`",
         "parameters": [
           {
             "$ref": "#/components/parameters/pathId"
@@ -438,14 +438,14 @@
         ],
         "responses": {
           "200": {
-            "description": "The account.",
+            "description": "The company.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/Account"
+                      "$ref": "#/components/schemas/Company"
                     }
                   }
                 }
@@ -467,12 +467,12 @@
         }
       },
       "patch": {
-        "operationId": "updateAccount",
-        "summary": "Update an account",
+        "operationId": "updateCompany",
+        "summary": "Update a company",
         "tags": [
-          "Accounts"
+          "Companies"
         ],
-        "description": "Update mutable fields on an existing account.\n\n**Scope:** `write:accounts`",
+        "description": "Update mutable fields on an existing company.\n\n**Scope:** `write:companies`",
         "parameters": [
           {
             "$ref": "#/components/parameters/pathId"
@@ -483,21 +483,21 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AccountPatch"
+                "$ref": "#/components/schemas/CompanyPatch"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "The updated account.",
+            "description": "The updated company.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/Account"
+                      "$ref": "#/components/schemas/Company"
                     }
                   }
                 }
@@ -1329,7 +1329,7 @@
         "name": "id",
         "in": "path",
         "required": true,
-        "description": "Resource UUID. For accounts you may also pass `ext:<externalId>` to address by your external id.",
+        "description": "Resource UUID. For companies you may also pass `ext:<externalId>` to address by your external id.",
         "schema": {
           "type": "string"
         }
@@ -1431,9 +1431,9 @@
           "error"
         ]
       },
-      "Account": {
+      "Company": {
         "type": "object",
-        "description": "A canonical company (golden account). Health, counts, and timestamps are read-only.",
+        "description": "A canonical company record. Health, counts, and timestamps are read-only.",
         "properties": {
           "id": {
             "type": "string",
@@ -1896,12 +1896,12 @@
           }
         }
       },
-      "AccountUpsert": {
+      "CompanyUpsert": {
         "type": "object",
         "required": [
           "name"
         ],
-        "description": "Create or update an account. Upserts on `externalId` (defaults to a slug of `name`).",
+        "description": "Create or update a company. Upserts on `externalId` (defaults to a slug of `name`).",
         "properties": {
           "name": {
             "type": "string",
@@ -2020,9 +2020,9 @@
           }
         }
       },
-      "AccountPatch": {
+      "CompanyPatch": {
         "type": "object",
-        "description": "Any subset of the writable account fields. `healthScore`/`healthStatus`/counts are read-only.",
+        "description": "Any subset of the writable company fields. `healthScore`/`healthStatus`/counts are read-only.",
         "properties": {
           "name": {
             "type": "string",
@@ -2433,8 +2433,8 @@
       "WebhookEvent": {
         "type": "string",
         "enum": [
-          "account.created",
-          "account.updated",
+          "company.created",
+          "company.updated",
           "contact.created",
           "contact.updated",
           "contact.deleted",
@@ -2648,8 +2648,8 @@
   },
   "tags": [
     {
-      "name": "Accounts",
-      "description": "Read and manage canonical company accounts."
+      "name": "Companies",
+      "description": "Read and manage canonical company records."
     },
     {
       "name": "Signals",

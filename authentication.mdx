@@ -6,7 +6,7 @@ description: "Authenticate with a Bearer API key, scoped to a workspace."
 Every request must include an API key as a Bearer token:
 
 ```bash
-curl https://app.gaintrace.com/api/v1/accounts \
+curl https://app.gaintrace.com/api/v1/companies \
   -H "Authorization: Bearer gt_live_your_key_here"
 ```
 
@@ -31,8 +31,8 @@ Each key is granted a set of scopes. A request needs the scope its endpoint requ
 
 | Endpoint | Method | Required scope |
 | --- | --- | --- |
-| `/accounts`, `/accounts/{id}` | GET | `read:accounts` |
-| `/accounts`, `/accounts/{id}` | POST, PATCH | `write:accounts` |
+| `/companies`, `/companies/{id}` | GET | `read:companies` |
+| `/companies`, `/companies/{id}` | POST, PATCH | `write:companies` |
 | `/contacts`, `/contacts/{id}` | GET | `read:contacts` |
 | `/contacts`, `/contacts/{id}` | POST, PATCH, DELETE | `write:contacts` |
 | `/signals`, `/signals/{id}` | GET | `read:signals` |

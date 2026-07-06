@@ -110,7 +110,7 @@ Precise CRUD grouped by resource. Expand a namespace to see its tools.
 
 ## Permissions and limits
 
-- **Scopes** — each tool requires a scope (for example `read:accounts`, `write:signals`). Your OAuth grant or API key decides which tools are available. Read tools need a `read:` scope; writes need the matching `write:` scope.
+- **Scopes** — each tool requires a scope (for example `read:companies`, `write:signals`). Your OAuth grant or API key decides which tools are available. Read tools need a `read:` scope; writes need the matching `write:` scope.
 - **Audited writes** — every write is recorded in the workspace audit log with the acting identity.
 - **Rate limits** — 60 read calls and 20 write calls per minute, per identity. A `429` means back off and retry.
 - **Workspace isolation** — the server only ever sees the one workspace your token belongs to.
