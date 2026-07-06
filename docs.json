@@ -37,6 +37,14 @@
               "help/getting-started/for-admins",
               "help/getting-started/for-csms"
             ]
+          },
+          {
+            "group": "Records",
+            "pages": [
+              "help/records/companies",
+              "help/records/people",
+              "help/records/revenue"
+            ]
           }
         ]
       },
