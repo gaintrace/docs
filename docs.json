@@ -52,6 +52,36 @@
               "help/accounts/health",
               "help/accounts/triage"
             ]
+          },
+          {
+            "group": "Automating workflows",
+            "pages": [
+              "help/automation/flows"
+            ]
+          },
+          {
+            "group": "Boards",
+            "pages": [
+              "help/boards/boards"
+            ]
+          },
+          {
+            "group": "Customer success",
+            "pages": [
+              "help/success/success-plans"
+            ]
+          },
+          {
+            "group": "Connecting your data",
+            "pages": [
+              "help/integrations/integrations"
+            ]
+          },
+          {
+            "group": "Trace AI",
+            "pages": [
+              "help/trace-ai/trace-ai"
+            ]
           }
         ]
       },

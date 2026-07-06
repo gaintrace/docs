@@ -1,0 +1,40 @@
+---
+title: "Flows"
+description: "Automate the repetitive parts of customer success without writing code."
+---
+
+{/* docs-meta: routes=[/flows, /flows/[id]] reviewed=2026-07 */}
+
+**Flows** is where you automate the repetitive parts of your work, under **Automation** in the left nav. A flow watches for something to happen, then runs the steps you set up, like creating a task, sending an email, posting to Slack, or updating a field.
+
+<Frame>
+  <img src="/images/help/flows.png" alt="The Flows list with each flow's status, trigger, run count, and success rate" />
+</Frame>
+
+## Build a flow
+
+There are three ways to start:
+
+- **Describe it in plain language.** Type what you want ("When health drops below 40, create an urgent task for the account owner") and GainTrace turns it into a flow you can edit.
+- **Start from a template** for a common play.
+- **Build in the canvas** and drag the steps together yourself.
+
+Any of these drops you into the editor, a canvas where you connect a trigger to a series of actions. It saves as a draft while you work on it.
+
+## What a flow can do
+
+A trigger starts a flow, like a **Signal**, a **Schedule**, a **Data change**, or a **Manual** run. From there, the steps can:
+
+- Create a task for an owner
+- Send an email or a Slack message
+- Update a field on the account
+- Branch on a condition, or wait before the next step
+
+## Test before you turn it on
+
+Save the flow, then use **Test** to run it once and watch each step light up on the canvas. When it looks right, **Activate** it. You can **Pause** it or drop it back to a draft any time. The flows list shows each flow's status, how many times it's run, and its success rate.
+
+## Good to know
+
+- Some steps need a channel connected to do their job. Sending email needs email set up for GainTrace, and the Slack step needs Slack connected. If a channel isn't ready, that step is skipped and the rest of the flow still runs.
+- **Test** only works once you've saved the flow.
