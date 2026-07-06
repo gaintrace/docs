@@ -45,6 +45,13 @@
               "help/records/people",
               "help/records/revenue"
             ]
+          },
+          {
+            "group": "Health and triage",
+            "pages": [
+              "help/accounts/health",
+              "help/accounts/triage"
+            ]
           }
         ]
       },
