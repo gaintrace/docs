@@ -1,0 +1,41 @@
+---
+title: "Connect Stripe to GainTrace"
+sidebarTitle: "Stripe"
+description: "Sync Stripe customers, subscriptions, and invoices into GainTrace so revenue and billing signals feed health scores and renewals. Set up the Stripe integration in minutes."
+keywords: ["Stripe integration", "GainTrace Stripe", "sync Stripe", "Stripe customer success", "billing integration", "MRR"]
+---
+
+{/* docs-meta: catalog=IntegrationsExperience.tsx (sourceId stripe); verified 2026-07 */}
+
+Stripe is where your billing lives, so connecting it gives GainTrace the revenue picture behind every account: what they pay, whether they're renewing, and whether a payment just failed.
+
+## What syncs
+
+GainTrace pulls your Stripe billing objects and ties them to your Companies:
+
+- **Customers** link to the matching company.
+- **Subscriptions** feed Revenue, MRR, and renewal dates.
+- **Invoices and charges** show payment history and catch failed or overdue payments.
+
+## Connect Stripe
+
+<Steps>
+  <Step title="Open the catalog">
+    Go to **Integrations** in the left nav and pick **Stripe**.
+  </Step>
+  <Step title="Add your API key">
+    Paste a Stripe secret key when prompted, then confirm. A restricted key with read access is enough, and keeps the connection scoped to what GainTrace needs.
+  </Step>
+  <Step title="Let it sync">
+    Billing data starts flowing in. Manage the connection under **Data > Sources**.
+  </Step>
+</Steps>
+
+## What you can do with it
+
+With Stripe connected, Revenue reflects real MRR and renewal dates, and billing changes become signals: a failed payment or a downgrade can move an account's health and show up in triage before it turns into churn.
+
+## Good to know
+
+- Stripe changes arrive in near real time through webhooks, backed by a regular sync so nothing is missed.
+- This connector is read-only. GainTrace reads your billing data and never changes it in Stripe.

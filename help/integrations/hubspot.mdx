@@ -1,0 +1,42 @@
+---
+title: "Connect HubSpot to GainTrace"
+sidebarTitle: "HubSpot"
+description: "Sync HubSpot contacts, companies, and deals into GainTrace to power health scores, signals, and renewals. Set up the HubSpot integration in a few minutes."
+keywords: ["HubSpot integration", "GainTrace HubSpot", "sync HubSpot", "HubSpot customer success", "CRM integration"]
+---
+
+{/* docs-meta: catalog=IntegrationsExperience.tsx (sourceId hubspot); verified 2026-07 */}
+
+HubSpot is where most teams keep their companies, contacts, and deals, so it's the first source many admins connect. Once it's in, GainTrace has the account and owner data it needs to build health, surface signals, and track renewals.
+
+## What syncs
+
+GainTrace pulls these HubSpot objects and maps them to your workspace:
+
+- **Companies** become your Companies.
+- **Contacts** become your People.
+- **Deals** feed Revenue and renewal tracking.
+- **Owners, tickets, engagements, products, and line items** come along too, so activity and support history show up on each account.
+
+## Connect HubSpot
+
+<Steps>
+  <Step title="Open the catalog">
+    Go to **Integrations** in the left nav and pick **HubSpot**.
+  </Step>
+  <Step title="Authorize">
+    Use **Connect with OAuth** and approve GainTrace in the HubSpot window that opens. If you'd rather use a private app token, switch to manual and paste it instead.
+  </Step>
+  <Step title="Let it sync">
+    GainTrace starts pulling your data right away. You can watch and manage the connection under **Data > Sources**.
+  </Step>
+</Steps>
+
+## What you can do with it
+
+With HubSpot connected, health scores start reflecting real account data, signals fire on changes like a deal slipping or an owner going quiet, and renewals show up in Revenue. Your CSMs open a company and see the full picture without leaving GainTrace.
+
+## Good to know
+
+- HubSpot updates flow in near real time through webhooks, with a regular background sync as a safety net.
+- This connector supports two-way sync. With the write permissions granted, GainTrace can push updates back to HubSpot as well as read from it.

@@ -74,7 +74,21 @@
           {
             "group": "Connecting your data",
             "pages": [
-              "help/integrations/integrations"
+              "help/integrations/integrations",
+              {
+                "group": "Popular integrations",
+                "pages": [
+                  "help/integrations/hubspot",
+                  "help/integrations/salesforce",
+                  "help/integrations/attio",
+                  "help/integrations/stripe",
+                  "help/integrations/intercom",
+                  "help/integrations/slack",
+                  "help/integrations/posthog",
+                  "help/integrations/mixpanel",
+                  "help/integrations/gong"
+                ]
+              }
             ]
           },
           {

@@ -1,0 +1,41 @@
+---
+title: "Connect Intercom to GainTrace"
+sidebarTitle: "Intercom"
+description: "Sync Intercom contacts, companies, and conversations into GainTrace so support activity feeds health scores and signals. Connect the Intercom integration in minutes."
+keywords: ["Intercom integration", "GainTrace Intercom", "sync Intercom", "Intercom customer success", "support integration"]
+---
+
+{/* docs-meta: catalog=IntegrationsExperience.tsx (sourceId intercom); verified 2026-07 */}
+
+Intercom is where a lot of your customer conversations happen. Connecting it brings that support history into GainTrace, so a spike in tickets or a frustrated thread can show up on the account before it becomes a churn risk.
+
+## What syncs
+
+GainTrace pulls these Intercom objects and maps them into your workspace:
+
+- **Companies** become your Companies.
+- **Contacts** become your People.
+- **Conversations, tags, and segments** attach to the right account, so support volume and sentiment are visible in context.
+
+## Connect Intercom
+
+<Steps>
+  <Step title="Open the catalog">
+    Go to **Integrations** in the left nav and pick **Intercom**.
+  </Step>
+  <Step title="Authorize">
+    Use **Connect with OAuth** and approve GainTrace in the Intercom window. You can also connect manually with an access token.
+  </Step>
+  <Step title="Let it sync">
+    Your conversations and contacts start syncing. Manage the connection under **Data > Sources**.
+  </Step>
+</Steps>
+
+## What you can do with it
+
+With Intercom connected, support activity becomes part of health. A rise in open conversations can lower a score and raise a signal, so your team sees a struggling account in triage instead of hearing about it at renewal.
+
+## Good to know
+
+- Intercom updates flow in near real time through webhooks, with a regular background sync as backup.
+- This connector is read-only. GainTrace reads your Intercom data and doesn't write back to it.

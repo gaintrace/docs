@@ -1,0 +1,41 @@
+---
+title: "Connect Slack to GainTrace"
+sidebarTitle: "Slack"
+description: "Connect Slack to GainTrace to bring channel activity into your workspace. Set up the Slack integration in a few minutes."
+keywords: ["Slack integration", "GainTrace Slack", "sync Slack", "Slack alerts", "customer success notifications"]
+---
+
+{/* docs-meta: catalog=IntegrationsExperience.tsx (sourceId slack); flow alerts use push destinations, verified against src/lib/flows/engine.ts + PushDestinationsSection.tsx; 2026-07 */}
+
+Slack is where your team already works. Connecting it as a source brings channel activity into GainTrace, so shared-channel conversations with a customer are available alongside the rest of that account's data.
+
+## What syncs
+
+GainTrace reads these from Slack:
+
+- **Channels, users, and messages.**
+
+## Connect Slack
+
+<Steps>
+  <Step title="Open the catalog">
+    Go to **Integrations** in the left nav and pick **Slack**.
+  </Step>
+  <Step title="Authorize">
+    Use **Connect with OAuth** and approve GainTrace for your Slack workspace. You can also connect manually with a token.
+  </Step>
+  <Step title="Let it sync">
+    Slack starts syncing. Manage the connection under **Data > Sources**.
+  </Step>
+</Steps>
+
+## Good to know
+
+- Slack activity comes in near real time through Slack's Events API, with a regular sync as backup.
+- This connector is read-only. GainTrace reads from Slack and doesn't post to it.
+
+## Sending Slack alerts from Flows
+
+Posting to Slack when something happens, like an account dropping into at-risk, is a **separate** setup from this connector. A **Flow** sends Slack alerts through a Slack incoming webhook, not through the source connection above.
+
+To turn it on, go to **Settings > Push Destinations** and add a Slack webhook (an `https://hooks.slack.com/...` URL from your Slack app). Once it's active, the Slack step in Flows can post to it. Connecting the Slack source here does not, on its own, enable that step.
