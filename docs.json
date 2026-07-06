@@ -13,34 +13,59 @@
     "tabs": [
       {
         "tab": "Documentation",
-        "icon": "book-open",
+        "icon": "library",
         "groups": [
           {
             "group": "Get started",
-            "pages": ["index", "quickstart", "authentication"]
+            "pages": [
+              "index",
+              "quickstart",
+              "authentication"
+            ]
           }
         ]
       },
       {
         "tab": "API reference",
-        "icon": "terminal",
+        "icon": "code",
         "openapi": "openapi.json",
         "groups": [
           {
             "group": "Accounts",
-            "pages": ["GET /accounts", "POST /accounts", "GET /accounts/{id}", "PATCH /accounts/{id}"]
+            "pages": [
+              "GET /accounts",
+              "POST /accounts",
+              "GET /accounts/{id}",
+              "PATCH /accounts/{id}"
+            ]
           },
           {
             "group": "Contacts",
-            "pages": ["GET /contacts", "POST /contacts", "GET /contacts/{id}", "PATCH /contacts/{id}", "DELETE /contacts/{id}"]
+            "pages": [
+              "GET /contacts",
+              "POST /contacts",
+              "GET /contacts/{id}",
+              "PATCH /contacts/{id}",
+              "DELETE /contacts/{id}"
+            ]
           },
           {
             "group": "Signals",
-            "pages": ["GET /signals", "POST /signals", "POST /signals/batch", "GET /signals/{id}", "PATCH /signals/{id}", "DELETE /signals/{id}"]
+            "pages": [
+              "GET /signals",
+              "POST /signals",
+              "POST /signals/batch",
+              "GET /signals/{id}",
+              "PATCH /signals/{id}",
+              "DELETE /signals/{id}"
+            ]
           },
           {
             "group": "Ingest",
-            "pages": ["POST /events", "POST /metric-events"]
+            "pages": [
+              "POST /events",
+              "POST /metric-events"
+            ]
           }
         ]
       },
@@ -51,18 +76,29 @@
         "groups": [
           {
             "group": "Guide",
-            "pages": ["webhooks"]
+            "pages": [
+              "webhooks"
+            ]
           },
           {
             "group": "Endpoints",
-            "pages": ["GET /webhooks", "POST /webhooks", "GET /webhooks/{id}", "PATCH /webhooks/{id}", "DELETE /webhooks/{id}", "POST /webhooks/{id}/test"]
+            "pages": [
+              "GET /webhooks",
+              "POST /webhooks",
+              "GET /webhooks/{id}",
+              "PATCH /webhooks/{id}",
+              "DELETE /webhooks/{id}",
+              "POST /webhooks/{id}/test"
+            ]
           }
         ]
       },
       {
         "tab": "MCP",
         "icon": "plug",
-        "pages": ["mcp-server"]
+        "pages": [
+          "mcp-server"
+        ]
       }
     ]
   },
@@ -88,12 +124,21 @@
       "proxy": true
     },
     "examples": {
-      "languages": ["bash", "javascript", "python"],
+      "languages": [
+        "bash",
+        "javascript",
+        "python"
+      ],
       "prefill": true
     }
   },
   "contextual": {
-    "options": ["copy", "view", "chatgpt", "claude"]
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude"
+    ]
   },
   "icons": {
     "library": "lucide"
