@@ -62,7 +62,7 @@
       {
         "tab": "MCP",
         "icon": "plug",
-        "pages": ["mcp"]
+        "pages": ["mcp-server"]
       }
     ]
   },
