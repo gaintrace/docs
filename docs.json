@@ -224,9 +224,18 @@
     ]
   },
   "icons": {
-    "library": "lucide"
+    "library": "tabler"
   },
   "styling": {
-    "codeblocks": "dark"
+    "codeblocks": "system"
+  },
+  "fonts": {
+    "family": "Geist"
+  },
+  "thumbnails": {
+    "background": "/images/gaintrace-og.jpg"
+  },
+  "metadata": {
+    "timestamp": true
   }
 }
