@@ -82,6 +82,14 @@
             "pages": [
               "help/trace-ai/trace-ai"
             ]
+          },
+          {
+            "group": "Workspace admin",
+            "pages": [
+              "help/admin/members",
+              "help/admin/billing",
+              "help/admin/governance"
+            ]
           }
         ]
       },
