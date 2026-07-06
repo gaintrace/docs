@@ -13,23 +13,17 @@
     "tabs": [
       {
         "tab": "Documentation",
+        "icon": "book-open",
         "groups": [
           {
             "group": "Get started",
             "pages": ["index", "quickstart", "authentication"]
-          },
-          {
-            "group": "Guides",
-            "pages": ["webhooks"]
-          },
-          {
-            "group": "Integrations",
-            "pages": ["mcp"]
           }
         ]
       },
       {
         "tab": "API reference",
+        "icon": "terminal",
         "openapi": "openapi.json",
         "groups": [
           {
@@ -45,14 +39,30 @@
             "pages": ["GET /signals", "POST /signals", "POST /signals/batch", "GET /signals/{id}", "PATCH /signals/{id}", "DELETE /signals/{id}"]
           },
           {
-            "group": "Webhooks",
-            "pages": ["GET /webhooks", "POST /webhooks", "GET /webhooks/{id}", "PATCH /webhooks/{id}", "DELETE /webhooks/{id}", "POST /webhooks/{id}/test"]
-          },
-          {
             "group": "Ingest",
             "pages": ["POST /events", "POST /metric-events"]
           }
         ]
+      },
+      {
+        "tab": "Webhooks",
+        "icon": "webhook",
+        "openapi": "openapi.json",
+        "groups": [
+          {
+            "group": "Guide",
+            "pages": ["webhooks"]
+          },
+          {
+            "group": "Endpoints",
+            "pages": ["GET /webhooks", "POST /webhooks", "GET /webhooks/{id}", "PATCH /webhooks/{id}", "DELETE /webhooks/{id}", "POST /webhooks/{id}/test"]
+          }
+        ]
+      },
+      {
+        "tab": "MCP",
+        "icon": "plug",
+        "pages": ["mcp"]
       }
     ]
   },
