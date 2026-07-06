@@ -6,19 +6,66 @@
     "description": "The GainTrace REST API (v1). Read your customer data and push product-usage events, metric events, and signals into GainTrace.\n\nAll endpoints are authenticated with a Bearer API key and scoped to a single workspace."
   },
   "servers": [
-    { "url": "https://app.gaintrace.com/api/v1", "description": "Production" }
+    {
+      "url": "https://app.gaintrace.com/api/v1",
+      "description": "Production"
+    }
   ],
-  "security": [{ "bearerAuth": [] }],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
   "paths": {
     "/accounts": {
       "get": {
         "operationId": "listAccounts",
         "summary": "List accounts",
         "description": "Returns the workspace's accounts, most-recently-updated first.\n\n**Scope:** `read:accounts`",
-        "tags": ["Accounts"],
+        "tags": [
+          "Accounts"
+        ],
         "parameters": [
-          { "$ref": "#/components/parameters/limit" },
-          { "$ref": "#/components/parameters/offset" }
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "name": "healthStatus",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "healthy",
+                "at_risk",
+                "churning"
+              ]
+            }
+          },
+          {
+            "name": "segment",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "plan",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Case-insensitive match on name or domain.",
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -28,16 +75,91 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Account" } },
-                    "meta": { "$ref": "#/components/schemas/Meta" }
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Account"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/Meta"
+                    }
                   }
                 }
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "403": { "$ref": "#/components/responses/Forbidden" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      },
+      "post": {
+        "operationId": "upsertAccount",
+        "summary": "Create or update an account",
+        "tags": [
+          "Accounts"
+        ],
+        "description": "Creates an account, or updates the existing one with the same `externalId` (upsert).\n\n**Scope:** `write:accounts`",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountUpsert"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Existing account updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Account"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Account created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Account"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
         }
       }
     },
@@ -46,10 +168,16 @@
         "operationId": "listSignals",
         "summary": "List signals",
         "description": "Returns non-dismissed signals for the workspace, most-recent first.\n\n**Scope:** `read:signals`",
-        "tags": ["Signals"],
+        "tags": [
+          "Signals"
+        ],
         "parameters": [
-          { "$ref": "#/components/parameters/limit" },
-          { "$ref": "#/components/parameters/offset" }
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
         ],
         "responses": {
           "200": {
@@ -59,28 +187,45 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Signal" } },
-                    "meta": { "$ref": "#/components/schemas/Meta" }
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SignalListItem"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/Meta"
+                    }
                   }
                 }
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "403": { "$ref": "#/components/responses/Forbidden" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
         }
       },
       "post": {
         "operationId": "createSignal",
         "summary": "Create a signal",
         "description": "Records a signal against an account in the workspace.\n\n**Scope:** `write:signals`",
-        "tags": ["Signals"],
+        "tags": [
+          "Signals"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/SignalCreate" }
+              "schema": {
+                "$ref": "#/components/schemas/SignalCreate"
+              }
             }
           }
         },
@@ -91,16 +236,36 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": { "data": { "type": "object", "properties": { "id": { "type": "string", "format": "uuid" } } } }
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "403": { "$ref": "#/components/responses/Forbidden" },
-          "404": { "$ref": "#/components/responses/NotFound" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
         }
       }
     },
@@ -108,21 +273,27 @@
       "post": {
         "operationId": "ingestProductEvents",
         "summary": "Ingest product events",
-        "description": "Ingests a batch of product-usage events (Segment-style). Feeds health, signals, and activation recompute.\n\nAccepts server keys (`gt_live_`, scope `write:events`) or client-safe browser keys (`gt_pub_`, scope `write:ingest`). Public ingest is CORS-enabled.\n\n**Scope:** `write:events` or `write:ingest` · **Max 1000 events per request.**",
-        "tags": ["Ingest"],
+        "description": "Ingests a batch of product-usage events (Segment-style). Feeds health, signals, and activation recompute.\n\nAccepts server keys (`gt_live_`, scope `write:events`) or client-safe browser keys (`gt_pub_`, scope `write:ingest`). Public ingest is CORS-enabled.\n\n**Scope:** `write:events` or `write:ingest` \u00b7 **Max 1000 events per request.**",
+        "tags": [
+          "Ingest"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["events"],
+                "required": [
+                  "events"
+                ],
                 "properties": {
                   "events": {
                     "type": "array",
                     "minItems": 1,
                     "maxItems": 1000,
-                    "items": { "$ref": "#/components/schemas/ProductEvent" }
+                    "items": {
+                      "$ref": "#/components/schemas/ProductEvent"
+                    }
                   }
                 }
               }
@@ -140,25 +311,43 @@
                     "data": {
                       "type": "object",
                       "properties": {
-                        "inserted": { "type": "integer" },
-                        "duplicates": { "type": "integer" },
-                        "linked": { "type": "integer" },
-                        "errors": { "type": "integer" }
+                        "inserted": {
+                          "type": "integer"
+                        },
+                        "duplicates": {
+                          "type": "integer"
+                        },
+                        "linked": {
+                          "type": "integer"
+                        },
+                        "errors": {
+                          "type": "integer"
+                        }
                       }
                     },
                     "validation_errors": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/EventValidationError" }
+                      "items": {
+                        "$ref": "#/components/schemas/EventValidationError"
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "403": { "$ref": "#/components/responses/Forbidden" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
         }
       }
     },
@@ -166,13 +355,17 @@
       "post": {
         "operationId": "ingestMetricEvents",
         "summary": "Ingest metric events",
-        "description": "Ingests a batch of typed metric events into the metrics engine (feeds daily snapshots that calc metrics evaluate). Idempotent on `(source, externalId)`; duplicates are skipped silently. Returns a per-event outcome.\n\n**Scope:** `write:events` · **1–500 events per request.**",
-        "tags": ["Ingest"],
+        "description": "Ingests a batch of typed metric events into the metrics engine (feeds daily snapshots that calc metrics evaluate). Idempotent on `(source, externalId)`; duplicates are skipped silently. Returns a per-event outcome.\n\n**Scope:** `write:events` \u00b7 **1\u2013500 events per request.**",
+        "tags": [
+          "Ingest"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/MetricEventBatch" }
+              "schema": {
+                "$ref": "#/components/schemas/MetricEventBatch"
+              }
             }
           }
         },
@@ -184,26 +377,920 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "ok": { "type": "boolean" },
+                    "ok": {
+                      "type": "boolean"
+                    },
                     "summary": {
                       "type": "object",
                       "properties": {
-                        "received": { "type": "integer" },
-                        "ingested": { "type": "integer" },
-                        "duplicate": { "type": "integer" },
-                        "rejected": { "type": "integer" }
+                        "received": {
+                          "type": "integer"
+                        },
+                        "ingested": {
+                          "type": "integer"
+                        },
+                        "duplicate": {
+                          "type": "integer"
+                        },
+                        "rejected": {
+                          "type": "integer"
+                        }
                       }
                     },
-                    "outcomes": { "type": "array", "items": { "$ref": "#/components/schemas/MetricEventOutcome" } }
+                    "outcomes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MetricEventOutcome"
+                      }
+                    }
                   }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "403": { "$ref": "#/components/responses/Forbidden" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/accounts/{id}": {
+      "get": {
+        "operationId": "getAccount",
+        "summary": "Get an account",
+        "tags": [
+          "Accounts"
+        ],
+        "description": "Fetch one account by UUID or `ext:<externalId>`.\n\n**Scope:** `read:accounts`",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/pathId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Account"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateAccount",
+        "summary": "Update an account",
+        "tags": [
+          "Accounts"
+        ],
+        "description": "Update mutable fields on an existing account.\n\n**Scope:** `write:accounts`",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/pathId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Account"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/signals/{id}": {
+      "get": {
+        "operationId": "getSignal",
+        "summary": "Get a signal",
+        "tags": [
+          "Signals"
+        ],
+        "description": "Fetch one signal by id.\n\n**Scope:** `read:signals`",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/pathId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The signal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Signal"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateSignal",
+        "summary": "Update a signal",
+        "tags": [
+          "Signals"
+        ],
+        "description": "Update a signal's title, description, severity, snooze, or metadata.\n\n**Scope:** `write:signals`",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/pathId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated signal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Signal"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "dismissSignal",
+        "summary": "Dismiss a signal",
+        "tags": [
+          "Signals"
+        ],
+        "description": "Soft-deletes (dismisses) the signal.\n\n**Scope:** `write:signals`",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/pathId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Dismissed."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/signals/batch": {
+      "post": {
+        "operationId": "createSignalsBatch",
+        "summary": "Create signals in bulk",
+        "tags": [
+          "Signals"
+        ],
+        "description": "Create up to 1000 signals. Partial success: each item reports its own outcome.\n\n**Scope:** `write:signals`",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 1000,
+                    "items": {
+                      "$ref": "#/components/schemas/SignalCreate"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Per-item outcomes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/BatchOutcome"
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "received": {
+                          "type": "integer"
+                        },
+                        "succeeded": {
+                          "type": "integer"
+                        },
+                        "failed": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/contacts": {
+      "get": {
+        "operationId": "listContacts",
+        "summary": "List contacts",
+        "tags": [
+          "Contacts"
+        ],
+        "description": "List contacts, optionally scoped to one account or email.\n\n**Scope:** `read:contacts`",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "name": "accountId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "email"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of contacts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Contact"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/Meta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createContact",
+        "summary": "Create a contact",
+        "tags": [
+          "Contacts"
+        ],
+        "description": "Create a contact under an account. Email is unique per workspace (409 on conflict).\n\n**Scope:** `write:contacts`",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Contact created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Contact"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A contact with this email already exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/contacts/{id}": {
+      "get": {
+        "operationId": "getContact",
+        "summary": "Get a contact",
+        "tags": [
+          "Contacts"
+        ],
+        "description": "Fetch one contact.\n\n**Scope:** `read:contacts`",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/pathId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The contact.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Contact"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateContact",
+        "summary": "Update a contact",
+        "tags": [
+          "Contacts"
+        ],
+        "description": "Update mutable contact fields.\n\n**Scope:** `write:contacts`",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/pathId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated contact.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Contact"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email already in use.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteContact",
+        "summary": "Delete a contact",
+        "tags": [
+          "Contacts"
+        ],
+        "description": "Permanently delete a contact.\n\n**Scope:** `write:contacts`",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/pathId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/webhooks": {
+      "get": {
+        "operationId": "listWebhooks",
+        "summary": "List webhooks",
+        "tags": [
+          "Webhooks"
+        ],
+        "description": "List the workspace's webhook subscriptions.\n\n**Scope:** `read:webhooks`",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of webhooks.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Webhook"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/Meta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createWebhook",
+        "summary": "Create a webhook",
+        "tags": [
+          "Webhooks"
+        ],
+        "description": "Register a webhook subscription. The signing `secret` is returned only in this response.\n\n**Scope:** `write:webhooks`",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook created (includes the one-time secret).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/WebhookCreated"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "402": {
+            "$ref": "#/components/responses/PlanLimit"
+          }
+        }
+      }
+    },
+    "/webhooks/{id}": {
+      "get": {
+        "operationId": "getWebhook",
+        "summary": "Get a webhook",
+        "tags": [
+          "Webhooks"
+        ],
+        "description": "Fetch one webhook.\n\n**Scope:** `read:webhooks`",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/pathId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The webhook.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Webhook"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateWebhook",
+        "summary": "Update a webhook",
+        "tags": [
+          "Webhooks"
+        ],
+        "description": "Update url, events, headers, description, or active state.\n\n**Scope:** `write:webhooks`",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/pathId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated webhook.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Webhook"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteWebhook",
+        "summary": "Delete a webhook",
+        "tags": [
+          "Webhooks"
+        ],
+        "description": "Delete a webhook and its delivery history.\n\n**Scope:** `write:webhooks`",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/pathId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/webhooks/{id}/test": {
+      "post": {
+        "operationId": "testWebhook",
+        "summary": "Send a test event",
+        "tags": [
+          "Webhooks"
+        ],
+        "description": "Send a signed `ping` to the endpoint now and return the result.\n\n**Scope:** `write:webhooks`",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/pathId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delivery result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "deliveryId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "delivered",
+                            "failed"
+                          ]
+                        },
+                        "responseStatus": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "error": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
         }
       }
     }
@@ -213,7 +1300,7 @@
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer",
-        "description": "Bearer API key. Secret server keys start with `gt_live_`; client-safe browser keys start with `gt_pub_` (write-only, origin-pinned). Create and scope keys in Settings → API Keys."
+        "description": "Bearer API key. Secret server keys start with `gt_live_`; client-safe browser keys start with `gt_pub_` (write-only, origin-pinned). Create and scope keys in Settings \u2192 API Keys."
       }
     },
     "parameters": {
@@ -221,148 +1308,1364 @@
         "name": "limit",
         "in": "query",
         "description": "Max rows to return. Default 50, max 100.",
-        "schema": { "type": "integer", "default": 50, "maximum": 100, "minimum": 1 }
+        "schema": {
+          "type": "integer",
+          "default": 50,
+          "maximum": 100,
+          "minimum": 1
+        }
       },
       "offset": {
         "name": "offset",
         "in": "query",
         "description": "Rows to skip (pagination).",
-        "schema": { "type": "integer", "default": 0, "minimum": 0 }
+        "schema": {
+          "type": "integer",
+          "default": 0,
+          "minimum": 0
+        }
+      },
+      "pathId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": "Resource UUID. For accounts you may also pass `ext:<externalId>` to address by your external id.",
+        "schema": {
+          "type": "string"
+        }
       }
     },
     "responses": {
-      "BadRequest": { "description": "Invalid request body or parameters.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-      "Unauthorized": { "description": "Missing or invalid API key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-      "Forbidden": { "description": "Insufficient scope, or API v1 is not enabled for the workspace.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-      "NotFound": { "description": "Referenced resource not found in this workspace.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-      "RateLimited": { "description": "Per-key rate limit exceeded.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+      "BadRequest": {
+        "description": "Invalid request body or parameters.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Missing or invalid API key.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Insufficient scope, or API v1 is not enabled for the workspace.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Referenced resource not found in this workspace.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Per-key rate limit exceeded.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "PlanLimit": {
+        "description": "Plan limit reached for this resource.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
     },
     "schemas": {
       "Meta": {
         "type": "object",
         "properties": {
-          "limit": { "type": "integer" },
-          "offset": { "type": "integer" },
-          "count": { "type": "integer", "description": "Number of rows in this page." }
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of rows in this page."
+          }
         }
       },
       "Error": {
         "type": "object",
         "properties": {
-          "error": { "type": "string", "description": "Human-readable, safe error message." },
-          "detail": { "type": "string" },
-          "code": { "type": "string" }
+          "error": {
+            "type": "string",
+            "description": "Human-readable, safe error message."
+          },
+          "detail": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
         },
-        "required": ["error"]
+        "required": [
+          "error"
+        ]
       },
       "Account": {
         "type": "object",
+        "description": "A canonical company (golden account). Health, counts, and timestamps are read-only.",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "name": { "type": "string" },
-          "domain": { "type": ["string", "null"] },
-          "industry": { "type": ["string", "null"] },
-          "healthScore": { "type": ["integer", "null"], "description": "0–100 composite health score." },
-          "healthStatus": { "type": ["string", "null"], "description": "e.g. Healthy, At risk, Critical." },
-          "arr": { "type": ["integer", "null"], "description": "Annual recurring revenue, in minor units." },
-          "plan": { "type": ["string", "null"] },
-          "ownerId": { "type": ["string", "null"], "format": "uuid" }
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "externalId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Your stable external id (unique per workspace). Used for upsert."
+          },
+          "name": {
+            "type": "string"
+          },
+          "domain": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "industry": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "employeeCount": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "plan": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "segment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "region": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "location": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lifecycleStage": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ownerEmail": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "arr": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Annual recurring revenue in integer minor units of `currency`."
+          },
+          "mrr": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Monthly recurring revenue in integer minor units of `currency`."
+          },
+          "currency": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO 4217 code. Null = workspace reporting currency."
+          },
+          "contractStartDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "contractEndDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "autoRenew": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "healthScore": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "0-100 (read-only)."
+          },
+          "healthStatus": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "at_risk",
+              "churning"
+            ],
+            "description": "Read-only."
+          },
+          "contactCount": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "dealCount": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "isPhantom": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "lastActivityAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
       "Signal": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "accountId": { "type": "string", "format": "uuid" },
-          "type": { "$ref": "#/components/schemas/SignalType" },
-          "severity": { "$ref": "#/components/schemas/SignalSeverity" },
-          "title": { "type": "string" },
-          "description": { "type": ["string", "null"] },
-          "occurredAt": { "type": "string", "format": "date-time" }
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/SignalType"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/SignalSeverity"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "snoozed",
+              "dismissed"
+            ],
+            "description": "Derived from dismiss/snooze timestamps."
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "snoozedUntil": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "dismissedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "metadata": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true
+          }
         }
       },
       "SignalCreate": {
         "type": "object",
-        "required": ["accountId", "type", "severity", "title"],
+        "required": [
+          "accountId",
+          "type",
+          "severity",
+          "title"
+        ],
         "properties": {
-          "accountId": { "type": "string", "format": "uuid", "description": "Must belong to your workspace." },
-          "type": { "$ref": "#/components/schemas/SignalType" },
-          "severity": { "$ref": "#/components/schemas/SignalSeverity" },
-          "title": { "type": "string", "maxLength": 500 },
-          "description": { "type": "string", "maxLength": 5000 },
-          "metadata": { "type": "object", "description": "Arbitrary JSON, max 10KB serialized.", "additionalProperties": true }
+          "accountId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Must belong to your workspace."
+          },
+          "type": {
+            "$ref": "#/components/schemas/SignalType"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/SignalSeverity"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 5000
+          },
+          "metadata": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true,
+            "description": "Arbitrary JSON, max 10KB serialized."
+          }
         }
       },
       "SignalType": {
         "type": "string",
-        "enum": ["usage_drop", "usage_spike", "feature_adoption", "support_ticket", "payment_failed", "expansion_signal", "nps_response", "contract_renewal", "login_inactive", "champion_left"]
+        "enum": [
+          "usage_drop",
+          "usage_spike",
+          "feature_adoption",
+          "support_ticket",
+          "payment_failed",
+          "expansion_signal",
+          "nps_response",
+          "contract_renewal",
+          "login_inactive",
+          "champion_left"
+        ]
       },
-      "SignalSeverity": { "type": "string", "enum": ["info", "warning", "critical"] },
+      "SignalSeverity": {
+        "type": "string",
+        "enum": [
+          "info",
+          "warning",
+          "critical"
+        ]
+      },
       "ProductEvent": {
         "type": "object",
-        "required": ["event_name", "timestamp"],
+        "required": [
+          "event_name",
+          "timestamp"
+        ],
         "properties": {
-          "event_name": { "type": "string", "maxLength": 255, "description": "The event identifier, e.g. `report_exported`." },
-          "timestamp": { "type": "string", "format": "date-time", "description": "ISO 8601 event time." },
-          "account_id": { "type": "string", "description": "Company/account external id or UUID." },
-          "user_id": { "type": "string", "description": "End-user id." },
-          "anonymous_id": { "type": "string" },
-          "session_id": { "type": "string" },
-          "event_category": { "type": "string" },
-          "feature_name": { "type": "string" },
-          "source": { "type": "string" },
-          "source_event_id": { "type": "string", "description": "Idempotency key for dedup." },
-          "value": { "type": "number" },
-          "unit": { "type": "string" },
-          "is_programmatic": { "type": "boolean" },
-          "properties": { "type": "object", "description": "Arbitrary JSON, max 10KB serialized.", "additionalProperties": true }
+          "event_name": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "The event identifier, e.g. `report_exported`."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 event time."
+          },
+          "account_id": {
+            "type": "string",
+            "description": "Company/account external id or UUID."
+          },
+          "user_id": {
+            "type": "string",
+            "description": "End-user id."
+          },
+          "anonymous_id": {
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "event_category": {
+            "type": "string"
+          },
+          "feature_name": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "source_event_id": {
+            "type": "string",
+            "description": "Idempotency key for dedup."
+          },
+          "value": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "is_programmatic": {
+            "type": "boolean"
+          },
+          "properties": {
+            "type": "object",
+            "description": "Arbitrary JSON, max 10KB serialized.",
+            "additionalProperties": true
+          }
         }
       },
       "EventValidationError": {
         "type": "object",
         "properties": {
-          "index": { "type": "integer", "description": "Index of the offending event in the batch." },
-          "error": { "type": "string" }
+          "index": {
+            "type": "integer",
+            "description": "Index of the offending event in the batch."
+          },
+          "error": {
+            "type": "string"
+          }
         }
       },
       "MetricEventBatch": {
         "type": "object",
-        "required": ["events"],
+        "required": [
+          "events"
+        ],
         "properties": {
-          "source": { "type": "string", "enum": ["script", "api", "segment", "pendo", "mixpanel", "import", "system"], "default": "api" },
-          "strict": { "type": "boolean", "default": false, "description": "When true, reject events whose `eventName` is not registered in event definitions." },
-          "events": { "type": "array", "minItems": 1, "maxItems": 500, "items": { "$ref": "#/components/schemas/MetricEvent" } }
+          "source": {
+            "type": "string",
+            "enum": [
+              "script",
+              "api",
+              "segment",
+              "pendo",
+              "mixpanel",
+              "import",
+              "system"
+            ],
+            "default": "api"
+          },
+          "strict": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, reject events whose `eventName` is not registered in event definitions."
+          },
+          "events": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 500,
+            "items": {
+              "$ref": "#/components/schemas/MetricEvent"
+            }
+          }
         }
       },
       "MetricEvent": {
         "type": "object",
-        "required": ["eventName", "occurredAt"],
+        "required": [
+          "eventName",
+          "occurredAt"
+        ],
         "description": "Provide exactly one company key (`companyId` OR `companyExternalId`). Contact attribution is optional.",
         "properties": {
-          "companyId": { "type": "string", "format": "uuid", "description": "Account UUID. Provide this or `companyExternalId`." },
-          "companyExternalId": { "type": "string", "description": "Account slug/CRM id; resolves to a company. Provide this or `companyId`." },
-          "enduserId": { "type": "string", "format": "uuid" },
-          "enduserEmail": { "type": "string", "format": "email" },
-          "eventName": { "type": "string", "minLength": 1, "maxLength": 120 },
-          "occurredAt": { "type": "string", "format": "date-time" },
-          "properties": { "type": "object", "additionalProperties": true, "description": "Optionally shape-validated against the event definition." },
-          "externalId": { "type": "string", "maxLength": 200, "description": "Idempotency key; repeats are skipped silently." }
+          "companyId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Account UUID. Provide this or `companyExternalId`."
+          },
+          "companyExternalId": {
+            "type": "string",
+            "description": "Account slug/CRM id; resolves to a company. Provide this or `companyId`."
+          },
+          "enduserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "enduserEmail": {
+            "type": "string",
+            "format": "email"
+          },
+          "eventName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Optionally shape-validated against the event definition."
+          },
+          "externalId": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Idempotency key; repeats are skipped silently."
+          }
         }
       },
       "MetricEventOutcome": {
         "type": "object",
         "properties": {
-          "index": { "type": "integer" },
-          "status": { "type": "string", "enum": ["ingested", "duplicate", "rejected"] },
-          "error": { "type": "string" },
-          "eventLogId": { "type": "integer" }
+          "index": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ingested",
+              "duplicate",
+              "rejected"
+            ]
+          },
+          "error": {
+            "type": "string"
+          },
+          "eventLogId": {
+            "type": "integer"
+          }
+        }
+      },
+      "AccountUpsert": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "description": "Create or update an account. Upserts on `externalId` (defaults to a slug of `name`).",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "externalId": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Upsert key. Defaults to a slug of the name."
+          },
+          "domain": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255
+          },
+          "industry": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 100
+          },
+          "plan": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 50
+          },
+          "segment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 50
+          },
+          "region": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 100
+          },
+          "location": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255
+          },
+          "lifecycleStage": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 30
+          },
+          "ownerEmail": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255
+          },
+          "employeeCount": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "arr": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "description": "Integer minor units."
+          },
+          "mrr": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "description": "Integer minor units."
+          },
+          "currency": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[A-Z]{3}$",
+            "maxLength": 3,
+            "description": "ISO 4217 code or null."
+          },
+          "contractStartDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "contractEndDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "autoRenew": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AccountPatch": {
+        "type": "object",
+        "description": "Any subset of the writable account fields. `healthScore`/`healthStatus`/counts are read-only.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "domain": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255
+          },
+          "industry": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 100
+          },
+          "plan": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 50
+          },
+          "segment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 50
+          },
+          "region": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 100
+          },
+          "location": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255
+          },
+          "lifecycleStage": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 30
+          },
+          "ownerEmail": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255
+          },
+          "employeeCount": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "arr": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "description": "Integer minor units."
+          },
+          "mrr": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "description": "Integer minor units."
+          },
+          "currency": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[A-Z]{3}$",
+            "maxLength": 3,
+            "description": "ISO 4217 code or null."
+          },
+          "contractStartDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "contractEndDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "autoRenew": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SignalPatch": {
+        "type": "object",
+        "description": "Any subset of the mutable signal fields.",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 5000
+          },
+          "severity": {
+            "$ref": "#/components/schemas/SignalSeverity"
+          },
+          "snoozedUntil": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Snooze until this time, or null to unsnooze."
+          },
+          "metadata": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true
+          }
+        }
+      },
+      "BatchOutcome": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "created",
+              "failed"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "ContactRole": {
+        "type": "string",
+        "enum": [
+          "decision_maker",
+          "champion",
+          "end_user",
+          "billing",
+          "influencer",
+          "executive_sponsor",
+          "technical",
+          "other"
+        ]
+      },
+      "Contact": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The golden account this contact belongs to."
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email"
+          },
+          "externalId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Your stable user id (for event resolution)."
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "role": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "contactRole": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContactRole"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "isChampion": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "linkedinUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "avatarUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lastSeenAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "engagementScore": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Read-only."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ContactCreate": {
+        "type": "object",
+        "required": [
+          "accountId",
+          "name"
+        ],
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Golden account UUID; must belong to your workspace."
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email",
+            "description": "Unique per workspace.",
+            "maxLength": 255
+          },
+          "externalId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 50
+          },
+          "role": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 100
+          },
+          "contactRole": {
+            "$ref": "#/components/schemas/ContactRole"
+          },
+          "isChampion": {
+            "type": "boolean"
+          },
+          "linkedinUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 2000
+          },
+          "avatarUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 2000
+          }
+        }
+      },
+      "ContactPatch": {
+        "type": "object",
+        "description": "Any subset of the mutable contact fields.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email",
+            "description": "Unique per workspace.",
+            "maxLength": 255
+          },
+          "externalId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 50
+          },
+          "role": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 100
+          },
+          "contactRole": {
+            "$ref": "#/components/schemas/ContactRole"
+          },
+          "isChampion": {
+            "type": "boolean"
+          },
+          "linkedinUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 2000
+          },
+          "avatarUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 2000
+          }
+        }
+      },
+      "WebhookEvent": {
+        "type": "string",
+        "enum": [
+          "account.created",
+          "account.updated",
+          "contact.created",
+          "contact.updated",
+          "contact.deleted",
+          "signal.created",
+          "member.invited",
+          "member.joined"
+        ]
+      },
+      "Webhook": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Subscribed events, or `[\"*\"]` for all."
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Custom headers sent with each delivery. Values are redacted (`***`) in responses."
+          },
+          "secretPrefix": {
+            "type": "string",
+            "description": "First chars of the signing secret. Full secret is returned only at creation."
+          },
+          "consecutiveFailures": {
+            "type": "integer"
+          },
+          "disabledAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Set when auto-disabled after sustained failures."
+          },
+          "lastSuccessAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "WebhookCreate": {
+        "type": "object",
+        "required": [
+          "url",
+          "events"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 500,
+            "description": "HTTPS only; may not resolve to a private/reserved address."
+          },
+          "events": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/WebhookEvent"
+                },
+                {
+                  "const": "*"
+                }
+              ]
+            },
+            "description": "Subscribed events, or `[\"*\"]`."
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Optional custom headers (e.g. an auth token). Reserved/signing headers are rejected. Max 20, 4KB total."
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255
+          }
+        }
+      },
+      "WebhookPatch": {
+        "type": "object",
+        "description": "Any subset. Setting `active:true` also clears the auto-disable failure state.",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 500
+          },
+          "events": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/WebhookEvent"
+                },
+                {
+                  "const": "*"
+                }
+              ]
+            }
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "minProperties": 1
+      },
+      "WebhookCreated": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Webhook"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "secret": {
+                "type": "string",
+                "description": "The signing secret, returned ONCE. Store it now."
+              }
+            }
+          }
+        ]
+      },
+      "SignalListItem": {
+        "type": "object",
+        "description": "Subset returned by the list endpoint. GET /signals/{id} returns the full Signal.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/SignalType"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/SignalSeverity"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       }
     }
   },
   "tags": [
-    { "name": "Accounts", "description": "Read the workspace's customer accounts." },
-    { "name": "Signals", "description": "Read and create buyer / risk signals." },
-    { "name": "Ingest", "description": "Push product-usage and metric events into GainTrace." }
+    {
+      "name": "Accounts",
+      "description": "Read and manage canonical company accounts."
+    },
+    {
+      "name": "Signals",
+      "description": "Read, create, and manage buyer / risk signals."
+    },
+    {
+      "name": "Ingest",
+      "description": "Push product-usage and metric events into GainTrace."
+    },
+    {
+      "name": "Contacts",
+      "description": "Read and manage the people on an account."
+    },
+    {
+      "name": "Webhooks",
+      "description": "Subscribe to workspace events with signed, retried delivery."
+    }
   ]
 }

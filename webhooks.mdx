@@ -1,0 +1,160 @@
+---
+title: "Webhooks"
+description: "Subscribe to workspace events with signed, retried delivery."
+---
+
+Webhooks let GainTrace notify your systems the moment something happens in your workspace, instead of you polling for changes. You register an HTTPS endpoint, subscribe to a set of events, and GainTrace delivers a signed POST to that endpoint as each event occurs.
+
+## Events
+
+Subscribe to any of these, or to `*` for all of them.
+
+| Event | Fires when |
+| --- | --- |
+| `account.created` | An account is created via the API |
+| `account.updated` | An account is updated or upserted |
+| `contact.created` | A contact is created |
+| `contact.updated` | A contact is updated |
+| `contact.deleted` | A contact is deleted |
+| `signal.created` | A signal is recorded against an account |
+| `member.invited` | A teammate is invited to the workspace |
+| `member.joined` | An invited teammate joins |
+
+## Create a subscription
+
+Register an endpoint with the events you care about. The signing `secret` is returned only in this response, so store it now.
+
+```bash
+curl -X POST https://app.gaintrace.com/api/v1/webhooks \
+  -H "Authorization: Bearer gt_live_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/hooks/gaintrace",
+    "events": ["signal.created", "account.updated"],
+    "description": "Prod ingest"
+  }'
+```
+
+```json
+{
+  "data": {
+    "id": "6f1c...",
+    "url": "https://example.com/hooks/gaintrace",
+    "events": ["signal.created", "account.updated"],
+    "active": true,
+    "secret": "whsec_9a2f...",
+    "secretPrefix": "whsec_9a2f0...",
+    "headers": {}
+  }
+}
+```
+
+<Warning>
+  The full `secret` appears only once, at creation. Later responses show a
+  redacted `secretPrefix`. If you lose it, rotate by deleting and recreating the
+  webhook.
+</Warning>
+
+## Payload
+
+Every delivery is a JSON POST with this envelope:
+
+```json
+{
+  "event": "signal.created",
+  "timestamp": "2026-07-06T10:32:11.000Z",
+  "data": {
+    "id": "b2c9...",
+    "accountId": "a1f0...",
+    "type": "usage_drop",
+    "severity": "warning",
+    "title": "Weekly active users down 40%"
+  }
+}
+```
+
+These headers accompany it:
+
+| Header | Purpose |
+| --- | --- |
+| `X-GainTrace-Signature` | `sha256=<hmac>` over the raw body (see below) |
+| `X-GainTrace-Event` | The event name |
+| `X-GainTrace-Delivery` | Unique delivery id (safe to dedupe on) |
+| `X-GainTrace-Timestamp` | ISO 8601 send time |
+
+## Verify the signature
+
+Compute an HMAC-SHA256 of the **raw request body** with your webhook secret, hex-encode it, prefix `sha256=`, and compare it to `X-GainTrace-Signature` with a constant-time check. Reject any request that does not match.
+
+<CodeGroup>
+```javascript Node.js
+import crypto from "node:crypto";
+
+function verify(rawBody, signatureHeader, secret) {
+  const expected =
+    "sha256=" + crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
+  const a = Buffer.from(signatureHeader ?? "");
+  const b = Buffer.from(expected);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+```
+
+```python Python
+import hmac, hashlib
+
+def verify(raw_body: bytes, signature_header: str, secret: str) -> bool:
+    expected = "sha256=" + hmac.new(secret.encode(), raw_body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature_header or "")
+```
+</CodeGroup>
+
+<Note>
+  Sign the **raw** bytes, before any JSON parsing or re-serialization. Reparsing
+  and re-stringifying can reorder keys and break the signature.
+</Note>
+
+## Custom headers
+
+For an extra layer of authentication, attach custom headers that your receiver checks (for example a shared secret or bearer token). They are sent with every delivery.
+
+```bash
+curl -X POST https://app.gaintrace.com/api/v1/webhooks \
+  -H "Authorization: Bearer gt_live_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/hooks/gaintrace",
+    "events": ["*"],
+    "headers": { "X-Webhook-Token": "a-shared-secret" }
+  }'
+```
+
+Reserved and signing headers (`Content-Type`, `X-GainTrace-*`, `Host`, ...) cannot be set. Header values may hold secrets, so they are redacted (`***`) in every API response. Max 20 headers, 4KB total.
+
+## Delivery and retries
+
+- **Immediate.** Delivery is attempted the moment the event fires, not on a schedule.
+- **Respond fast.** Return a `2xx` within 10 seconds. A non-`2xx`, a timeout, or a connection error counts as a failure.
+- **Retried with backoff.** Failed deliveries retry with exponential backoff over roughly the next few hours.
+- **Auto-disabled.** After a long run of consecutive failures the endpoint is disabled (`disabledAt` is set and `active` becomes `false`). Fix your receiver, then re-enable it.
+
+```bash
+curl -X PATCH https://app.gaintrace.com/api/v1/webhooks/6f1c... \
+  -H "Authorization: Bearer gt_live_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{ "active": true }'
+```
+
+Re-enabling clears the failure count so delivery resumes cleanly.
+
+## Test an endpoint
+
+Send a signed `ping` to your endpoint at any time and get the result back:
+
+```bash
+curl -X POST https://app.gaintrace.com/api/v1/webhooks/6f1c.../test \
+  -H "Authorization: Bearer gt_live_your_key_here"
+```
+
+```json
+{ "data": { "deliveryId": "d3e1...", "status": "delivered", "responseStatus": 200, "error": null } }
+```

@@ -31,13 +31,18 @@ Each key is granted a set of scopes. A request needs the scope its endpoint requ
 
 | Endpoint | Method | Required scope |
 | --- | --- | --- |
-| `/accounts` | GET | `read:accounts` |
-| `/signals` | GET | `read:signals` |
-| `/signals` | POST | `write:signals` |
+| `/accounts`, `/accounts/{id}` | GET | `read:accounts` |
+| `/accounts`, `/accounts/{id}` | POST, PATCH | `write:accounts` |
+| `/contacts`, `/contacts/{id}` | GET | `read:contacts` |
+| `/contacts`, `/contacts/{id}` | POST, PATCH, DELETE | `write:contacts` |
+| `/signals`, `/signals/{id}` | GET | `read:signals` |
+| `/signals`, `/signals/batch`, `/signals/{id}` | POST, PATCH, DELETE | `write:signals` |
+| `/webhooks`, `/webhooks/{id}` | GET | `read:webhooks` |
+| `/webhooks`, `/webhooks/{id}`, `/webhooks/{id}/test` | POST, PATCH, DELETE | `write:webhooks` |
 | `/events` | POST | `write:events` or `write:ingest` |
 | `/metric-events` | POST | `write:events` |
 
-Other read and write scopes exist for future endpoints — for example `read:contacts`, `read:deals`, `read:revenue`, `read:health`, `write:accounts`, `write:data`. Grant only what a key needs.
+Grant only what a key needs. Other scopes exist for surfaces not yet on the public API (for example `read:revenue`, `read:health`, `read:deals`).
 
 ## Errors
 
