@@ -1,0 +1,42 @@
+---
+title: "Setting up your workspace"
+description: "For admins: connect your data, invite your team, and get health scores flowing."
+---
+
+{/* docs-meta: routes=[/onboarding, /integrations, /data/model, /settings/health-scores, /settings] reviewed=2026-07 */}
+
+If you are the person setting GainTrace up for your team, this is the path to follow. Plan for about an afternoon, though most of that is your first data sync running in the background while you get on with other things.
+
+## Before you start
+
+You will connect a few of your existing tools, so it helps to have admin access in each one (your CRM, your billing tool, your product analytics). Connecting uses OAuth or an API key from each service, nothing you need to prepare in advance beyond being able to sign in.
+
+<Steps>
+  <Step title="Create your workspace">
+    The first time you sign in, GainTrace walks you through creating a workspace and naming it after your company. A workspace holds all of your customer data and keeps it separate from any other team's.
+  </Step>
+  <Step title="Connect your first data source">
+    Open **Integrations** and pick the tool you want to start with. Most teams begin with their CRM, since that is where accounts and owners live. Connecting is quick: authorize GainTrace, choose what to sync, and let the first sync run.
+
+    Not sure where to begin? HubSpot or Salesforce for accounts, Stripe for revenue, and your product analytics (Segment, PostHog, Mixpanel, and others) for usage.
+  </Step>
+  <Step title="Check your data model">
+    Once data starts flowing, open **Data > Model** to see the objects GainTrace built for you. New workspaces come with a ready-made set, so in most cases there is nothing to configure. This is a good moment to confirm your Companies and People look the way you expect.
+  </Step>
+  <Step title="Set up health scores">
+    Go to **Customer Success > Health scores** to decide what healthy means for your customers. You pick the inputs (usage, support, payments, and so on) and how much each one counts. Start simple. You can tune it as you learn what really predicts risk for your book of business.
+  </Step>
+  <Step title="Invite your team">
+    In **Settings > Members**, invite your CSMs and set their roles. Everyone lands in the same workspace with the data already in place, so there is no per-person setup to worry about.
+  </Step>
+</Steps>
+
+## What good looks like
+
+You are set up when you can open **Companies**, see real health scores on your accounts, and open **Triage** to a queue of things worth a look. That is the point where GainTrace starts earning its keep.
+
+## Next
+
+<Card title="Bring your CSMs up to speed" href="/help/getting-started/for-csms">
+  The day-to-day path for the people working accounts.
+</Card>

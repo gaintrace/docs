@@ -12,7 +12,7 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Documentation",
+        "tab": "Developer Docs",
         "icon": "book-copy",
         "groups": [
           {
@@ -21,6 +21,21 @@
               "index",
               "quickstart",
               "authentication"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Help Center",
+        "icon": "life-buoy",
+        "groups": [
+          {
+            "group": "Getting started",
+            "pages": [
+              "help/index",
+              "help/getting-started/what-is-gaintrace",
+              "help/getting-started/for-admins",
+              "help/getting-started/for-csms"
             ]
           }
         ]
