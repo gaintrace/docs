@@ -13,7 +13,7 @@
     "tabs": [
       {
         "tab": "Developer Docs",
-        "icon": "book-copy",
+        "icon": "books",
         "groups": [
           {
             "group": "Get started",
@@ -27,7 +27,7 @@
       },
       {
         "tab": "Help Center",
-        "icon": "life-buoy",
+        "icon": "chart-donut-3",
         "groups": [
           {
             "group": "Getting started",
