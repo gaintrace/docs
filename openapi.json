@@ -95,8 +95,20 @@
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       },
@@ -157,8 +169,20 @@
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       }
@@ -209,6 +233,15 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       },
@@ -263,8 +296,20 @@
           "404": {
             "$ref": "#/components/responses/NotFound"
           },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       }
@@ -342,11 +387,26 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       }
@@ -417,8 +477,20 @@
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       }
@@ -463,6 +535,15 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       },
@@ -516,8 +597,20 @@
           "404": {
             "$ref": "#/components/responses/NotFound"
           },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       }
@@ -562,6 +655,15 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       },
@@ -615,8 +717,20 @@
           "404": {
             "$ref": "#/components/responses/NotFound"
           },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       },
@@ -647,6 +761,15 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       }
@@ -724,8 +847,20 @@
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       }
@@ -792,6 +927,15 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       },
@@ -828,16 +972,6 @@
               }
             }
           },
-          "409": {
-            "description": "A contact with this email already exists.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
           "400": {
             "$ref": "#/components/responses/BadRequest"
           },
@@ -850,8 +984,23 @@
           "404": {
             "$ref": "#/components/responses/NotFound"
           },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       }
@@ -896,6 +1045,15 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       },
@@ -937,16 +1095,6 @@
               }
             }
           },
-          "409": {
-            "description": "Email already in use.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
           "400": {
             "$ref": "#/components/responses/BadRequest"
           },
@@ -959,8 +1107,23 @@
           "404": {
             "$ref": "#/components/responses/NotFound"
           },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       },
@@ -991,6 +1154,15 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       }
@@ -1041,6 +1213,15 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       },
@@ -1083,14 +1264,26 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
           },
-          "402": {
-            "$ref": "#/components/responses/PlanLimit"
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       }
@@ -1135,6 +1328,15 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       },
@@ -1188,8 +1390,20 @@
           "404": {
             "$ref": "#/components/responses/NotFound"
           },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       },
@@ -1220,6 +1434,15 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       }
@@ -1290,6 +1513,15 @@
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
           }
         }
       }
@@ -1337,61 +1569,188 @@
     },
     "responses": {
       "BadRequest": {
-        "description": "Invalid request body or parameters.",
+        "description": "The request could not be parsed (for example, malformed JSON).",
         "content": {
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "bad_request",
+                "message": "Invalid JSON body",
+                "doc_url": "https://docs.gaintrace.com/errors#bad_request"
+              }
             }
           }
         }
       },
       "Unauthorized": {
-        "description": "Missing or invalid API key.",
+        "description": "Missing, malformed, expired, or revoked API key.",
         "content": {
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "unauthorized",
+                "message": "Missing Authorization header",
+                "doc_url": "https://docs.gaintrace.com/errors#unauthorized"
+              }
+            }
+          }
+        }
+      },
+      "PaymentRequired": {
+        "description": "A plan limit was reached, or billing is locked. Upgrade or enable pay-as-you-go.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "payment_required",
+                "message": "Monthly event limit reached. Upgrade or enable overage billing.",
+                "doc_url": "https://docs.gaintrace.com/errors#payment_required"
+              }
             }
           }
         }
       },
       "Forbidden": {
-        "description": "Insufficient scope, or API v1 is not enabled for the workspace.",
+        "description": "The key is valid but lacks the required scope, the origin is not allowed, or API v1 is not enabled for the workspace.",
         "content": {
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "forbidden",
+                "message": "Insufficient scope: write:companies required",
+                "doc_url": "https://docs.gaintrace.com/errors#forbidden"
+              }
             }
           }
         }
       },
       "NotFound": {
-        "description": "Referenced resource not found in this workspace.",
+        "description": "The resource, or a resource you referenced, was not found in this workspace.",
         "content": {
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "not_found",
+                "message": "Company not found",
+                "doc_url": "https://docs.gaintrace.com/errors#not_found"
+              }
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "The request conflicts with an existing resource (for example, a duplicate email).",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "conflict",
+                "message": "A contact with this email already exists in the workspace",
+                "doc_url": "https://docs.gaintrace.com/errors#conflict"
+              }
+            }
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "description": "The request was well-formed but a value failed validation.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "unprocessable_entity",
+                "message": "Request validation failed. name: name is required",
+                "doc_url": "https://docs.gaintrace.com/errors#unprocessable_entity"
+              }
             }
           }
         }
       },
       "RateLimited": {
-        "description": "Per-key rate limit exceeded.",
+        "description": "The per-key rate limit was exceeded. Back off and retry.",
         "content": {
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "rate_limit_exceeded",
+                "message": "Rate limit exceeded. Maximum 120 requests per minute per API key.",
+                "doc_url": "https://docs.gaintrace.com/errors#rate_limit_exceeded"
+              }
             }
           }
         }
       },
-      "PlanLimit": {
-        "description": "Plan limit reached for this resource.",
+      "InternalServerError": {
+        "description": "An unexpected error occurred on our side. The failure is logged; retry shortly.",
         "content": {
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "internal_server_error",
+                "message": "Something went wrong. Try again in a moment.",
+                "doc_url": "https://docs.gaintrace.com/errors#internal_server_error"
+              }
+            }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "A backing service (for example, the database) was temporarily unavailable. Retry shortly.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "service_unavailable",
+                "message": "We had trouble reaching the database. Try again in a moment.",
+                "doc_url": "https://docs.gaintrace.com/errors#service_unavailable"
+              }
+            }
+          }
+        }
+      },
+      "GatewayTimeout": {
+        "description": "The request took too long upstream before completing. Retry, and reduce batch size for large payloads.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "gateway_timeout",
+                "message": "The request timed out. Try again in a moment.",
+                "doc_url": "https://docs.gaintrace.com/errors#gateway_timeout"
+              }
             }
           }
         }
@@ -1415,21 +1774,48 @@
       },
       "Error": {
         "type": "object",
-        "properties": {
-          "error": {
-            "type": "string",
-            "description": "Human-readable, safe error message."
-          },
-          "detail": {
-            "type": "string"
-          },
-          "code": {
-            "type": "string"
-          }
-        },
         "required": [
           "error"
-        ]
+        ],
+        "description": "The standard error envelope. Every 4xx/5xx response uses this shape.",
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "bad_request",
+                  "unauthorized",
+                  "payment_required",
+                  "forbidden",
+                  "not_found",
+                  "conflict",
+                  "unprocessable_entity",
+                  "rate_limit_exceeded",
+                  "internal_server_error",
+                  "service_unavailable",
+                  "gateway_timeout"
+                ],
+                "description": "Stable, machine-readable error code. Each code maps to exactly one HTTP status."
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable, safe description of what went wrong. Never contains internal or provider detail."
+              },
+              "doc_url": {
+                "type": "string",
+                "format": "uri",
+                "example": "https://docs.gaintrace.com/errors#not_found",
+                "description": "Deep link to this code in the Errors reference."
+              }
+            }
+          }
+        }
       },
       "Company": {
         "type": "object",

@@ -1,0 +1,83 @@
+---
+title: "Errors"
+description: "How the GainTrace API reports errors: a machine-readable code, a safe human-readable message, and a link back to this reference."
+keywords: ["GainTrace API errors", "API error codes", "error handling", "unprocessable_entity", "rate limit", "500"]
+---
+
+Every error response uses the same envelope: a machine-readable `code`, a safe human-readable `message`, and a `doc_url` that links back to the matching entry on this page.
+
+```json
+{
+  "error": {
+    "code": "not_found",
+    "message": "Company not found",
+    "doc_url": "https://docs.gaintrace.com/errors#not_found"
+  }
+}
+```
+
+The HTTP status tells you the broad category; the `code` tells you exactly what happened.
+
+<ResponseField name="error.code" type="string" required>
+  A stable, machine-readable code. Branch on this, not on `message`. Each code maps to exactly one HTTP status.
+</ResponseField>
+
+<ResponseField name="error.message" type="string" required>
+  A safe, human-readable description. It never contains database, driver, or provider detail, so it's fine to log. Don't parse it, it can change.
+</ResponseField>
+
+<ResponseField name="error.doc_url" type="string">
+  A link to the matching entry below.
+</ResponseField>
+
+## Error codes
+
+### bad_request
+
+**HTTP 400.** We couldn't parse your request, usually because the JSON body is malformed. Check the payload is valid JSON and resend.
+
+### unauthorized
+
+**HTTP 401.** Your API key is missing, malformed, expired, or revoked. Confirm the `Authorization: Bearer <key>` header is present and the key is still active in **Settings > API Keys**.
+
+### payment_required
+
+**HTTP 402.** You've reached a plan limit (for example the monthly event cap) or billing is locked. Upgrade the plan, or turn on pay-as-you-go to keep going past the limit.
+
+### forbidden
+
+**HTTP 403.** The key is valid but not allowed to do this. Either it lacks the scope the endpoint needs, the request origin isn't allowed for a publishable key, or API v1 isn't enabled for the workspace. Grant the missing scope (see [Authentication](/authentication)) or enable access.
+
+### not_found
+
+**HTTP 404.** The resource, or something you referenced such as a parent company, doesn't exist in this workspace. Check the id, and remember ids are scoped to one workspace.
+
+### conflict
+
+**HTTP 409.** The request clashes with a resource that already exists, like creating a contact with an email that's already taken. Use a unique value, or update the existing record instead.
+
+### unprocessable_entity
+
+**HTTP 422.** We parsed the request, but a value failed validation. The `message` names the field and the rule it broke. Fix that field and resend.
+
+### rate_limit_exceeded
+
+**HTTP 429.** You've sent too many requests in a short window. Back off and retry after a short pause.
+
+### internal_server_error
+
+**HTTP 500.** Something went wrong on our side. The failure is logged with an id on our end; nothing about it leaks into the response. Retry after a short delay, and if it keeps happening, contact support.
+
+### service_unavailable
+
+**HTTP 503.** A backing service, such as the database, was briefly unavailable. Retry after a short delay.
+
+### gateway_timeout
+
+**HTTP 504.** The request took too long upstream before completing. Retry, and if you're sending a large batch, try a smaller one.
+
+## Handling errors well
+
+- **Branch on `code`, not `message`.** Codes are stable; messages are for humans and can change.
+- **Retry the 5xx family and 429** with backoff. They're transient. Don't blindly retry 4xx (except 429), since the request itself needs to change.
+- **Log `code` and the HTTP status.** Together they're enough to diagnose almost anything without leaking sensitive detail.

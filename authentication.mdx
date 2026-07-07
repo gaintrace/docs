@@ -46,13 +46,35 @@ Grant only what a key needs. Other scopes exist for surfaces not yet on the publ
 
 ## Errors
 
-| Status | Meaning |
-| --- | --- |
-| `401` | Missing `Authorization` header, or an expired, revoked, or invalid key. |
-| `403` | The key lacks the required scope, or API v1 is not enabled for the workspace. |
-| `429` | The key's rate limit was exceeded. Back off and retry. |
+Every error returns the same envelope: a machine-readable `code`, a safe `message`, and a `doc_url`.
+
+```json
+{
+  "error": {
+    "code": "forbidden",
+    "message": "Insufficient scope: write:companies required",
+    "doc_url": "https://docs.gaintrace.com/errors#forbidden"
+  }
+}
+```
+
+| Status | Code | Meaning |
+| --- | --- | --- |
+| `400` | `bad_request` | The request could not be parsed (for example, malformed JSON). |
+| `401` | `unauthorized` | Missing `Authorization` header, or an expired, revoked, or invalid key. |
+| `402` | `payment_required` | A plan limit was reached, or billing is locked. |
+| `403` | `forbidden` | The key lacks the required scope, the origin is not allowed, or API v1 is not enabled. |
+| `404` | `not_found` | The resource, or a resource you referenced, is not in this workspace. |
+| `409` | `conflict` | The request clashes with an existing resource (for example, a duplicate email). |
+| `422` | `unprocessable_entity` | The request was well-formed but a value failed validation. |
+| `429` | `rate_limit_exceeded` | The key's rate limit was exceeded. Back off and retry. |
+| `500` | `internal_server_error` | Something went wrong on our side. Retry shortly. |
+| `503` | `service_unavailable` | A backing service was briefly unavailable. Retry shortly. |
+| `504` | `gateway_timeout` | The request took too long upstream. Retry, and use smaller batches. |
+
+Branch on `error.code`, not the message. The full reference, including what to do for each, is on the [Errors](/errors) page.
 
 <Warning>
-  Treat `gt_live_` keys like passwords. If one leaks, revoke it in **Settings →
-  API Keys** — validation checks revocation on every request.
+  Treat `gt_live_` keys like passwords. If one leaks, revoke it in **Settings >
+  API Keys**. Validation checks revocation on every request.
 </Warning>
