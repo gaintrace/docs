@@ -22,7 +22,7 @@ Each dimension needs a real data source behind it. A dimension with no data for 
 | Sentiment | How the customer feels about you | An advocacy score GainTrace computes from synced activity and sentiment trends. NPS responses affect health through the signal adjustment, not this dimension | 15% |
 | Revenue | The company's contract value | ARR | 15% |
 | CSM pulse | A CSM's own 0 to 10 read on the company | Counts only for companies where a pulse has been recorded | 30% |
-| Support | Support burden | No support source is connected today, so this dimension is never counted | 10% (not counted) |
+| Support | Support burden | Not yet wired to support data. GainTrace skips this dimension for every company and redistributes its weight, even when a support tool like Intercom is connected. Support conversations still affect health through sentiment and signals | 10% (not counted yet) |
 
 Weights are shares, not absolutes. If a company has data for only three dimensions, those three weights are rescaled to cover the whole score.
 
