@@ -1,0 +1,157 @@
+---
+title: "The GainTrace data model"
+sidebarTitle: "Data model"
+description: "How GainTrace organizes your customer data: Companies and People at the core, the system models every workspace gets, custom models, computed traits, and where synced records land."
+keywords: ["GainTrace data model", "custom objects", "computed traits", "system models", "data model fields", "unified customer records", "customer data platform"]
+---
+
+{/* docs-meta: routes=[/data/model, /data/model/[slug]/records, /data/mappings, /data/identity, /data/quality, /traits]; verified 2026-08 */}
+
+Everything in GainTrace, from health scores to boards to flows, reads from one data model: a set of models (Companies, People, Invoices, and so on), each with typed fields and records. This article explains how that model is organized, what you get out of the box, and how to extend it with your own objects and computed traits.
+
+## Records, models, and fields
+
+A **model** is a type of thing you track, like Company or Invoice. A **field** is one typed attribute on a model, like MRR or Renewal Date. A **record** is one row of a model: one company, one invoice.
+
+Models connect through **relationships**. Company is the root model of the workspace: nearly every other model belongs to a Company, directly or through a parent. That is what lets an invoice, a conversation, or a support ticket roll up to the right customer.
+
+Fields carry a data type (text, rich text, number, integer, currency, percent, date, date and time, yes/no, list, multi-list, reference, array, or object), a visibility level (visible to all members, admin-only, or internal), and flags you'll see as badges in the field list: **Required**, **Computed** (calculated by the system), **Cached** (copied from another model), and **Hidden**.
+
+## Companies and People
+
+Companies and People are the two records your team works with every day, under the **Records** section in the left nav. Both are primarily built by GainTrace: connectors sync raw records from your sources, and identity resolution merges them into one Company per customer and one record per person, no matter how many tools each appears in. You can also add a Company by hand with the **New Company** button on the Companies page, or bring Companies in through **Import CSV**. People always come from your sources.
+
+In the data model, the People directory is backed by the model labeled **End User** (the customer-side people at your Companies). A separate **User** model holds your own teammates, so the two are never mixed.
+
+## The system models every workspace starts with
+
+Every new workspace is provisioned with 28 system models automatically, so synced data has somewhere to land on day one. You'll find them grouped by category on the **Data Model** page:
+
+| Category | Models |
+|---|---|
+| Core | Company, User |
+| CRM | End User, Conversation, Task, NPS Response |
+| Revenue | License, Sale, Churn Event, Invoice, Opportunity |
+| Product | Product |
+| Operations | Project, Issue, Time Entry, Timesheet, Objective, Asset |
+| Workflow | Workflow Template, Workflow, Automation, Campaign, Sendout |
+| AI | AI Report, AI Agent |
+| System | Metric, Background Job, Workspace |
+
+System models are built in, and the rules for changing them are deliberate:
+
+- You can rename a system model's display name and description, but not change its category or parent.
+- System models cannot be deleted, and Company, as the root model, can never be deleted.
+- System fields cannot be removed, though you can hide them, edit their labels and descriptions, and reorder them.
+- Custom fields are added on custom models. The Data Model page does not offer Add field on system models.
+
+## Custom models
+
+When your business tracks something the system models don't cover, create a custom model. Its records live in GainTrace's flexible record store, so you can add and reshape fields at any time without migrations.
+
+<Steps>
+  <Step title="Create the model">
+    Go to **Data > Data Model** and click **New model**. Give it a display name, a plural, and a slug.
+  </Step>
+  <Step title="Choose how it links to your customers">
+    Custom models pick a linkage: **Company** (each record rolls up to a Company), **Person** (rolls up to a person), or **Standalone** (reference data with no customer link). You can also set a parent model, for example Licenses belong to Company.
+  </Step>
+  <Step title="Add fields">
+    Open the model and click **Add field**. Each field gets a label, a stable key, a data type, and a visibility level.
+  </Step>
+  <Step title="Add records">
+    From the model's menu, choose **View records**, then **New record**. Records can also arrive from a connected source once you map its fields.
+  </Step>
+</Steps>
+
+<Note>
+A model's slug and a field's key are permanent once created; they identify the model in URLs and metric references. Display names and labels stay editable.
+</Note>
+
+<Warning>
+Deleting a custom model deletes every one of its records, fields, relationships, and calc metrics with it. The dialog shows the counts and requires typing the model's slug to confirm. There is no undo.
+</Warning>
+
+Each model's page has four tabs: **Fields**, **Relationships**, **Computed** (traits and features derived on that model), and **History** (an audit trail of schema changes). The page header also offers a **Schema** view: an interactive, categorized overview of every model - expand any model card to see its fields and the models it connects to.
+
+## Computed traits
+
+Computed traits are derived fields calculated from your product event data, like "active seats in the last 14 days" or "days since last login". Each trait attaches to Companies or to individual people (the trait editor labels the person-level option **User**), picks the events to aggregate, an output type, and a time window from the last 24 hours up to the last 12 months, or all time.
+
+Output types come in eight groups:
+
+| Group | What it produces |
+|---|---|
+| Counts | Event count, distinct user count, distinct property values |
+| Property aggregates | Sum, average, minimum, or maximum of a numeric event property |
+| Property values | First or last value of a property |
+| Time | First or last event time, days since first or last event |
+| Existence | Whether the event has fired at least once |
+| Trend | Percent or absolute change versus the prior window, or just the sign of the change |
+| Conditional | Threshold gates and linear formulas over an aggregation |
+| Expression | A custom formula combining an aggregation, record fields, and built-in functions |
+
+The trait editor shows a live preview against a real record while you build, so you can check the result before saving. Live traits recompute automatically, roughly every 6 hours; you can pause a trait to freeze its values. The traits list shows each trait's status, last computed time, and how many values were written.
+
+## How synced records reach the data model
+
+Records from connectors do not land in your models raw. They pass through three stages, each with its own page in the **Data** section:
+
+1. **Sources** syncs raw records from each connection, stream by stream. [Ingestion filters](/help/integrations/ingestion-filters) control which records sync at all.
+2. **Field Mapping** connects each synced source field to a field in your data model. Only mapped fields flow into Companies, health, and boards. GainTrace proposes the obvious matches with a confidence score, and you review the rest.
+3. **Identity** matches and merges source records into one unified Company per customer, whatever each system called it, and the same for People.
+
+When two sources report different values for the same field, **Source Priority Rules** on the **Data Quality** page decide which source wins, set per field category (financial, identity, relationship, usage, support, metadata). Data Quality also surfaces sync issues to resolve.
+
+One-off data that lives in no tool can come in through **Import CSV**.
+
+## Explore the data model in the app
+
+| Page | Where | What you do there |
+|---|---|---|
+| Data Model | **Data > Data Model** | Browse every model, its fields and relationships, create custom models, view records |
+| Field Mapping | **Data > Field Mapping** | Map synced source fields to model fields |
+| Identity | **Data > Identity** | Review how source records merged into unified Companies |
+| Data Quality | **Data > Data Quality** | Resolve data issues, set Source Priority Rules |
+| Sources | **Data > Sources** | Manage connections and syncs |
+| Import CSV | **Data > Import CSV** | Bring in one-off data |
+| Computed traits | `app.gaintrace.com/traits`, or a model's **Computed** tab | Create and manage traits |
+
+## Good to know
+
+- Viewing the Data Model page is available to members; creating or modifying models, fields, and computed traits requires an admin role.
+- People are created from your connected sources as data syncs and resolves; there is no manual add step for them. Companies mostly arrive the same way, but you can also create one with the **New Company** button or via **Import CSV**.
+- Records of most system models are managed in their own product surfaces rather than the generic record browser; the **View records** page tells you where they live.
+- Some fields are admin-only or internal. The **Admin fields** toggle on a model reveals them if your role allows; other members never see them.
+- Trait values refresh on the automatic cycle, so a change in your product data can take a few hours to appear in a trait.
+
+## FAQ
+
+**Can I delete a system model?**
+No. System models cannot be deleted, and Company, the root model, can never be deleted. You can hide the fields you do not use.
+
+**Can I rename a field's key after creating it?**
+No. Field keys and model slugs are permanent; labels and display names stay editable.
+
+**Who can edit the data model?**
+Any member can view it; creating or modifying models, fields, and computed traits requires an admin or owner role.
+
+**How often do computed traits update?**
+Live traits recompute automatically, roughly every 6 hours. Pause a trait to freeze its values.
+
+## Related articles
+
+<CardGroup cols={2}>
+  <Card title="Companies" href="/help/records/companies">
+    Browse your Companies, filter by health, and open any record.
+  </Card>
+  <Card title="People" href="/help/records/people">
+    Find the People at your Companies and see who's engaged.
+  </Card>
+  <Card title="Ingestion filters" href="/help/integrations/ingestion-filters">
+    Control which records your sources sync in the first place.
+  </Card>
+  <Card title="Integrations" href="/help/integrations/integrations">
+    Browse the catalog and connect the sources that feed the model.
+  </Card>
+</CardGroup>

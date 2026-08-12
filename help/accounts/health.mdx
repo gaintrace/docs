@@ -1,28 +1,130 @@
 ---
-title: "How health works"
-description: "What a company's health means and where you'll see it."
+title: "Health scores"
+description: "How GainTrace computes each company's health score, where the score appears, how to tune the weights, and what happens when data is sparse."
+keywords: ["health score", "customer health", "health score weights", "at risk", "churning", "GainTrace health"]
 ---
 
-{/* docs-meta: routes=[/companies, /companies/[id]] reviewed=2026-07 */}
+{/* docs-meta: routes=[/companies, /companies/[id], /settings/health-scores] verified 2026-08 */}
 
-Every company in GainTrace carries a health status, so you can tell at a glance who's doing well and who needs a look. You don't set this up. GainTrace works it out from the data flowing in from your connected sources.
+Every Company in GainTrace carries a health score from 0 to 100 and a status: **Healthy**, **At Risk**, **Churning**, or **Not scored**. This article explains what feeds the score, where it appears, how to change the weighting, and what to expect when a company has little data.
 
-## The three states
+## How a score is computed
 
-Health lands in one of three states:
+Health is a weighted average of up to six dimensions, each normalized onto a 0 to 100 scale, plus an adjustment from recent signals. It is a transparent calculation over your synced data, not an AI prediction: the same inputs always produce the same score, and Trace AI does not set the number.
 
-- **Healthy** (green): things look good.
-- **At risk** (amber): worth keeping an eye on.
-- **Churning** (red): needs attention.
+Each dimension needs a real data source behind it. A dimension with no data for a company is skipped, and the remaining weights renormalize, so the score reflects only what GainTrace actually knows.
 
-Each company also has a numeric score, so you can compare accounts and sort by it.
+| Dimension | What it measures | Data it needs | Default weight |
+|---|---|---|---|
+| Usage | How much of what they bought the company actually uses | Product usage from a connected source: utilization of committed seats or quota where available, otherwise how consistently users are active | 25% |
+| Adoption | The share of your defined features the company has adopted | Feature definitions under **Features**, plus product usage data | 20% |
+| Engagement | Depth of engagement with the company | An engagement score GainTrace computes from synced activity | 15% |
+| Sentiment | How the customer feels about you | An advocacy score GainTrace computes from synced activity and sentiment trends. NPS responses affect health through the signal adjustment, not this dimension | 15% |
+| Revenue | The company's contract value | ARR | 15% |
+| CSM pulse | A CSM's own 0 to 10 read on the company | Counts only for companies where a pulse has been recorded | 30% |
+| Support | Support burden | No support source is connected today, so this dimension is never counted | 10% (not counted) |
 
-## Where you'll see it
+Weights are shares, not absolutes. If a company has data for only three dimensions, those three weights are rescaled to cover the whole score.
 
-- On the **Companies** list, as a colored dot in the Health column. You can filter the list by health, or switch to the board layout to group accounts by state.
-- At the top of each **company's page**, alongside a trend that shows how the score has moved recently.
+Revenue is normalized on a logarithmic scale: a larger contract scores higher, but not proportionally higher, so one large company does not read as ten times healthier than a mid-sized one.
+
+## How signals adjust the score
+
+After the weighted average, GainTrace folds in the company's active signals from the last 30 days. Risk signals such as a usage drop, a champion leaving, or a failed payment subtract points; positive signals such as reaching first value or an expansion add points. An NPS detractor lowers the score and a promoter raises it.
+
+The total signal adjustment is capped between -30 and +20 points, so signals shift the score rather than replace it. Dismissing a signal removes its effect on the next scoring run, and signals older than 30 days age out on their own.
+
+## Read the statuses
+
+| Status | Score | Meaning |
+|---|---|---|
+| Healthy | 70 to 100 | Things look good |
+| At Risk | 40 to 69 | Worth attention soon |
+| Churning | Below 40 | Needs attention now |
+| Not scored | No score | No dimension had data for this company |
+
+A company with nothing to score shows **Not scored** rather than a fake zero. The score only exists when at least one dimension has real data.
+
+## Where health appears
+
+- On the **Companies** list, each row shows the status in the Health column. The **All health** dropdown filters to Healthy, At Risk, or Churning, and the **Sort by** control in the **Display** menu can order the list by **Health score**. Clicking the **Health** column header sorts the list too.
+- On a company's record, the score and status appear in the metrics strip at the top of the page once the company has a score. A health trend chart covering the last 90 days sits further down on the Overview tab.
+- On **Boards**, widgets such as average health and health movers read the same scores and their snapshot history.
+- In **Flows**, add an **Event** trigger and set its event type to **Health score change**. It starts an automation when a company's status changes or its score moves by 5 or more points.
+
+## Change the weights
+
+Changing weights requires an Owner or Admin role. Other members can view companies' scores but cannot edit the scoring profile.
+
+<Steps>
+  <Step title="Open the scoring page">
+    Go to **Setup > Health scoring**. The Setup section is also reachable from the setup checklist on Home and from the command menu.
+  </Step>
+  <Step title="Adjust each dimension">
+    Drag a dimension's slider to change its weight; sliders move in steps of 5. The bar at the top shows the resulting mix, and each row shows its share of that mix.
+  </Step>
+  <Step title="Save">
+    Click **Save weights**. The new weights apply on the next scoring run, not retroactively to past snapshots.
+  </Step>
+</Steps>
+
+Weights do not need to add up to 100: each weight is a share of the total you set. One scoring profile applies to every company in the workspace.
+
+<Note>
+Setting every weight to zero means no company can be scored. The page warns you before you save a mix like that.
+</Note>
+
+## When scores update
+
+Scores recompute on an automatic cycle that runs several times a day, roughly every six hours. Each run refreshes the underlying inputs, recomputes every company's score, and records a dated snapshot, which is what the trend charts draw from.
+
+Expect a change you make, such as a dismissed signal, a new NPS response, or saved weights, to be reflected within about six hours. A company's trend chart needs at least two snapshots before it has anything to show.
+
+## What happens with sparse data
+
+- A dimension with no data is skipped and the remaining weights renormalize, so a partial score is still a real score over what is known.
+- A company with no scoreable data at all shows **Not scored**. GainTrace never fills the gap with an invented number.
+- Adoption is skipped for every company until you define features under **Features**.
+- Sentiment is skipped until GainTrace has computed the company's advocacy score, which happens on the first scoring cycle after activity data syncs.
+- Support is currently skipped for every company; its weight changes nothing until a support data source exists.
+
+In a new workspace, connect a data source first: scores appear after the first scoring run that follows your first sync. The more sources you connect, the more dimensions participate and the fuller the score becomes.
+
+## FAQ
+
+**Is the health score AI-generated?**
+No. It is a deterministic weighted calculation over your synced data. Trace AI drafts actions and explanations elsewhere in the product, but it does not decide the score.
+
+**Does the health score predict churn?**
+No. It summarizes the current evidence about a company; it is not a probability and carries no accuracy guarantee. Treat it as a guide for where to look first.
+
+**Why did a score drop suddenly?**
+A new risk signal, such as a failed payment or a champion leaving, can subtract several points in one run. Open the company's record and check its recent signals for the cause.
+
+**Can different segments use different scoring?**
+Not today. The weights you set on the Health scoring page apply to every company in the workspace.
+
+**Why does a company show Not scored?**
+No dimension had data for it, and no CSM pulse was recorded, usually because its sources have not synced usable data yet. Once any dimension has data, the next scoring run produces a score.
 
 ## Good to know
 
-- Health updates as new data comes in, so a score reflects the latest picture rather than a one-time snapshot.
+- A CSM pulse counts only where one has been recorded, and a pulse older than 90 days stops counting, so a stale gut call cannot quietly steer the score forever.
 - Health is a guide, not a verdict. Use it to decide where to look first, then open the company for the full story.
+
+## Related articles
+
+<CardGroup cols={2}>
+  <Card title="Companies" href="/help/records/companies">
+    Browse your Companies, filter by health, and open any record.
+  </Card>
+  <Card title="Triage" href="/help/accounts/triage">
+    Work the queue of drafted actions for the companies that need you.
+  </Card>
+  <Card title="Flows" href="/help/automation/flows">
+    Automate follow-ups when a health score changes.
+  </Card>
+  <Card title="Boards" href="/help/boards/boards">
+    Track portfolio health with widgets built on the same scores.
+  </Card>
+</CardGroup>

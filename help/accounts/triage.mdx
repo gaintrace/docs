@@ -1,30 +1,159 @@
 ---
 title: "Triage"
-description: "Work the queue of AI-drafted actions and coverage gaps that need your attention."
+description: "Work your daily queue: approve or decline AI-drafted actions, act on signals, and tune what interrupts you."
+keywords: ["triage", "needs you", "signal routing", "approve AI actions", "customer success inbox"]
 ---
 
-{/* docs-meta: routes=[/triage] reviewed=2026-07 */}
+{/* docs-meta: routes=[/triage, /settings/signals] verified 2026-08 */}
 
-**Triage** is your queue, under **Home** in the left nav. It gathers the work waiting on you, so you're not starting from a blank page each morning.
+**Triage** is your daily queue, with its own icon in the left nav. It gathers everything waiting on a decision from you - actions Trace AI has drafted, signals that fired on your companies, and check-ins that are due - so you start from a queue, not a blank page. A count badge on the Triage icon shows how many drafted actions are waiting.
 
-## Needs approval
+## How Triage works
 
-Most of Triage is actions Trace AI has drafted for your accounts, like a renewal note or a check-in email. Each one shows the account, the draft, and a short "Why this needs review" so you can decide quickly. For each item you can:
+Triage is a conversation between you and GainTrace's AI agents. Each item is a thread tied to the company it concerns: the agent posts its finding or drafted action on the left, and your decision is the reply. The named agents are part of the product - for example, Iris drafts outreach and Kairos watches signals - and each thread shows which agent raised it.
 
-- **Approve** or **Decline** it.
-- **Edit** the draft first if you'd word it differently.
+Two kinds of items land in the queue:
 
-You can move through the queue from the keyboard: J and K step between items, A approves, and X declines.
+- **Drafted actions**: an agent proposes something concrete, like an email or a refund, and waits for your approval before anything runs.
+- **Signals**: something just happened on a company, like a usage drop or a failed payment. Signals are evidence, not proposals, so you respond by acting on them rather than approving them.
 
-## Champion coverage
+Filters across the top split the queue:
 
-The **Champion coverage** tab lists accounts that have an owner but no champion tracked, so you can see where a key relationship is missing and fill the gap.
+| Filter | What it holds |
+|---|---|
+| **Needs you** | Drafted actions awaiting your decision, plus any signal types your workspace routes here as decisions |
+| **Signals** | The live signal feed for your companies, newest first |
+| **Confirmed** | Signals that were later confirmed by a real revenue event, with lead time and dollars |
+| **AI activity** | A read-only log of what the agents have done |
+| **Pulse check** | Companies you own that are due for a health check-in from you |
+| **Champion gaps** | Companies across the workspace with an owner but no named champion, or whose tracked champion left |
+| **Done** | Decisions already made: approved, declined, or expired |
 
-## Decided
+When you open Triage, it lands on **Needs you** if any drafted actions are waiting for your decision, and on **Pulse check** otherwise.
 
-The **Decided** tab keeps a record of what you've already approved or declined, so you can look back at what went out.
+## Work the Needs you queue
+
+Items are ordered most urgent first: critical severity at the top, then by recency. For a drafted action, the thread shows the company, the agent's reasoning, a confidence badge, and the full proposal - an email draft, a refund, a billing change - so you can decide without leaving the queue.
+
+For each drafted action you can:
+
+- **Approve** it. The approve button names the action it will take, for example **Send to [name]** or **Approve and send**. Approvals wait 5 seconds with an **Undo** option before they commit, so a mis-click is recoverable.
+- **Decline** it. Declines commit immediately.
+- **Edit** it first, where the action supports editing. Change the fields, then click **Send with Edits**.
+
+You can also click **Ask Iris to draft** to have outreach drafted for the company in the thread. This button appears only when the item is linked to a company record.
+
+Some items carry a decision deadline, shown as a countdown badge on the thread. Past the deadline the item is marked **Overdue** and sorts into the most urgent group at the top of the queue.
+
+### Keyboard shortcuts
+
+| Key | Action |
+|---|---|
+| J / K (or arrow keys) | Next / previous thread |
+| A | Approve |
+| X | Decline |
+| E | Toggle editing, on items that support it |
+
+## Act on a signal
+
+Open the **Signals** filter to see everything that fired on your companies: the signal, its severity, the evidence, and the company's ARR. For each signal you can:
+
+- **Ask Iris to draft** outreach about it, when the signal is linked to a company record.
+- **Snooze 7d** to hide it for exactly 7 days. It returns to the feed after that.
+- **Dismiss** to close it. If the same condition recurs later, a new signal can fire.
+
+Signals close themselves in two ways, so a shrinking queue is normal:
+
+- A signal nobody acts on lapses after 30 days. GainTrace records no outcome for it - an unactioned signal is not treated as a correct or incorrect prediction.
+- A churn or expansion signal that is followed by a matching revenue event within 90 days moves to **Confirmed**, with the lead time and the dollar movement it called.
+
+### Severity levels
+
+Every signal carries one of three severities:
+
+| Severity | Meaning |
+|---|---|
+| **Critical** | Revenue is at immediate risk. Routed into Needs you by default. |
+| **Warning** | Worth attention soon |
+| **Info** | Context, not a fire |
+
+## Choose which signals interrupt you
+
+By default, only critical-severity signal types join the Needs you queue as decisions; everything else waits in the Signals filter as FYI. Out of the box that means **Payment failed**, **Champion left**, and **Commercial intent**. You can change this per signal type.
+
+<Steps>
+  <Step title="Open the routing control">
+    In Triage, click the gear icon beside the filter pills. A popover titled **What lands in Needs you** opens.
+  </Step>
+  <Step title="Toggle signal types">
+    Switch a type on to make its firings land in Needs you as decisions, or off to keep them in the Signals filter. Changes apply to the whole workspace, not just to you.
+  </Step>
+</Steps>
+
+<Note>
+Changing signal routing requires the Owner or Admin role. Members can view the routing but get a permission error when they try to change it.
+</Note>
+
+## Reopen a decision
+
+The **Done** filter keeps the record: who decided each item, when, and any notes. If a call was wrong, open the thread and click **Reopen**. You can add an optional reason, and the item returns to Needs you for a fresh decision. The full decision trail - approved, declined, reopened, by whom and when - stays on the thread.
+
+<Warning>
+Reopening an approved item does not undo the action that already ran. A sent email stays sent; reopening records the change of mind, it does not reverse the side effect.
+</Warning>
+
+## Submit a pulse check
+
+**Pulse check** asks you to record your own read on companies you own, on a recurring cadence based on the company's segment: every 14 days for Enterprise, 30 for Mid-Market, 45 for SMB, and 30 otherwise. For each due company, rate it **Healthy**, **Concerning**, or **Poor**, add a note, and submit. You can snooze a pulse to a later date; snoozed pulses sit in the **Snoozed** view until they wake, or wake one early yourself.
+
+## Close champion gaps
+
+**Champion gaps** lists companies across the workspace that have an owner but no named champion or executive sponsor, plus any company whose tracked champion departed. Each row shows who owns the company. Single-threaded companies are the ones that churn quietly, so fill the gap:
+
+- Click **Name** (or **Replace**, when the champion left) on a row to record a champion at that company.
+- To hand the work off, select rows, pick a teammate under **Assign to...**, and click **Create task**. Each selected company becomes a task for that teammate.
+
+## Configure signals in settings
+
+The full signal catalog lives at **Setup** > **Signals**, also linked as **Full signal settings** from the routing popover. It lists every signal GainTrace can detect with the exact values it uses right now. For each signal an Owner or Admin can:
+
+- Turn the signal on or off. Off stops GainTrace's own detection; signals your systems push through the API are still recorded.
+- Toggle **Show in Needs you**, the same routing control as the popover in Triage.
+- Click **Edit settings** to tune what the signal exposes: **Severity** (Auto, Info, Warning, or Critical), **Cooldown between fires** in days, detection thresholds, and which segments it applies to. Click **Save changes** to apply, or **Reset to default** to return to the built-in values.
+
+Not every signal exposes every knob, and each card shows honestly whether the signal has the data it needs to run, with the fix when it does not. Automations reference these same settings, so one change lands everywhere.
 
 ## Good to know
 
-- Triage fills up as Trace AI drafts actions for your accounts, so a quiet queue means there's nothing pressing right now.
-- You're always the one deciding. Trace AI drafts, and you approve or decline.
+- Anyone in the workspace can approve or decline drafted actions. Only signal configuration and routing require the Owner or Admin role.
+- Every decision is recorded: approve, decline, and reopen events are written to the workspace audit log.
+- The Signals feed shows what your plan's history window allows. On lower tiers, older signals fall outside the queryable window.
+- Signals older than 90 days are removed, except ones that drove a recorded outcome, revenue attribution, or an action.
+- Confirmed is deliberately strict: only signals followed by a real revenue event count. Signals that merely expired are never claimed as correct predictions.
+
+## FAQ
+
+**Can I undo an approval?** Within the 5-second window, yes - click **Undo** on the toast. After it commits, the action runs; reopening from Done records the change of mind but does not reverse it.
+
+**What happens to a signal nobody acts on?** It lapses after 30 days with no outcome recorded. GainTrace never counts an expired signal as a correct prediction.
+
+**Why did a snoozed signal come back?** Snooze hides a signal for exactly 7 days, then it returns to the feed. Dismiss closes it instead; a new signal can still fire if the condition recurs.
+
+**Who can approve drafted actions?** Anyone in the workspace. Only signal configuration and routing require the Owner or Admin role.
+
+## Related articles
+
+<CardGroup cols={2}>
+  <Card title="How health works" href="/help/accounts/health">
+    What a company's health status means and where you'll see it.
+  </Card>
+  <Card title="Trace AI" href="/help/trace-ai/trace-ai">
+    Ask questions about your companies and let Trace AI draft the follow-up.
+  </Card>
+  <Card title="For CSMs" href="/help/getting-started/for-csms">
+    The daily workflow: triage, company pages, and renewals.
+  </Card>
+  <Card title="Companies" href="/help/records/companies">
+    Browse your companies, filter by health, and assign owners.
+  </Card>
+</CardGroup>

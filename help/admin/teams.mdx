@@ -1,0 +1,76 @@
+---
+title: "Teams"
+description: "What the Teams section in Settings previews, why team creation is not available yet, and how to route work, scope access, and track reporting lines with the tools that exist today."
+keywords: ["GainTrace teams", "create team", "team routing", "scoped access", "team reporting", "assignment rules", "organize members", "org chart"]
+---
+
+{/* docs-meta: routes=[/settings?section=teams, /settings?section=assignments, /settings?section=members]; components=TeamsSection.tsx, AssignmentRulesSection.tsx, MembersSection.tsx; verified 2026-08 */}
+
+**Settings > Teams** previews an upcoming capability: grouping workspace members into named teams that mirror your org chart, so work can be routed, scoped, and reported by team.
+
+Teams is a preview. Creating and managing teams is not available yet, on any GainTrace plan. The page describes what teams will do and links to plan comparison; it has no settings of its own, and nothing on it changes how your workspace behaves.
+
+<Note>
+The Teams page presents teams as a capability of higher plans, but upgrading does not unlock team creation today. If you upgrade, you get everything listed for your new plan in [Billing and plans](/help/admin/billing); the Teams page stays a preview until the capability launches.
+</Note>
+
+## What the Teams page previews
+
+The page shows four capability cards. All four are planned, none are configurable yet.
+
+| Capability | What the page describes |
+|---|---|
+| **Routing** | Auto-assign Companies to the right team by segment, region, or stage |
+| **Scoped access** | Permissions that follow the team, so sensitive Companies stay with the people who own them |
+| **Reporting** | Slice dashboards and forecasts by team without rebuilding filters |
+| **Quotas** | Track pipeline, retention, and expansion goals at the team level |
+
+The two buttons on the page, **Upgrade to enable teams** and **Compare plans**, both open **Settings > Billing**.
+
+## What to use today
+
+Most of what teams will do has a working equivalent in the current product.
+
+| You want to | Use this today | Where |
+|---|---|---|
+| Route Companies to the right member automatically | Assignment rules: condition-based rules that assign Companies round robin, by workload, or to a specific member. A rule can target a pool of members you choose, which works like an informal team | **Settings > Assignments** |
+| Control what members can see and do | Built-in roles, or custom roles with an exact permission set | **Settings > Members**, **Roles** tab |
+| Record who reports to whom | The **Reports to** field on each member. Automations that escalate to a member's manager use this field | **Settings > Members** |
+| See how work is distributed | The workload view: assigned and unassigned Companies, and ARR per member | **Settings > Assignments** |
+
+For roles, reporting lines, and everything else about managing people in your workspace, see [Members, roles, and teams](/help/admin/members).
+
+## Bring your team into the workspace
+
+If you arrived here looking for how teammates get into GainTrace, that works today and is a separate system from the Teams preview. You can invite people by email, share an invite link, and approve requests to join. The full guide, including joining policies and how teammates find your workspace by email domain, is in [Members, roles, and teams](/help/admin/members).
+
+## Good to know
+
+- The Teams section appears in **Settings** for every member, on every plan.
+- The closest thing to team-based routing today is an assignment rule that distributes Companies round robin or by workload across a pool of members you pick.
+- Team-level dashboards and quotas have no equivalent yet. The per-member workload view in **Settings > Assignments** is the current way to see distribution across your team.
+
+## FAQ
+
+**I upgraded my plan. Why can't I create teams?**
+Team creation has not launched, so no plan enables it yet. Upgrading changes the limits and features listed in [Billing and plans](/help/admin/billing); the Teams page stays a preview for now.
+
+**Can I group members into a team today?**
+Not as a named team. The working substitute is an assignment rule in **Settings > Assignments** that targets a pool of members you choose; GainTrace distributes Companies across that pool round robin or by workload.
+
+**Does anything on the Teams page change my workspace?**
+No. The page is informational. Its only actions are links to **Settings > Billing**.
+
+**Which plan will include teams?**
+Plan placement is confirmed when the capability launches. Until then, the page previews teams as a paid capability, and no current plan enables it.
+
+## Related articles
+
+<CardGroup cols={2}>
+  <Card title="Members, roles, and teams" href="/help/admin/members">
+    Invites, roles, reporting lines, and how teammates join your workspace.
+  </Card>
+  <Card title="Billing and plans" href="/help/admin/billing">
+    What each plan includes, seat pricing, and how to change plans.
+  </Card>
+</CardGroup>

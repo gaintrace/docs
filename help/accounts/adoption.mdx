@@ -1,0 +1,200 @@
+---
+title: "Product adoption and usage"
+sidebarTitle: "Adoption and usage"
+description: "How product-usage data gets into GainTrace, how to define the features you track, how to read the adoption matrix and activation funnel, and how usage feeds health scores and signals."
+keywords: ["product adoption", "feature adoption", "product usage", "activation funnel", "usage data", "GainTrace adoption", "events API"]
+---
+
+{/* docs-meta: routes=[/features, /data/sources/connect/sdk, /data/sources/events, /companies/[id]] verified 2026-08 */}
+
+GainTrace turns raw product events into adoption facts: which Companies use which features, how heavily, and where activation stalls. This article covers how usage data gets in, how to define the features you track, how to read the adoption views, and how usage feeds health scores and signals.
+
+## How usage data reaches GainTrace
+
+Everything on the adoption surfaces is computed from product events: one row per action a user took in your product, such as `report_export` or `Report Exported`. GainTrace resolves each event to a person and rolls it up to their Company, so adoption is always read per customer, not per anonymous user.
+
+You can send events through any of these paths. They all land in the same event stream, so you can mix them.
+
+| Path | How it works | Where to start |
+|---|---|---|
+| PostHog | Connector polls your PostHog project for events and persons | **Integrations** > **PostHog** |
+| Mixpanel | Connector polls your Mixpanel project for events and profiles | **Integrations** > **Mixpanel** |
+| Amplitude | Connector polls your Amplitude project for events | **Integrations** > **Amplitude** |
+| Segment | You add GainTrace as a webhook destination in Segment; track, identify, and group calls flow in | **Integrations** > **Segment** |
+| GainTrace snippet and events API | You send events directly with a browser snippet or server-side API calls | **Integrations** > **Product Usage (SDK)** |
+| BigQuery or Snowflake | Scheduled read-only sync of events from your warehouse. Available on the Enterprise plan. | **Integrations** > **BigQuery** or **Snowflake** |
+
+Analytics connectors are read-only: GainTrace reads your data and changes nothing on the other side.
+
+### How events attach to People and Companies
+
+- An event's user identifier is matched against your People by email or external ID. The match is exact (case-insensitive); there is no fuzzy matching.
+- Events sent through the API can also carry a Company ID directly, which skips person matching.
+- Attribution happens once, when the event is stored. An event whose identifier matches no Person, or whose Person has no Company link yet, stays unattributed - it is not re-linked later. Sync your People and their Company links before sending usage events.
+
+<Note>
+Attribution depends on your People being in GainTrace first. Connect your CRM or analytics source before relying on adoption data, and send the same email or external ID your other sources use.
+</Note>
+
+## Send events with the snippet or API
+
+Use this path if you do not run a product analytics tool, or you want events in GainTrace without another vendor in between.
+
+<Steps>
+  <Step title="Open the install page">
+    Go to **Integrations**, find **Product Usage (SDK)**, and open it. The install wizard opens on its own page.
+  </Step>
+  <Step title="Generate a write key">
+    Optionally enter your site URL, then click **Generate key**. The key is client-safe: it can only write events, and adding your site URL pins it to your domain.
+  </Step>
+  <Step title="Add the snippet">
+    Pick your stack and copy the snippet; the key and host are filled in for you.
+    - The **HTML** tab works today with a plain `fetch` call to the events API.
+    - The Next.js, React, and Node tabs are marked **Soon**: the `@gaintrace/sdk` package is not yet published, so those snippets are previews.
+    - Server-side calls use a secret key with the events write scope instead of the public write key. Create one under **Settings** > API keys.
+  </Step>
+  <Step title="Trigger your first event">
+    Perform an action in your app. The page shows **Receiving events** once the first event lands, along with the matched person, their Company, and its health score.
+  </Step>
+  <Step title="Watch events live">
+    Click **Open the live event inspector** to see each incoming event with the person and Company it resolved to.
+  </Step>
+</Steps>
+
+API facts worth knowing:
+
+- One request can carry up to 1,000 events.
+- Events from the snippet and SDK must include a stable event ID, which GainTrace uses to deduplicate retries. A resent event is never counted twice.
+- Events sent through the API update adoption and health shortly after they arrive, without waiting for a sync cycle.
+
+## Define the features you track
+
+Adoption is computed against feature definitions you create. A feature is a name plus one or more event patterns; any event matching a pattern counts as a use of that feature.
+
+<Steps>
+  <Step title="Open the adoption page">
+    Go to **Intelligence** > **Feature adoption**. The same page is listed as **Features** in the Setup section.
+  </Step>
+  <Step title="Define a feature">
+    Click **Define Feature** and give it a name. Then pick the events that constitute this feature from the list of event names GainTrace has observed in your workspace. At least one event pattern is required.
+  </Step>
+  <Step title="Check the live preview">
+    As you select events, the dialog shows how many events from how many Companies those patterns matched in the last 30 days, so you know the definition works before you save it.
+  </Step>
+  <Step title="Set the threshold and create">
+    Set the **Adoption threshold (min uses)**, 3 by default, and tick **Key feature (counts toward activation)** if this feature should count toward activation. Click **Create**. Adoption for the new feature is computed immediately.
+  </Step>
+</Steps>
+
+A pattern matches an event whose name equals it exactly, or starts with it followed by a dot, so `reports` matches both `reports` and `reports.export`. Matching is case-insensitive.
+
+Each feature row on the page has a menu to **View reality**, **Edit definition**, **Recompute adoption**, **Deprecate**, or **Delete** it. Renaming a feature or changing its patterns recomputes its adoption right away, and rename keeps the feature's usage history.
+
+<Warning>
+**Delete** removes a feature from tracking permanently: its adoption history is kept, but it stops contributing to signals and health, and it cannot be restored from this page. If you might bring a feature back, use **Deprecate** instead; deprecated features can be restored with one click.
+</Warning>
+
+## Read the adoption matrix
+
+The matrix on **Intelligence** > **Feature adoption** shows one row per Company and one column per feature. Each cell is a status dot; hover it for the exact use count. The stat strip above summarizes features, Companies with usage, and average adoption, where a Company counts as adopted for a feature at **Adopted** or **Power**.
+
+| Status | Meaning |
+|---|---|
+| Power | 10 or more uses in the last 7 days and 40 or more in the last 30 days |
+| Adopted | Total uses reached the feature's threshold, with at least 2 uses in the last 30 days |
+| Exploring | Some use, but not yet enough to reach the threshold |
+| Never used | No matching events for this Company |
+| Abandoned | Reached the threshold in the past, but no use in the last 30 days |
+
+The threshold is per feature: the **Adoption threshold (min uses)** you set on its definition.
+
+## Track activation
+
+The **Activation** section on the same page shows a funnel of milestones: how many Companies reached each step and where they drop off.
+
+You do not build the funnel by hand. The first time you open the Activation section with key features marked, the default funnel builds itself: one milestone per key feature, in the order you created them, using each feature's first event pattern. The funnel is seeded once - marking or unmarking key features afterward does not change the existing funnel. Completion fills in as new Companies hit each milestone, and the summary line names the biggest drop-off step.
+
+## See usage on a Company record
+
+Open any Company and stay on its overview. Once a usage source has synced events for it, the record shows an active-users chart, a **Main features** table with per-feature adoption, use counts, unique users, and top user, and a per-person activity grid.
+
+Until then, the record shows a **No product usage yet** empty state with a link to connect a source. GainTrace never fills these sections with sample data.
+
+## How usage feeds health and signals
+
+Product usage drives two of the six health dimensions:
+
+- **Usage** (25% default weight) measures how actively the Company uses the product: utilization of committed seats or quota where available, otherwise how consistently its users are active.
+- **Adoption** (20% default weight) is the share of your active feature definitions the Company has at Adopted or Power.
+
+A dimension with no data is skipped and the remaining weights renormalize, so connecting a usage source deepens the score rather than unlocking it. See [Health scores](/help/accounts/health) for the full model.
+
+Usage also powers signals:
+
+- **Usage drop** fires when a Company's activity in the trailing 14 days falls at least 50% below the prior 14 days (critical at 80%), with a floor of 5 baseline events so quiet Companies do not produce noise. Activity here is the Company's combined stream - product events plus CRM and email activity - and the 50%/80%/5-event numbers are defaults you can tune under Setup > Signals.
+- **First value** fires when a brand-new Company (up to 14 days old) records its first activity - its first product event or CRM activity.
+- **Feature adoption** fires on adoption moments, and its per-feature rules can trigger on first use, on crossing an adoption threshold, or when a tagged champion adopts a feature.
+
+## What stays empty without a usage source
+
+GainTrace shows honest empty states instead of estimates. With no product events in the workspace:
+
+- **Feature adoption** shows "No adoption data yet", and the Define Feature dialog has no observed events to pick from.
+- Company records show the **No product usage yet** state in place of usage charts and the features table.
+- The Usage and Adoption health dimensions are skipped; health can still compute from other dimensions such as engagement, sentiment, and revenue.
+- Usage-based signals such as Usage drop are shown as unavailable until an activity source is connected, so they never fire on guesses.
+- The live event inspector is empty.
+
+## Limits and timing
+
+Each plan includes a monthly event allowance and a connector sync frequency:
+
+| Plan | Events per month | Connector sync frequency |
+|---|---|---|
+| Free | 5,000 | Every 12 hours |
+| Pro | 20,000 per seat | Every 6 hours |
+| Scale | 200,000 | Every 2 hours |
+| Enterprise | Unlimited | Every 15 minutes |
+
+When the allowance is used up, the events API rejects new events until the month resets, you upgrade, or you enable overage billing. Overage billing requires a paid plan, so on Free the cap is hard until the month resets or you upgrade. Events arriving through connectors follow the sync schedule above; events sent through the API are processed as they arrive. Adoption rollups also refresh on a periodic cycle, so rolling 7-day and 30-day counts stay current even for quiet Companies.
+
+## FAQ
+
+**Do I need PostHog or Mixpanel to use adoption?**
+No. Any path works: an analytics connector, Segment, a warehouse sync, or sending events directly to the events API. The adoption views read the same event stream regardless of source.
+
+**Why is an event not attributed to a Company?**
+Its user identifier did not exactly match any Person's email or external ID, or the matched Person is not linked to a Company yet. Send the same identifier your CRM or analytics source uses, or pass the Company ID directly on API events. Attribution is set when the event arrives and is not revisited, so fix the identifier or Company link before sending more events.
+
+**Can I rename a feature without losing its history?**
+Yes. Renaming keeps the feature's adoption history and recomputes adoption under the new name right away.
+
+**Why does a feature show no adoption right after I create it?**
+The rollup runs immediately after create but can take a moment; the row shows "Computing adoption..." until it lands. If it still looks wrong later, use **Recompute adoption** in the feature's menu.
+
+**Does defining a feature backfill history?**
+Yes. Adoption is computed from all matching events already in GainTrace, not only events that arrive after you define the feature.
+
+## Good to know
+
+- Event-name matching is case-insensitive, and a pattern also matches names prefixed with it plus a dot (`reports` matches `reports.export`).
+- The adoption threshold is per feature, and threshold edits recompute adoption right away.
+- The event picker in the Define Feature dialog lists the most frequent event names observed in your workspace, up to 200.
+- The adoption surfaces render only what product events recorded. If a number looks low, check that your sources are syncing and your identifiers match, not the math.
+
+## Related articles
+
+<CardGroup cols={2}>
+  <Card title="Health scores" href="/help/accounts/health">
+    How usage and adoption feed each Company's health score.
+  </Card>
+  <Card title="PostHog" href="/help/integrations/posthog">
+    Connect PostHog so its events drive adoption and health.
+  </Card>
+  <Card title="Mixpanel" href="/help/integrations/mixpanel">
+    Connect Mixpanel so its events drive adoption and health.
+  </Card>
+  <Card title="Companies" href="/help/records/companies">
+    Browse your Companies and open any record's usage view.
+  </Card>
+</CardGroup>

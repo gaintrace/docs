@@ -1,36 +1,172 @@
 ---
-title: "Flows"
-description: "Automate the repetitive parts of customer success without writing code."
+title: "Automate your work with Flows"
+sidebarTitle: "Flows"
+description: "Build no-code automations that react to signals, schedules, and data changes: create tasks, draft emails, post to Slack, update fields, and route anything sensitive through approval."
+keywords: ["flows", "automation", "GainTrace flows", "workflow automation", "triggers", "no-code automation", "customer success automation", "approval gate", "test a flow"]
 ---
 
-{/* docs-meta: routes=[/flows, /flows/[id]] reviewed=2026-07 */}
+{/* docs-meta: routes=[/flows, /flows/[id]]; components=flows list page, flow editor, NodePicker, NodeConfigPanel, TestRunDialog, RunHistoryPanel, ActivationBackfillDialog, SentenceBuilder, TemplateBrowserDialog; verified 2026-08 */}
 
-**Flows** is where you automate the repetitive parts of your work, under **Automation** in the left nav. A flow watches for something to happen, then runs the steps you set up, like creating a task, sending an email, posting to Slack, or updating a field.
+A flow watches for something to happen, then runs the steps you set up: create a task, draft an email, post to Slack, update a field, or pause for a teammate's approval. Flows live under **Automation > Flows** in the left nav.
 
-## Build a flow
+Every flow is a trigger connected to a series of steps on a visual canvas. Steps can branch on conditions, wait for time or data, and hand anything customer-facing to a human before it goes out.
 
-There are three ways to start:
+## Create a flow
 
-- **Describe it in plain language.** Type what you want ("When health drops below 40, create an urgent task for the account owner") and GainTrace turns it into a flow you can edit.
-- **Start from a template** for a common play.
-- **Build in the canvas** and drag the steps together yourself.
+There are three ways to start, all from the **Flows** page:
 
-Any of these drops you into the editor, a canvas where you connect a trigger to a series of actions. It saves as a draft while you work on it.
+- **Describe it in plain language.** The box at the top of the page is the primary way to create a flow. Type what you want, like "When health drops below 40, create an urgent task for the company owner", and Trace AI turns it into a flow you can review and edit. This uses your workspace's AI allowance.
+- **Start from a template.** Click **Start from a template** for a library of prebuilt flows across categories like Onboarding, Renewal, Retention, Adoption, Feedback, and Operations, for example New-Customer Onboarding, Churn-Risk Save Motion, Health-Drop Risk Play, NPS Follow-up, and Renewal Reminder Sequence.
+- **Build on the canvas.** Start from a blank canvas and connect the steps yourself.
 
-## What a flow can do
+Each path lands you in the editor. The flow saves as a draft while you work; nothing runs until you activate it.
 
-A trigger starts a flow, like a **Signal**, a **Schedule**, a **Data change**, or a **Manual** run. From there, the steps can:
+## Triggers
 
-- Create a task for an owner
-- Send an email or a Slack message
-- Update a field on the account
-- Branch on a condition, or wait before the next step
+A flow has exactly one trigger. These are the trigger types you can pick:
 
-## Test before you turn it on
+| Trigger | Fires when |
+|---|---|
+| **Signal Trigger** | A signal matching your criteria is detected. Pick one or more signal types, choose whether any one signal fires the flow or all of them must occur within a window (7 days by default), and optionally set a minimum severity. |
+| **Schedule** | A recurring schedule comes due: every N minutes, hours, days, weeks, or months at a set time, with a timezone. You can also enter a raw cron expression. |
+| **Event** | A product event occurs: Deal stage change, Health score change, Company created, NPS response, Phase change, Owner changed, or CTA SLA breach. |
+| **Date Anchor** | A date field on a Company is a set number of days away, for example 90 days before the renewal date. Evaluated once a day; each Company enrolls once per anchor date, and a moved date qualifies again. |
+| **Manual** | You click **Run** in the editor. |
+| **Data Change** | A field changes on a record: any change, a change to a specific value, or a change away from one. |
+| **Segment Entry** | A Company enters a filter for the first time. A Company already enrolled, or inside a cooldown, is not enrolled again. |
+| **Workflow Event** | A workflow is created, completed, or archived. |
 
-Save the flow, then use **Test** to run it once and watch each step light up on the canvas. When it looks right, **Activate** it. You can **Pause** it or drop it back to a draft any time. The flows list shows each flow's status, how many times it's run, and its success rate.
+## Conditions and branching
+
+| Step | What it does |
+|---|---|
+| **If / Else** | Compares a field against a value and branches into a true path and a false path. |
+| **Switch** | Branches into multiple paths based on a field's value, with a default path for anything unmatched. |
+| **Delay** | Waits a set amount of time before continuing: minutes, hours, days, or workdays. Waits are durable, so a delayed flow resumes on time even across maintenance restarts. |
+| **Wait for Condition** | Pauses until a data condition becomes true, with a timeout. The step has a met branch and a timeout branch, and you choose what a timeout does: skip, continue, or halt. |
+| **Wait for Step** | Waits until another step completes with the outcome you specify. |
+| **Approval Gate** | Pauses the run and asks a teammate to approve or reject in **Triage**. The step branches into approved, rejected, and timeout paths. You set a review deadline (24 hours by default); if nobody decides in time, the item expires from Triage and the flow takes the timeout branch. |
+
+## Actions
+
+| Step | What it does |
+|---|---|
+| **Create Task** | Creates a task with a title, priority, and due date. Assign it to the Company owner, the flow owner, a specific member, or round-robin. |
+| **Send Notification** | Notifies a teammate in-app, by email, or in Slack. |
+| **Update Field** | Sets a field on a record to a static value or a merge value. |
+| **Get Data** | Reads fields from a related record and names the result so later steps can use it. |
+| **Apply Workflow** | Applies a workflow template to a record. |
+| **Webhook** | Sends an HTTP request (GET, POST, PUT, or PATCH) to an external URL you provide. |
+| **Add to Sequence** | Enrolls a person in a connected external sequencer: Saleshandy, Instantly, Apollo.io, Smartlead, HeyReach, or AimFox. You choose which fields to include and what happens if the prospect already exists. |
+| **Send Transactional Email** | Drafts a one-off email to a customer. See the send modes below. |
+| **Send Slack Message** | Posts a message to Slack through the webhook configured in **Settings > Signal Push**. |
+| **Send Survey** | Emails an NPS, CSAT, CES, or custom survey with one-click score links. Survey sends are always drafted for approval in **Triage**; there is no auto-send for surveys. |
+| **Understand**, **Summarize**, **AI Draft** | AI steps that classify data, summarize a record, or draft a message for later steps to use. AI steps count against your workspace's AI allowance. |
+| **No Operation** | Does nothing. Useful as a placeholder on an empty branch. |
+
+### Email send modes
+
+Every **Send Transactional Email** step has a send mode:
+
+- **Draft for approval** (default): the flow drafts the email and queues it in **Triage**. Approving it there sends it; nothing reaches the customer without a decision.
+- **Draft to CSM**: the draft goes to the Company owner to send themselves. The flow never emails the customer directly.
+- **Auto-send**: sends without approval. Auto-send needs enablement; a flow containing an auto-send email step cannot be activated. Switch the step to one of the draft modes to activate the flow.
+
+## Personalize with merge fields
+
+Email subjects, bodies, Slack messages, and task text accept merge tokens like `{{company.name}}`, plus context tokens for the Company owner and the person involved, and time codes for dates. The builder warns about tokens it cannot resolve, and a customer email with an unresolvable token is blocked from sending rather than delivered with a gap in it.
+
+## Test a flow
+
+A test run walks the whole flow against a real Company but fires no external side effects: no email, no Slack post, no webhook call, no sequence enrollment, no task, no notification. Each such step computes what it would have done and shows that in its output instead.
+
+<Steps>
+  <Step title="Save the flow">
+    Testing runs the saved version, so an unsaved new flow can't be tested. The editor autosaves as you work.
+  </Step>
+  <Step title="Click Test and pick a Company">
+    The **Test** button in the toolbar opens a picker. Test runs resolve real fields, so you need at least one synced Company to test against.
+  </Step>
+  <Step title="Watch the run on the canvas">
+    Steps light up as they execute, and you can open each one to inspect its output or error. A failed test offers a retry.
+  </Step>
+</Steps>
+
+You can also pin a step's output in the editor; test runs then use the pinned data for that step instead of executing it, which is useful for testing downstream branches against fixed values.
+
+Flows with a **Manual** trigger also get a **Run** button in the editor toolbar. Unlike **Test**, **Run** executes the flow for real, side effects included.
+
+## Activate a flow
+
+Click **Activate** in the editor to turn a flow on, and **Pause** to stop it. A flow is always in one of four states: draft, active, paused, or archived. The flows list has a tab for each state and a switch on every row to turn flows on and off; turning one off can be undone from the toast.
+
+When you activate an enrolling flow (Segment Entry or Date Anchor), GainTrace asks what to do with Companies that already qualify:
+
+- **Only new** (default): nobody enrolls now; Companies enroll as they cross the trigger in the future.
+- **Enroll existing**: the Companies that qualify today enroll immediately. The dialog shows the count before you confirm, so a mass enrollment is always a deliberate choice.
+
+### Control repeat runs
+
+The flow's **Settings** panel controls how often the same record can go through:
+
+- **Reapplication**: run once ever, once if not currently active, multiple times if not active, or multiple runs in parallel.
+- **Cooldown (days)**: after a run finishes, block the same record from re-enrolling for this many days, so a flapping condition can't re-fire the flow daily.
+- **Exclusion group**: flows sharing a group name run one at a time per record, so two competing motions never overlap on the same Company.
+
+## Runs and history
+
+Open the run history panel at the bottom of the editor to see past runs: each run's status, duration, and start time, with a step-by-step execution tree showing every step's output or error. Selecting a run replays its step statuses on the canvas.
+
+The flows list shows each flow's total runs and success rate, plus recent activity. Actions a flow takes on a Company, like tasks it created, are also recorded on that Company's timeline.
+
+Run history is kept for 14 days, then pruned. In very high-volume workspaces older runs can be pruned sooner: only the most recent 10,000 runs are retained.
+
+## Limits and failure behavior
+
+- **Per-step error handling.** Every step has an **On Error** setting: **Retry** (up to 3 retries with backoff), **Skip this step** (the default; the run records the error and continues), or **Halt the flow** (the run is marked failed).
+- **Run timeout.** A run that exceeds 10 minutes is marked failed.
+- **Concurrency.** A workspace runs at most 10 flows at once; a run starting beyond that is rejected and the trigger does not queue. Test runs do not count against this limit.
+- **AI limits.** AI steps and plain-language flow creation share your workspace's AI allowance, with an additional cap of 1,000 AI executions per workspace per day.
+- **Auto-send emails.** A flow with an auto-send email step can't be activated; switch the step to one of the draft modes first. Surveys are always approval-only.
+- **Missing channels.** A Slack step without a configured Slack destination, or a sequence step without a connected sequencer, records an error on that step; with the default **Skip this step** setting the rest of the flow still runs.
 
 ## Good to know
 
-- Some steps need a channel connected to do their job. Sending email needs email set up for GainTrace, and the Slack step needs Slack connected. If a channel isn't ready, that step is skipped and the rest of the flow still runs.
-- **Test** only works once you've saved the flow.
+- The Slack step posts through the webhook in **Settings > Signal Push**, which is separate from connecting Slack as a data source. Add the webhook there before relying on Slack steps.
+- Delays and waits are checked about once a minute, so a step can fire up to a minute after its exact due time.
+- The editor supports undo and redo, a **Tidy up** layout command, and sticky notes on the canvas.
+- Approvals from flows, including Approval Gate decisions and email drafts awaiting approval, all land in **Triage**.
+
+## FAQ
+
+**Does a test run send anything to my customers?**
+No. Test runs suppress every external side effect and show what each step would have done instead.
+
+**Can a flow email customers without anyone approving?**
+Not by default. Email steps default to draft for approval in **Triage**, and a flow with an auto-send step is blocked from activating. Surveys always require approval.
+
+**What happens to a flow that is waiting on a delay when I pause it?**
+Pausing stops new runs from starting. Waits themselves are durable and resume from where they left off when due.
+
+**Why did my flow run once and never again for the same Company?**
+Check the **Reapplication** setting and any cooldown in the flow's settings. The default allows a re-run only when the previous run for that record is no longer active.
+
+**How far back does run history go?**
+14 days, up to the most recent 10,000 runs. Older runs are pruned automatically.
+
+## Related articles
+
+<CardGroup cols={2}>
+  <Card title="Triage" href="/help/accounts/triage">
+    Where flow approvals and drafted emails wait for a human decision.
+  </Card>
+  <Card title="Trace AI" href="/help/trace-ai/trace-ai">
+    The AI that turns plain-language descriptions into flows.
+  </Card>
+  <Card title="Slack" href="/help/integrations/slack">
+    Set up the webhook that Slack steps post through.
+  </Card>
+  <Card title="Company health" href="/help/accounts/health">
+    The health scores and signals that many flows trigger on.
+  </Card>
+</CardGroup>

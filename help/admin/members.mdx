@@ -1,29 +1,234 @@
 ---
-title: "Members and roles"
-description: "Invite your team, set what each person can do, and manage who's in the workspace."
+title: "Members, roles, and teams"
+description: "Invite your team by email or link, set what each member can do with roles, and control how teammates find and join your workspace."
+keywords: ["invite team members", "GainTrace roles", "workspace members", "join requests", "invite link", "custom roles", "remove member", "workspace permissions"]
 ---
 
-{/* docs-meta: routes=[/settings, /governance/roles] reviewed=2026-07 */}
+{/* docs-meta: routes=[/settings?section=members, /settings?section=teams, /governance/roles, /auth/workspaces, /join/[token], /teams/[slug]]; components=MembersSection.tsx, InviteForm.tsx, JoinRequestsInbox.tsx, WorkspaceIdentity.tsx (unmounted), chooser-client.tsx; verified 2026-08 */}
 
-Manage who's in your workspace from **Settings > Members**. It has two tabs: **Members** for people and invites, and **Roles** for what they can do.
+Manage who's in your workspace from **Settings > Members**. The page has two tabs: **Members**, for people, invites, and join requests, and **Roles**, for the permission sets that govern what each person can do.
 
-## Invite your team
+## Roles and permissions
 
-Use **Invite team members** and either paste a list of email addresses (GainTrace sorts out who's new, who's already invited, and who's already here) or share an invite link that anyone can use to join.
+Every member holds one of three built-in roles. A role decides what a member can do everywhere in the workspace, not per feature.
 
-Pending invites appear in the list with a **Pending** badge. From the row menu you can **Resend invite** or **Revoke invite**. If someone asks to join, a **Requests to join** inbox lets you **Approve** or **Deny** each one.
+| Role | What it can do | What it cannot do |
+|---|---|---|
+| **Owner** | Everything an Admin can, plus change member roles, manage billing and the plan, export governance data, and delete the workspace | - |
+| **Admin** | Invite and remove members, edit workspace settings, manage API keys, webhooks, and AI permissions, read the audit trail, manage governance policies, export Companies | Change member roles, manage billing |
+| **Member** | Work with Companies, People, signals, views, and their own assignments; see the member list | Invite or remove members, change workspace settings, export Companies |
 
-## Roles
+Two rules worth quoting:
 
-Every member has a role:
+- Only an Owner can change a member's role. Admins can invite and remove members, but not change roles.
+- A workspace always keeps at least one Owner. The last Owner cannot be demoted or removed.
 
-- **Owner**: full control, including billing and ownership.
-- **Admin**: manages the workspace and its members.
-- **Member**: works in the app day to day.
+The roles you can assign from the member list are **Admin** and **Member**. The Owner role is set when the workspace is created and cannot currently be assigned to another member in the app.
 
-An owner can change a member's role or remove them from the row menu. On the **Roles** tab you can also define custom roles with a specific set of permissions.
+## Invite people by email
+
+Inviting requires an Owner or Admin role and a workspace with an active plan or trial.
+
+<Steps>
+  <Step title="Open the invite form">
+    Go to **Settings > Members** and click **Invite team members**.
+  </Step>
+  <Step title="Add emails">
+    Paste up to 50 email addresses, separated by commas, spaces, or line breaks. GainTrace checks each one and shows a preview:
+    - New addresses will receive an invitation.
+    - Addresses outside your workspace domain are flagged **external** but still get the invite if you proceed.
+    - Addresses that are already members, already invited, or your own are marked and skipped.
+    - Invalid addresses are marked so you can fix or remove them.
+  </Step>
+  <Step title="Choose a role">
+    Pick **Member** or **Admin** for the batch. The role applies to everyone in this send.
+  </Step>
+  <Step title="Send">
+    Click **Send invites**. Each person gets an email with a personal invitation link.
+  </Step>
+</Steps>
+
+Invitations expire after 7 days. An expired invite no longer works and no longer counts as a seat; resend it to issue a fresh one.
+
+<Note>
+On a paid Pro plan, each invite reserves a billable seat the moment you send it, prorated for the current period. The invite form shows your per-seat price before you send. Revoking an invite or removing a member frees the seat right away; expired invites are released automatically within a day. Unused seat time is credited toward your next invoice.
+</Note>
+
+## Resend or revoke a pending invite
+
+Pending invites appear in the member list with a **Pending** badge. From the row menu:
+
+- **Resend invite** sends a fresh email with a new link and restarts the 7-day expiry. The link in the earlier email stops working.
+- **Revoke invite** cancels it immediately. The emailed link stops working and the reserved seat is released.
+
+## Share an invite link
+
+Instead of addressing each person, you can create a link that anyone can use to join.
+
+<Steps>
+  <Step title="Open the link panel">
+    In the invite form, click **Or share an invite link**.
+  </Step>
+  <Step title="Create the link">
+    The link grants whichever role is selected in the form, **Member** or **Admin**. Click **Create link**.
+  </Step>
+  <Step title="Copy and share">
+    Click **Copy** and share the link. The panel shows how many times it has been used and when it expires.
+  </Step>
+</Steps>
+
+How invite links behave:
+
+- Anyone who opens the link signs in or creates a GainTrace account, verifies their email, and joins with the link's role.
+- A link expires 30 days after it is created.
+- Each role has one active link at a time. Creating a new link for the same role replaces the previous one, and the old URL stops working. This is also how you retire a link early.
+- A link can grant Member or Admin, never Owner.
+- When a member is removed from the workspace, every invite link and pending email invite they created is revoked automatically.
+
+<Warning>
+An invite link admits anyone who has it, from any email domain, until it expires or is replaced. Share Admin links carefully, and replace a link if it reaches people it shouldn't.
+</Warning>
+
+## Change a member's role
+
+Only an Owner can do this.
+
+<Steps>
+  <Step title="Open the member list">
+    Go to **Settings > Members**.
+  </Step>
+  <Step title="Pick the new role">
+    In the member's row, open the role selector and choose **Admin** or **Member**.
+  </Step>
+</Steps>
+
+The change applies immediately and is recorded in the audit trail. If the member is the only Owner, the change is blocked.
+
+## Set who a member reports to
+
+Only an Owner can set who a member reports to, using the **Reports to** column of the member list. Automations that escalate to a member's manager, such as SLA-breach notifications, follow this chain.
+
+A member cannot report to themselves, and GainTrace rejects any assignment that would create a reporting loop.
+
+## Remove a member
+
+Owners and Admins can remove any member except an Owner or themselves.
+
+<Steps>
+  <Step title="Open the member list">
+    Go to **Settings > Members**.
+  </Step>
+  <Step title="Choose Remove member">
+    Open the row menu on the member and choose **Remove member**.
+  </Step>
+  <Step title="Confirm">
+    Confirm with **Remove**.
+  </Step>
+</Steps>
+
+<Warning>
+Removal takes effect immediately and cannot be undone. The person loses access to the workspace the moment you confirm. To bring them back, send a new invite.
+</Warning>
+
+When a member is removed:
+
+- Companies they owned become unassigned, so you can reassign them to another member.
+- Every pending email invite and invite link they created is revoked.
+- On Pro, the billable seat is released.
+- The removal and its side effects are recorded in the audit trail.
+
+## Create a custom role
+
+Custom roles let you define an exact permission set instead of using the built-in grants. A custom role's permission list replaces the base role's grants entirely; it is not additive, so anything you leave unchecked is denied.
+
+<Steps>
+  <Step title="Open the Roles tab">
+    Go to **Settings > Members** and open the **Roles** tab. It lists the built-in roles, marked **Default**, and any workspace-defined roles, marked **Custom**, with member counts.
+  </Step>
+  <Step title="Define the role">
+    Click **New role**, name it, pick a base role, and select its permissions.
+  </Step>
+  <Step title="Assign it to members">
+    Assign the role to members under **Governance > Roles & access**.
+  </Step>
+</Steps>
+
+Creating and assigning custom roles requires an Owner or Admin role. An Admin cannot create a role that grants owner-only permissions such as billing or role changes.
+
+## How people find and join your workspace
+
+Beyond direct invites, GainTrace has a joining model built around your company's email domain. When someone signs in, the workspace chooser shows the workspaces they already belong to, invitations waiting for their email address, and, where a workspace has opted in, workspaces at their email domain they can join or request to join.
+
+Every workspace has a joining policy:
+
+| Policy | Who can find the workspace | How they join |
+|---|---|---|
+| **Invite only** (default) | No one without an invite | Email invite or invite link only |
+| **Request to join** | People with a verified email at the workspace's domain | They click **Request**; an Owner or Admin approves |
+| **Open to your domain** | People with a verified email at the workspace's domain | They click **Join** and are in immediately |
+| **Private** | No one | Invite only, and the workspace has no public team page |
+
+Rules that apply across policies:
+
+- New workspaces start as invite only.
+- Joining a workspace always requires a verified email address.
+- Consumer email domains like gmail.com never grant domain-based access, no matter the policy. People on those domains join by invite.
+- Anyone who joins by domain or by approved request joins as a Member.
+- If an open workspace is at its seat limit, clicking **Join** files a join request instead. The request appears in the **Requests to join** section of **Settings > Members**.
+- Workspaces with a **Request to join** or **Open to your domain** policy get a public team page showing the workspace name, logo, member count, and a join button. It never lists individual members. Invite-only and private workspaces have no public page.
+
+<Note>
+The joining policy and workspace domains do not yet have a control in workspace settings, so workspaces operate as invite only today. Contact support if you need domain-based joining enabled for your workspace.
+</Note>
+
+## Approve or deny join requests
+
+When someone requests to join, a **Requests to join** section appears above the member list in **Settings > Members**. Anyone who can open the page sees pending requests; only Owners and Admins can approve or deny them. Each request shows the person's name, email, and an optional message.
+
+- **Approve** adds them as a Member immediately. Approval checks your seat limit first; if the workspace is at its cap, the approval is blocked until you free a seat or upgrade.
+- **Deny** declines the request. The person can request again later.
+
+## Seats and plan limits
+
+Seats are how members are counted against your plan. On Pro, billing is per seat: every member and every live pending invite counts, and the count syncs to your subscription as it changes. Scale is a flat plan with unlimited seats. See [Billing and plans](/help/admin/billing) for pricing and limits.
+
+A workspace whose billing is locked, for example after a trial ends without a subscription, cannot send invites until a plan is active.
 
 ## Good to know
 
-- Only an owner can change roles. Admins can invite and remove members, but not change roles.
-- Removing a member reassigns their accounts and revokes any invites they'd sent.
+- Everyone in the workspace can see the member list. Invite, remove, and role controls only appear for the roles that hold them.
+- Owners and Admins see a **Recent activity** feed of member and invite events below the member list. The complete record, with export, lives in **Governance > Audit**.
+- People who join an existing workspace skip workspace setup. A banner asks for their function, like CS Leader or RevOps, to personalize their experience. It never blocks the dashboard, and it disappears for good once they pick a role; dismissing it without answering hides it only for the current session.
+- **Settings > Teams** previews grouping members into named teams for routing, scoped access, and team-level reporting. Creating teams is not available yet; the **Reports to** field on the Members tab is how reporting lines work today.
+- Every invite, role change, removal, and join decision is written to the audit trail with who did it and when.
+
+## FAQ
+
+**Can a workspace have a second Owner, or transfer ownership?**
+Not from the app today. The member list assigns Admin and Member only. Contact support to transfer ownership.
+
+**Do pending invites use a seat?**
+On a paid Pro plan, yes: a seat is reserved and billed when the invite is sent. Invites that expire after 7 days or are revoked stop counting, and unused time is credited.
+
+**Why can't my teammate see our workspace when they sign up?**
+Workspaces are invite only by default, so nothing appears at their domain. Send them an email invite or an invite link. Teammates on consumer email domains like gmail.com can only ever join by invite.
+
+**What happens to a removed member's Companies?**
+They become unassigned. Reassign them to another member from the Companies list.
+
+**An invite link leaked. What do I do?**
+Create a new link for the same role; the old URL stops working immediately. Links also expire on their own after 30 days.
+
+## Related articles
+
+<CardGroup cols={2}>
+  <Card title="Billing and plans" href="/help/admin/billing">
+    Seat pricing, plan limits, and how to change plans.
+  </Card>
+  <Card title="Governance" href="/help/admin/governance">
+    The audit trail, data retention, and field access controls.
+  </Card>
+  <Card title="Setting up your workspace" href="/help/getting-started/for-admins">
+    The admin path from empty workspace to health scores.
+  </Card>
+</CardGroup>

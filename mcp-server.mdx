@@ -1,9 +1,14 @@
 ---
 title: "MCP server"
-description: "Connect Claude, Cursor, and any MCP client to your GainTrace workspace."
+description: "Connect Claude, ChatGPT, Cursor, and any MCP client to your GainTrace workspace."
+keywords: ["MCP", "Model Context Protocol", "Claude connector", "ChatGPT connector", "Cursor MCP", "Claude Code MCP", "GainTrace MCP server", "AI tools"]
 ---
 
-GainTrace runs a hosted [Model Context Protocol](https://modelcontextprotocol.io) server. Connect an MCP client — Claude, Cursor, Claude Code, or your own — and it can read your accounts, contacts, health, signals, revenue, and more, and take audited actions, all scoped to your workspace.
+{/* docs-meta: routes=[/settings?section=mcp, /api/v1/mcp, /oauth/authorize]; components=MCPSection.tsx; source=src/lib/mcp; verified 2026-08 */}
+
+GainTrace runs a hosted [Model Context Protocol](https://modelcontextprotocol.io) server. Connect an MCP client - Claude, ChatGPT, Cursor, Claude Code, or your own - and it can read your Companies, People, health, signals, revenue, and more, and take audited actions, all scoped to one workspace.
+
+The same setup steps live in the app under **Settings > MCP**, with a tile for each client.
 
 ## Endpoint
 
@@ -11,111 +16,177 @@ GainTrace runs a hosted [Model Context Protocol](https://modelcontextprotocol.io
 https://app.gaintrace.com/api/v1/mcp
 ```
 
-Transport is streamable HTTP: `POST` for JSON-RPC, `GET` for the resumable SSE stream. The server is stateless — each request is bound to your auth context.
+Transport is streamable HTTP: `POST` for JSON-RPC, `GET` for the SSE stream. The server is stateless - each request is bound to your auth context.
 
-## Connect
+## Connect a client
 
-Two ways to authenticate, depending on your client.
+Connections use OAuth: each user signs in with their own GainTrace account and approves access in the browser. GainTrace advertises its OAuth flow at `/.well-known/oauth-protected-resource`, so compliant clients discover it automatically. No API key is needed for these flows.
 
 <Tabs>
-  <Tab title="OAuth (Claude, Cursor)">
-    Most MCP clients handle auth over OAuth — you add the server URL and approve access in your browser. GainTrace advertises its OAuth flow at `/.well-known/oauth-protected-resource`, so compliant clients discover it automatically.
-
-    **Claude Code**
-    ```bash
-    claude mcp add --transport http gaintrace https://app.gaintrace.com/api/v1/mcp
-    ```
-    Run a tool once and Claude Code opens a browser to authorize.
-
-    **Claude (desktop / web)**
-
-    Settings → Connectors → **Add custom connector** → paste the endpoint URL, then approve access.
-
-    **Cursor** (`~/.cursor/mcp.json`)
-    ```json
-    {
-      "mcpServers": {
-        "gaintrace": { "url": "https://app.gaintrace.com/api/v1/mcp" }
-      }
-    }
-    ```
+  <Tab title="Claude">
+    <Steps>
+      <Step title="Add the custom connector">
+        In Claude (web or desktop), open **Customize** > **Connectors**, click the **+** button, and choose **Add custom connector**. Name it GainTrace and paste the endpoint URL as the remote MCP server URL, then click **Add**. On Team or Enterprise plans, an Owner adds it from **Organization settings** > **Connectors** first; members then find it under **Customize** > **Connectors** and click **Connect**.
+      </Step>
+      <Step title="Sign in once">
+        Claude opens a GainTrace sign-in window the first time you use a tool. Sign in, approve the requested access, and the connection stays live for future chats.
+      </Step>
+      <Step title="Use it">
+        Toggle GainTrace on per chat from the **+** button in the message bar. Try: "List my at-risk companies in GainTrace."
+      </Step>
+    </Steps>
   </Tab>
-  <Tab title="API key (programmatic)">
-    Clients that support custom headers can authenticate with a `gt_live_` server key ([Settings → API Keys](/authentication)) instead of OAuth:
+  <Tab title="ChatGPT">
+    <Steps>
+      <Step title="Enable Developer mode">
+        In ChatGPT, open **Settings** > **Apps & Connectors** > **Advanced settings** and toggle **Developer mode** on. Developer mode is a beta feature on ChatGPT Plus and Pro (on the web). On Business, Enterprise, and Edu plans, a workspace admin enables custom connectors from workspace settings instead. Free ChatGPT can't add custom connectors.
+      </Step>
+      <Step title="Add the connector">
+        Back in **Apps & Connectors**, click **Add new connector**. Name it GainTrace, paste the endpoint URL as the MCP server URL, set Authentication to **OAuth**, check **I trust this application**, and click **Create**.
+      </Step>
+      <Step title="Sign in and use it">
+        ChatGPT opens a GainTrace sign-in window. Approve access, then turn GainTrace on per conversation from the **+** menu in any chat.
+      </Step>
+    </Steps>
 
-    ```json
-    {
-      "mcpServers": {
-        "gaintrace": {
-          "url": "https://app.gaintrace.com/api/v1/mcp",
-          "headers": { "Authorization": "Bearer gt_live_your_key_here" }
+    The server also exposes the `search` and `fetch` tools OpenAI's deep research connectors require, so GainTrace works as a deep research source, not only as an ordinary connector.
+  </Tab>
+  <Tab title="Cursor">
+    <Steps>
+      <Step title="Add to your MCP config">
+        Edit `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (per project) and merge in the snippet below. Or use the UI: open Cursor's settings and add a new server from the MCP section.
+
+        ```json
+        {
+          "mcpServers": {
+            "gaintrace": { "url": "https://app.gaintrace.com/api/v1/mcp" }
+          }
         }
-      }
-    }
-    ```
-
-    The key's scopes decide which tools are available and whether writes are allowed. Use a `gt_live_` (server) key, never a `gt_pub_` key.
+        ```
+      </Step>
+      <Step title="Authorize">
+        Open **Cursor Settings** > **MCP**. GainTrace shows "Needs authentication". Click **Connect**, sign in to GainTrace, and approve access.
+      </Step>
+      <Step title="Done">
+        GainTrace appears as Enabled in MCP Tools - available in Cursor Chat and Agent.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Claude Code">
+    <Steps>
+      <Step title="Run the setup command">
+        ```bash
+        claude mcp add --transport http gaintrace https://app.gaintrace.com/api/v1/mcp
+        ```
+      </Step>
+      <Step title="Authorize">
+        Open a Claude Code session and type `/mcp`. It walks you through the OAuth flow - a browser opens, you sign in to GainTrace, and the session reconnects automatically.
+      </Step>
+      <Step title="Verify">
+        Type `/mcp` again - `gaintrace` should be listed as connected with its tools enumerated.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Other clients">
+    Paste the endpoint URL into any client that speaks streamable HTTP MCP with OAuth discovery - for example VS Code (with the MCP extension), Windsurf, n8n (MCP Client node, streamable HTTP transport), Goose, or Codex CLI. The client redirects you to a GainTrace sign-in window on first call; approve access and the connection is live.
   </Tab>
 </Tabs>
 
+### API key instead of OAuth
+
+Clients that support custom headers can authenticate with a `gt_live_` secret key ([Settings > API Keys](/authentication)) instead of OAuth:
+
+```json
+{
+  "mcpServers": {
+    "gaintrace": {
+      "url": "https://app.gaintrace.com/api/v1/mcp",
+      "headers": { "Authorization": "Bearer gt_live_your_key_here" }
+    }
+  }
+}
+```
+
+The key's scopes decide which tools are available and whether writes are allowed. Use a `gt_live_` (secret) key, never a `gt_pub_` key.
+
+## Which workspace a connection sees
+
+When you approve an OAuth connection, the consent screen lists the requested access and asks which workspace to authorize - if you belong to several, pick deliberately, because the connection is bound to that one workspace from then on. Your membership is re-checked on every request: if you leave the workspace, the connection stops working immediately, even if the token has not expired.
+
+To disconnect, remove the connector in the client (Claude, ChatGPT, Cursor, and Claude Code each have a remove or disconnect option for MCP servers). For API-key connections, revoke the key in **Settings > API Keys**.
+
 ## Tools
 
-The server exposes **88 tools** in three tiers. Clients discover them automatically; you rarely name them yourself.
+The server exposes more than 80 tools in three tiers. Clients discover them automatically; you rarely name them yourself.
 
 <CardGroup cols={3}>
-  <Card title="Tier C — workflows" icon="sparkles">
+  <Card title="Tier C - workflows" icon="sparkles">
     One-shot answers to CS-shaped questions. Prefer these first.
   </Card>
-  <Card title="Tier B — namespaced" icon="layers">
+  <Card title="Tier B - namespaced" icon="layers">
     Precise reads and writes per resource (`gt_<namespace>_*`).
   </Card>
-  <Card title="Tier A — data platform" icon="database">
+  <Card title="Tier A - data platform" icon="database">
     Address any data model directly when a workflow tool can't.
   </Card>
 </CardGroup>
 
-### Tier C — workflow tools
+### Tier C - workflow tools
 
 High-level tools that answer a customer-success question in one call:
 
-`gt_ask` · `gt_my_day` · `gt_brief_account` · `gt_brief_team` · `gt_at_risk_accounts` · `gt_expansion_opportunities` · `gt_renewal_pipeline` · `gt_what_changed` · `gt_explain_health` · `gt_recommend_action` · `gt_compose_outreach` · `gt_attribution_story` · `gt_simulate_playbook` · `gt_data_health_report`
+`gt_ask` · `gt_my_day` · `gt_brief_company` · `gt_brief_team` · `gt_at_risk_companies` · `gt_expansion_opportunities` · `gt_renewal_pipeline` · `gt_what_changed` · `gt_explain_health` · `gt_recommend_action` · `gt_compose_outreach` · `gt_attribution_story` · `gt_simulate_playbook` · `gt_data_health_report`
 
-### Tier A — data platform
+### Tier A - data platform
 
 For novel queries the workflow tools can't satisfy:
 
 `gt_models_list` · `gt_model_schema` · `gt_search` · `gt_query_compile` · `gt_query_run`
 
-### Tier B — namespaced tools
+### Tier B - namespaced tools
 
-Precise CRUD grouped by resource. Expand a namespace to see its tools.
+Precise reads and writes grouped by resource. Expand a namespace to see its tools.
 
 <AccordionGroup>
-  <Accordion title="Accounts, contacts, activities">
-    `gt_account_list`, `gt_account_get`, `gt_account_search`, `gt_account_update_traits`, `gt_account_assign_csm`, `gt_account_timeline` · `gt_contact_list`, `gt_contact_get`, `gt_contact_search` · `gt_activity_list`, `gt_activity_get`
+  <Accordion title="Companies, People, activities">
+    `gt_company_list`, `gt_company_get`, `gt_company_search`, `gt_company_update_traits`, `gt_company_assign_csm`, `gt_company_timeline`, `gt_account_scorecard` · `gt_people_list`, `gt_people_get`, `gt_people_search` · `gt_activity_list`, `gt_activity_get`
   </Accordion>
-  <Accordion title="Health, signals, Trace AI">
+  <Accordion title="Health, signals, predictions">
     `gt_health_score`, `gt_health_history`, `gt_health_profiles_list`, `gt_health_set_override` · `gt_signal_list`, `gt_signal_get`, `gt_signal_dismiss`, `gt_signal_snooze`, `gt_signal_record_outcome` · `gt_cortex_predictions`, `gt_cortex_narrative`, `gt_cortex_blind_spots`, `gt_cortex_confirm_intervention`
   </Accordion>
-  <Accordion title="Revenue, deals, surveys">
-    `gt_revenue_event_list`, `gt_revenue_change_analysis`, `gt_revenue_change_history` · `gt_deal_list`, `gt_deal_get` · `gt_survey_list`, `gt_survey_get`, `gt_survey_responses` · `gt_success_plan_list`, `gt_success_plan_get`
+  <Accordion title="Revenue, deals, surveys, plans">
+    `gt_revenue_event_list`, `gt_revenue_change_analysis`, `gt_revenue_change_history` · `gt_deal_list`, `gt_deal_get` · `gt_survey_list`, `gt_survey_get`, `gt_survey_responses` · `gt_plan_list`, `gt_plan_get`
   </Accordion>
-  <Accordion title="Flows, views, comms, portals">
-    `gt_flow_list`, `gt_flow_get`, `gt_flow_runs`, `gt_flow_apply`, `gt_flow_test_run` · `gt_view_list`, `gt_view_get`, `gt_view_run`, `gt_view_create`, `gt_view_delete` · `gt_comm_emails_list`, `gt_comm_meetings_list`, `gt_comm_meeting_get` · `gt_portal_list`, `gt_portal_get`, `gt_portal_template_list`
+  <Accordion title="Flows, views, comms, portals, workflow AI">
+    `gt_flow_list`, `gt_flow_get`, `gt_flow_runs`, `gt_flow_apply`, `gt_flow_test_run` · `gt_view_list`, `gt_view_get`, `gt_view_run`, `gt_view_create`, `gt_view_delete` · `gt_comm_emails_list`, `gt_comm_meetings_list`, `gt_comm_meeting_get` · `gt_portal_list`, `gt_portal_get`, `gt_portal_template_list` · `gt_workflow_ai_pending_approvals`, `gt_workflow_ai_decide`, `gt_workflow_ai_usage`
   </Accordion>
   <Accordion title="Data, identity, sync, governance">
     `gt_data_completeness`, `gt_data_freshness`, `gt_data_conflicts`, `gt_data_lineage` · `gt_identity_match_candidates`, `gt_identity_match_confirm`, `gt_identity_match_reject`, `gt_identity_source_authority` · `gt_sync_connections_list`, `gt_sync_streams_list`, `gt_sync_status` · `gt_governance_audit_log`, `gt_governance_retention_policies`, `gt_governance_custom_roles`, `gt_governance_ip_allowlist`, `gt_governance_api_keys`
   </Accordion>
 </AccordionGroup>
 
+<Note>
+  Earlier tool names built on account/contact vocabulary (`gt_account_list`,
+  `gt_contact_get`, `gt_brief_account`, and so on) still work as deprecated
+  aliases of the `gt_company_*` / `gt_people_*` tools, so existing connectors
+  keep working without changes.
+</Note>
+
 ## Permissions and limits
 
-- **Scopes** — each tool requires a scope (for example `read:companies`, `write:signals`). Your OAuth grant or API key decides which tools are available. Read tools need a `read:` scope; writes need the matching `write:` scope.
-- **Audited writes** — every write is recorded in the workspace audit log with the acting identity.
-- **Rate limits** — 60 read calls and 20 write calls per minute, per identity. A `429` means back off and retry.
-- **Workspace isolation** — the server only ever sees the one workspace your token belongs to.
+- **Scopes** - each tool requires a scope (for example `read:companies`, `write:signals`). Your OAuth grant or API key decides which tools are available. Read tools need a `read:` scope; writes need the matching `write:` scope.
+- **Audited** - every tool call is recorded in the workspace audit log with the acting identity.
+- **Idempotent writes** - write tools accept an `idempotency_key`; a repeated call with the same key returns the cached response instead of running again. Keys are held for up to 24 hours on a best-effort basis - a deploy can clear the cache early, so keep writes safe to retry.
+- **Rate limits** - per connection, each tool allows 60 read calls or 20 write calls per minute. A few expensive tools are lower (`gt_ask` allows 10 per minute). A rate-limit error tells you how long to back off.
+- **Workspace isolation** - the server only ever sees the one workspace your connection was authorized for.
+- **IP allowlist** - if your workspace has an IP allowlist configured, MCP requests must come from an allowed address.
 
 <Note>
   V1 exposes tools only (no prompts or resources yet). Point your client at the
   endpoint and it will list the tools it's allowed to use.
 </Note>
+
+## Related
+
+- [Authentication](/authentication) - create and scope `gt_live_` API keys
+- [Errors](/errors) - the shared error envelope and codes

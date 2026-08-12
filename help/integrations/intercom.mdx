@@ -1,41 +1,140 @@
 ---
 title: "Connect Intercom to GainTrace"
 sidebarTitle: "Intercom"
-description: "Sync Intercom contacts, companies, and conversations into GainTrace so support activity feeds health scores and signals. Connect the Intercom integration in minutes."
-keywords: ["Intercom integration", "GainTrace Intercom", "sync Intercom", "Intercom customer success", "support integration"]
+description: "Connect Intercom with an access token to sync conversations, tickets, contacts, and companies into GainTrace so support activity feeds health scores and signals."
+keywords: ["Intercom integration", "GainTrace Intercom", "Intercom access token", "sync Intercom", "Intercom customer success", "support integration"]
 ---
 
-{/* docs-meta: catalog=IntegrationsExperience.tsx (sourceId intercom); verified 2026-07 */}
+{/* docs-meta: catalog=IntegrationsExperience.tsx (sourceId intercom); auth=intercom-oauth-gate.ts + credential-schemas.ts; streams=intercom-patch.ts; verified 2026-08 */}
 
-Intercom is where a lot of your customer conversations happen. Connecting it brings that support history into GainTrace, so a spike in tickets or a frustrated thread can show up on the account before it becomes a churn risk.
+Intercom is where your support conversations live. Connecting it brings conversations, tickets, contact notes, and company data into GainTrace, where they attach to the right Companies and People and feed health scores and signals.
+
+## How the connection works
+
+You connect Intercom with an access token that you create in Intercom's Developer Hub. The token belongs to one Intercom workspace, and GainTrace uses it to read that workspace's data on a schedule. GainTrace encrypts the token at rest in its database.
+
+The connection is read-only. GainTrace reads from Intercom and never writes to it, so nothing you do in GainTrace changes your Intercom data.
+
+After you connect, a sync runs automatically about every 5 minutes. The first syncs backfill your history in batches, so a large workspace fills in over a series of runs rather than all at once.
+
+<Note>
+Connecting Intercom with OAuth is temporarily limited to approved accounts, so the connect dialog asks for an access token. The token connection runs the same sync and brings in the same data.
+</Note>
 
 ## What syncs
 
-GainTrace pulls these Intercom objects and maps them into your workspace:
+| Intercom object | In GainTrace | Direction | Notes |
+| --- | --- | --- | --- |
+| Companies | Companies | Intercom to GainTrace | Matched to your existing Companies by identity resolution. |
+| Contacts | People | Intercom to GainTrace | Leads and users both sync. Very large lists backfill across several runs. |
+| Conversations | Support activity on the matching Company and People | Intercom to GainTrace | Includes the full message thread, and the assigned teammate's name. Backfills up to roughly 250 conversations per run. |
+| Tickets | Support activity on the matching Company and People | Intercom to GainTrace | Includes the ticket thread and state. |
+| Notes | Notes on the matching person | Intercom to GainTrace | Found by a rotating sweep of your contacts, so a new note can take a few runs to appear. |
+| Tags and segments | Context on the matching Companies | Intercom to GainTrace | Company tags and segments are stored as context on the Company record. |
 
-- **Companies** become your Companies.
-- **Contacts** become your People.
-- **Conversations, tags, and segments** attach to the right account, so support volume and sentiment are visible in context.
+Intercom teammates are not created as People. Their names appear on the conversations and tickets assigned to them.
+
+## Prerequisites
+
+- An Intercom teammate seat with the **Can access developer hub** permission. Teammates with full access have it.
+- An Intercom workspace. GainTrace is verified with US-hosted Intercom workspaces. If your workspace is EU-hosted or Australia-hosted (your Intercom URL starts with app.eu.intercom.com or app.au.intercom.com) and the connection check fails, contact support.
+- A GainTrace workspace. Intercom is a standard connector, available on every plan.
+
+## Create an access token in Intercom
+
+<Steps>
+  <Step title="Open the Developer Hub">
+    Sign in to Intercom and open the **Developer Hub** at `app.intercom.com/a/apps/_/developer-hub`.
+  </Step>
+  <Step title="Create an app">
+    Click **New app**. Give it a name such as `GainTrace`, choose the Intercom workspace you want to connect, and click **Create app**.
+  </Step>
+  <Step title="Copy the access token">
+    In the app's menu, open **Authentication**. The access token for your workspace is shown there. Copy it.
+  </Step>
+</Steps>
+
+The token carries the permissions listed on the **Authentication** page. New apps come with permissions preselected, which normally include read access to contacts, companies, conversations, and tickets - the set GainTrace needs. Confirm those read permissions are enabled, and click **Edit** to add any that are missing.
+
+<Warning>
+Treat the access token like a password. Anyone who has it can read your Intercom workspace data. If it leaks, open the app in the Developer Hub, go to **Test and Publish**, select your workspace, and click **Regenerate token** to invalidate the old token, then reconnect Intercom in GainTrace with the new one. To revoke the app's access entirely, click **Uninstall app** instead.
+</Warning>
 
 ## Connect Intercom
 
 <Steps>
   <Step title="Open the catalog">
-    Go to **Integrations** in the left nav and pick **Intercom**.
+    In GainTrace, go to **Integrations** in the left nav and select **Intercom**.
   </Step>
-  <Step title="Authorize">
-    Use **Connect with OAuth** and approve GainTrace in the Intercom window. You can also connect manually with an access token.
+  <Step title="Paste the token">
+    In the **Connect Intercom** dialog, paste the token into the **Intercom Access Token** field.
+  </Step>
+  <Step title="Connect">
+    Click **Continue**, then **Connect**. GainTrace verifies the token against Intercom before saving, so a failed check saves nothing.
   </Step>
   <Step title="Let it sync">
-    Your conversations and contacts start syncing. Manage the connection under **Data > Sources**.
+    The connection appears under **Data** > **Sources** and starts syncing on its own. The first records land within a few minutes, and history backfills over the following runs.
   </Step>
 </Steps>
 
-## What you can do with it
+## Filter which Companies sync
 
-With Intercom connected, support activity becomes part of health. A rise in open conversations can lower a score and raise a signal, so your team sees a struggling account in triage instead of hearing about it at renewal.
+Intercom workspaces often contain leads and free users who are not customers. Ingestion filters let you set rules for which Companies sync, and the rules can cascade to those Companies' People and activity.
+
+1. Go to **Data** > **Sources** and click **Manage** on the Intercom connection.
+2. Set your rules in the ingestion filters section and save.
+
+Editing filters requires permission to manage workspace settings. Members without it see the filters read-only. See [Ingestion filters](/help/integrations/ingestion-filters) for how rules and cascade behave.
+
+## Errors
+
+| Error | Cause | Fix |
+| --- | --- | --- |
+| Connection check failed. Verify your credentials and try again. | The token is wrong, was revoked, or the app was uninstalled from your Intercom workspace. | Copy the token again from the app's **Authentication** page in the Developer Hub and reconnect. Confirm the app still exists. |
+| Sync failed. Try again or reconnect this source. | A manually triggered sync hit an Intercom API error, or the token was revoked after connecting. | Click **Sync Now** on the connection under **Data** > **Sources**. If it keeps failing, create a fresh token and reconnect. |
+| Sync failed. It will retry on the next scheduled run. | A scheduled sync run hit an Intercom API error. | Wait for the retry, or click **Sync Now** on the connection under **Data** > **Sources**. |
+| Authentication with the provider failed. Reconnect this integration and try again. | The token was revoked or regenerated after connecting. | Copy a fresh token from the app's **Authentication** page and reconnect Intercom. |
+| Intercom OAuth is temporarily limited to approved accounts. Connect Intercom with an access token instead. | The OAuth path is restricted. | Connect with an access token. The data that syncs is identical. |
+
+If a connection fails 3 times in a row, GainTrace pauses automatic syncs and shows "Failed to sync {connection name} 3 times in a row. Syncing is paused. Fix the connection, then run a manual sync to resume." Click **Sync Now** to resume. If none of the fixes above work, contact support with the connection name and the error you see.
+
+## FAQ
+
+**Can I connect Intercom with OAuth?**
+Not currently, unless your account has been approved for it. Everyone else connects with an access token, which syncs the same data.
+
+**Does GainTrace write anything back to Intercom?**
+No. The connector is read-only, and there is no two-way sync option for Intercom.
+
+**How far back does history sync?**
+GainTrace backfills your full history. Conversations, notes, and very large contact lists sync in batches, so a workspace with a long history fills in over a series of runs instead of one pass.
+
+**What happens when I delete a contact or conversation in Intercom?**
+Nothing is deleted in GainTrace. The record stops receiving updates but stays in your workspace.
+
+**How do I rotate the token?**
+Open your app in the Developer Hub, go to **Test and Publish**, select your workspace, and click **Regenerate token**. Copy the new token and reconnect Intercom in GainTrace. The old token stops working immediately.
 
 ## Good to know
 
-- Intercom updates flow in near real time through webhooks, with a regular background sync as backup.
-- This connector is read-only. GainTrace reads your Intercom data and doesn't write back to it.
+- Syncs run about every 5 minutes, on every plan.
+- The connector is read-only. GainTrace never writes to Intercom.
+- Deletions in Intercom do not propagate to GainTrace.
+- Conversations sync with their full message threads, so Trace AI and signals can read what was actually said, not just that a conversation happened.
+
+## Related articles
+
+<CardGroup cols={2}>
+  <Card title="Integrations overview" icon="plug" href="/help/integrations/integrations">
+    Every connector GainTrace supports and how syncing works.
+  </Card>
+  <Card title="Ingestion filters" icon="filter" href="/help/integrations/ingestion-filters">
+    Control which Companies and People each connection brings in.
+  </Card>
+  <Card title="Companies" icon="building" href="/help/records/companies">
+    How synced data becomes one record per customer.
+  </Card>
+  <Card title="Health scores" icon="heart-pulse" href="/help/accounts/health">
+    How support activity feeds account health.
+  </Card>
+</CardGroup>

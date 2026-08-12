@@ -1,27 +1,160 @@
 ---
-title: "Success plans"
-description: "Set goals and outcomes for your key accounts, track progress, and run a QBR."
+title: "Plans"
+description: "Give every Company one living plan: objectives wired to real metrics, mutual commitments, event-triggered reviews, and a link your customer can open anytime."
+keywords: ["success plan", "living plan", "mutual action plan", "business review", "QBR", "renewal review", "share plan with customer", "GainTrace plans"]
 ---
 
-{/* docs-meta: routes=[/success-plans, /companies/[id]] reviewed=2026-07 */}
+{/* docs-meta: routes=[/plans, /plans/draft/[companyId], /plans/[planId], /plans/[planId]/reviews/[reviewId], /p/[token], /companies/[id]]; components=PlansHubClient.tsx, plan-view.tsx, reviews-section.tsx, shared-views.tsx; verified 2026-08 */}
 
-**Success Plans** is your workspace view of every account's plan, under **Customer Success** in the left nav. A plan pairs a goal with the outcomes and milestones that get you there, so you and your customer are working toward the same thing.
+**Plans** gives each Company one living plan: the customer's objectives wired to real numbers, a two-sided commitment list, and reviews that assemble themselves from what actually happened. Open the hub from the command menu (**Cmd+K**, type "Plans") or under **Setup > Customer success**; each Company page also has a **Plan** tab. You can share the plan with your customer through a link that stays current.
 
-## See where plans stand
+## How a living plan works
 
-The list ranks accounts by the ARR at stake, so the plans that matter most sit up top. Filter by status (**Active**, **At risk**, **Achieved**, **Archived**) or search by plan or account name.
+Every Company gets at most one plan. It seeds itself from data your workspace already has - ARR, renewal date, health, adoption, recent activity - and anything GainTrace does not know shows as empty ("ARR not tracked", "No renewal date") rather than being invented.
 
-To adjust a plan without leaving the list, open its menu: **Edit name**, or **Edit details** to set a priority and target date. **Archive** puts a plan aside when it's done.
+The plan then maintains itself. GainTrace re-syncs every plan automatically about every six hours: it refreshes the facts line, recomputes metric-bound objectives, advances the lifecycle stage, logs notable events (critical signals, first feature use, objectives achieved), and suggests a review when one is warranted. Use **Refresh** on a plan to re-sync it on demand.
 
-## Create a plan
+A plan moves through three stages:
 
-Plans live on the account, so you create one from a company's **Plan** tab. Open a company, go to Plan, and pick a template to start from. To roll plans out across a set of accounts at once, use **Bulk apply template** at the top of the Success Plans list.
+| Stage | When |
+|---|---|
+| **Onboarding** | For Companies new to your workspace (roughly their first 90 days), from plan creation until you click **First value achieved**. Plans started for longer-standing Companies begin in Adoption |
+| **Adoption** | After first value, outside the renewal window |
+| **Renewal** | The last 120 days before the renewal date. This stage always wins, even mid-onboarding |
 
-## Run a QBR
+When the renewal date passes or moves out of the window, the plan settles back into Adoption.
 
-From a plan you can open a QBR, a shareable business-review page that brings the account's story together. GainTrace drafts the write-up for you as a starting point, and you can share the finished page with your customer through a link.
+## Start plans
+
+<Steps>
+  <Step title="Open Plans">
+    Open the Plans hub from **Cmd+K** or **Setup > Customer success**, then click **Start plans**. You can also open a Company, go to its **Plan** tab, and click **Review the draft**.
+  </Step>
+  <Step title="Pick Companies">
+    The dialog lists Companies that have no plan yet, largest ARR first.
+    - Select one Company and click **Review the draft** to curate a full evidence-based draft.
+    - Select several and click **Start plans** to create lean plans (facts and lifecycle only) that you flesh out later.
+  </Step>
+  <Step title="Curate the draft (single Company)">
+    The draft page proposes objectives, stakeholders, and first commitments from real data - adoption gaps, health, the renewal date, your contact graph - with an evidence line under every proposal. It also lists **What we can't see yet**, so gaps are named instead of papered over. Keep or drop each item, add **Why they bought** in your own words, and adjust the first-value target date.
+  </Step>
+  <Step title="Create it">
+    Click **Create the plan**. Only the items you kept are created.
+  </Step>
+</Steps>
+
+<Note>
+Trace AI may tighten the draft's wording, grounded only in the evidence shown. If it cannot run, you get the same draft with plainer wording - the proposals themselves are always assembled from your data, never generated from scratch.
+</Note>
+
+## Read the Plans hub
+
+The hub opens with five stats: **Plans**, **ARR under plan**, **In renewal window**, **Objectives at risk**, and **Reviews waiting**. Below them:
+
+- **Needs attention** lists one row per reason: a suggested review, overdue commitments (yours or the customer's), objectives off pace, or a renewal countdown. Reviews sort first, then customer-owed work, then risk.
+- **Portfolio** is the whole book in one table - Company, Stage, Objectives, ARR, Health, Renewal, Last review, Owner - ordered by ARR.
+
+## Set objectives
+
+Objectives are the customer's goals, in their words. A plan holds at most 7 active objectives; archive one to add another.
+
+| Status | Meaning |
+|---|---|
+| **Not started** | No data yet. Missing data is never shown as progress |
+| **On track** | Moving, and not behind pace |
+| **At risk** | More than 25 points behind the pace needed to hit the target date |
+| **Achieved** | The target is met |
+| **Missed** | The target date passed without the target being met |
+
+Objectives from the drafted plan can be bound to a real metric (feature adoption, a usage metric, or the health score); their status is the system's verdict, recomputed on every sync, and cannot be hand-edited. Objectives you add with **Add** on the plan are manual: you set the status yourself, and the change is recorded with your name and a timestamp.
+
+## Track commitments
+
+Commitments are the mutual action plan, split into **We owe them** and **They owe us**. Each carries an optional owner and due date; mark items done or drop them.
+
+Commitments on your side also appear in your Tasks queue, so plan work lands in your daily list without double entry. Overdue commitments on either side surface in **Needs attention** on the hub.
+
+## Map stakeholders and log wins
+
+**Stakeholders** tracks who matters on the customer side: Champion, Economic buyer, Exec sponsor, Day to day, or Detractor, each with a pulse of Engaged, Quiet, or Left. Setting a champion's pulse to **Left** logs the change and suggests a Save review.
+
+**Wins and risks** is the plan's running ledger. GainTrace writes entries automatically - critical signals as risks, first feature use as adoption gains, objectives achieved, stage changes - and you can log wins, risks, milestones, and notes yourself. Pin a win or milestone to make sure it leads the next review. Reviews pull highlights from the period since the last delivered review; risks and notes stay in the ledger.
+
+## Run reviews
+
+Reviews are suggested by events, never by the calendar. Each suggestion names its reason:
+
+| Review | Suggested when |
+|---|---|
+| **Onboarding review** | The plan leaves onboarding and no review has been delivered yet |
+| **Renewal review** | The plan enters the renewal window, 120 days before the renewal date |
+| **Save review** | A champion is marked as Left, or the plan goes quiet: no activity in 60 days and no review delivered in 90 |
+| **Business review** | Started by you, from the **Start** menu in the Reviews section |
+
+You can start any review kind manually at any time.
+
+<Steps>
+  <Step title="Prepare">
+    Click **Prepare** on a suggested review, or **Skip** it with a one-line reason, which is stored on the review record. Preparing assembles a one-pager from the ledger, objectives, and live facts.
+  </Step>
+  <Step title="Compose">
+    Numbers in the document come from live data and are not editable. The narrative lines - the opening one-liner and the usage story - are yours to write, or click **Draft with Trace AI** to generate them from the facts. Trace AI writes only the narrative - the numbers stay locked to live data. **Refresh data** rebuilds the numbers and keeps your narrative.
+  </Step>
+  <Step title="Present or share">
+    **Present** turns the document into a full-screen, keyboard-driven walkthrough. **Share** creates a customer link to the one-pager.
+  </Step>
+  <Step title="Mark delivered">
+    **Mark delivered** closes the loop: the review becomes the permanent record of what was shown, and any next-period items you added become commitments on the plan (your side lands in Tasks too).
+  </Step>
+</Steps>
+
+<Warning>
+A delivered review cannot be edited or refreshed. It is the record of what the customer saw, so lock it in only when the document is final.
+</Warning>
+
+## Share the plan with your customer
+
+Click **Share with customer** on a plan. GainTrace copies a link your customer can open without logging in. The page shows the plan's objectives, open and completed commitments, recent wins, and the facts line, styled with your workspace's brand kit. It updates as the plan changes - it is a living document, not a snapshot.
+
+Reviews share the same way from the composer, showing the one-pager as delivered.
+
+Customer opens are recorded: the composer shows how many times a review was opened, the Portfolio shows when a plan was last viewed, and opens count as engagement on the plan.
+
+<Warning>
+Anyone with the link can view the page - there is no login and no expiry date. Click the share button again to disable a link at any time; re-enabling sharing later revives the same link. Archived plans stop resolving their link.
+</Warning>
+
+## FAQ
+
+**Can a Company have more than one plan?** No. Each Company has exactly one living plan, and drafting a second is blocked.
+
+**Do I have to fill in ARR, renewal dates, or health by hand?** No. The facts line reads from the Company record, which your connectors keep current. Fields with no source stay honestly empty.
+
+**Why does an objective show "Not started" when work has begun?** Its metric has no data yet. GainTrace never converts missing data into progress; connect the relevant source or switch the objective to manual status.
+
+**Why is there no quarterly review cadence?** Reviews are triggered by customer milestones - onboarding wrapping, the renewal window, disengagement, a champion change - because a calendar date is not a reason to meet. Start a Business review manually whenever you want one.
 
 ## Good to know
 
-- A brand-new plan shows no progress until the overnight sync fills in current values from your live data, so give it a day to catch up.
-- The QBR write-up is AI-drafted. Read it through and adjust it before you share it.
+- Plans re-sync automatically about every six hours; **Refresh** on a plan re-syncs it immediately.
+- Churn risk appears on the facts line only when the predictor has enough data to stand behind a number.
+- A plan holds at most 7 active objectives.
+- Skipping a review records your reason on the review record; skipped reviews don't appear in the plan's review list.
+- The shared page is excluded from search engine indexing, but the link itself is the only access control.
+
+## Related articles
+
+<CardGroup cols={2}>
+  <Card title="How health works" href="/help/accounts/health">
+    The health status and score that feed a plan's facts line.
+  </Card>
+  <Card title="Companies" href="/help/records/companies">
+    The Company records that plans are built on.
+  </Card>
+  <Card title="Trace AI" href="/help/trace-ai/trace-ai">
+    What the in-product AI does and how it stays grounded.
+  </Card>
+  <Card title="Your day in GainTrace" href="/help/getting-started/for-csms">
+    Where plans fit in a CSM's daily flow.
+  </Card>
+</CardGroup>

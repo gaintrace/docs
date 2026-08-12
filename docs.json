@@ -44,14 +44,16 @@
             "pages": [
               "help/records/companies",
               "help/records/people",
-              "help/records/revenue"
+              "help/records/revenue",
+              "help/records/data-model"
             ]
           },
           {
             "group": "Health and triage",
             "pages": [
               "help/accounts/health",
-              "help/accounts/triage"
+              "help/accounts/triage",
+              "help/accounts/adoption"
             ]
           },
           {
@@ -69,13 +71,15 @@
           {
             "group": "Customer success",
             "pages": [
-              "help/success/success-plans"
+              "help/success/success-plans",
+              "help/success/champion-tracking"
             ]
           },
           {
             "group": "Connecting your data",
             "pages": [
               "help/integrations/integrations",
+              "help/integrations/ingestion-filters",
               {
                 "group": "Popular integrations",
                 "pages": [
@@ -102,6 +106,7 @@
             "group": "Workspace admin",
             "pages": [
               "help/admin/members",
+              "help/admin/teams",
               "help/admin/billing",
               "help/admin/governance"
             ]
@@ -238,5 +243,19 @@
   },
   "metadata": {
     "timestamp": true
-  }
+  },
+  "redirects": [
+    {
+      "source": "/members",
+      "destination": "/help/admin/members"
+    },
+    {
+      "source": "/teams",
+      "destination": "/help/admin/teams"
+    },
+    {
+      "source": "/mcp",
+      "destination": "/mcp-server"
+    }
+  ]
 }

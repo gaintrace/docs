@@ -1,0 +1,155 @@
+---
+title: "Filter which records sync into GainTrace"
+sidebarTitle: "Ingestion filters"
+description: "Use ingestion filters to control which records a connected source syncs into GainTrace. Set per-connection conditions, skip non-customers, and keep your workspace clean."
+keywords: ["ingestion filters", "filter sync", "GainTrace filters", "sync filters", "exclude records", "CRM filter", "only sync customers"]
+---
+
+{/* docs-meta: routes=[/integrations/[connectionId]]; components=IngestionFiltersSection.tsx, SyncDirectionSection.tsx; verified 2026-08 */}
+
+Ingestion filters control which records a connected source syncs into GainTrace. CRMs often contain Companies that are not current customers; filters let you keep prospects, test records, and dead deals out of your workspace so health scores and signals reflect real customers only.
+
+## How ingestion filters work
+
+Filters are set per connection. Each connection has its own filters, and they apply to every sync GainTrace runs for that connection, scheduled or manual. Webhook-delivered CRM changes are picked up by the next sync, so they pass through the same filters.
+
+During a sync, GainTrace checks each incoming record against your filters. Records that match sync normally. Records that do not match are skipped: counted, never stored as records.
+
+There are two kinds of filters, and you can combine them:
+
+| Filter type | What it checks | When it is available |
+|---|---|---|
+| **Company conditions** | The unified Company profile in GainTrace, which combines data from all your connectors | Immediately, on any connection that shows the **Ingestion filters** section |
+| **Stream filters** | The raw fields of each record exactly as the source sends them, one filter per stream | After the connection's first sync, once its real fields have been discovered |
+
+Company conditions are cross-connector: a condition like MRR above $0 passes for a HubSpot Company even when the MRR came from Stripe, because both sources contribute to the same unified Company profile.
+
+Stream filters are source-native: they see the record's own field names, so a HubSpot deal filter uses HubSpot property names, not GainTrace field names.
+
+## Build conditions
+
+A filter is a list of conditions. The first condition reads **Where**; each additional condition joins with **and** or **or**, and you can click the connector word to switch between them.
+
+Company conditions can target these unified profile fields, plus any custom field you type in:
+
+| Field | Type |
+|---|---|
+| MRR, ARR | Currency |
+| Health score, Employees | Number |
+| Churn probability | Percent |
+| Health status | Option (Healthy, At risk, Churning, Unknown) |
+| Plan, Company name, Domain, Industry, Segment, Region, Location | Text |
+| Owner email | Email |
+| Contract start, Renewal date | Date |
+| Last activity | Date and time |
+
+Stream filter fields come from the connection's discovered schema, so you pick from the fields your source actually sends.
+
+The operators offered depend on the field's type:
+
+| Field type | Operators |
+|---|---|
+| Text, email | contains, does not contain, is, is not, starts with, ends with, is empty, is not empty |
+| Number, currency, percent | =, ≠, >, <, ≥, ≤, is between, is empty, is not empty |
+| Date, date and time | is, is before, is after, is between, is in the last, is empty, is not empty |
+| Option | is one of, is none of, is empty, is not empty |
+| Yes / no | is |
+
+## Skip linked records with a Company
+
+When a Company fails your Company conditions, its related records usually should not sync either. Two controls under **Company conditions** handle this:
+
+- **Skip linked records too**: when on, People, deals, and activity belonging to a Company that fails the conditions are skipped with it. This is on by default.
+- **Records with no linked company**: choose **Keep** or **Skip** for records GainTrace cannot link to any Company. The default is **Keep**, because initial backfills often deliver People and deals before their Companies arrive. This option appears while **Skip linked records too** is on.
+
+## Set filters on a connection
+
+Changing filters requires workspace admin permissions. Members without settings permissions see the filters read-only.
+
+<Steps>
+  <Step title="Open the connection">
+    Go to **Data > Sources** and click **Manage** on the connection you want to filter.
+  </Step>
+  <Step title="Find the Ingestion filters section">
+    Scroll to **Ingestion filters** on the connection's settings page.
+  </Step>
+  <Step title="Add Company conditions">
+    Under **Company conditions**, click **Add condition** and build your rule. If you are starting fresh, the one-click example **Try an example: only sync paying customers (MRR above $0)** seeds the most common condition.
+  </Step>
+  <Step title="Add stream filters (optional)">
+    Click **Filter a stream**, pick a stream, then click **Add rule** to add conditions on that stream's raw fields. Click **Remove** on a stream card to drop its filter.
+  </Step>
+  <Step title="Save">
+    Click **Save filters**. Nothing you build takes effect until you save, so a half-finished rule never skips records. Saved filters apply from the next sync.
+  </Step>
+</Steps>
+
+## What happens to records that do not match
+
+- Non-matching records are skipped during sync. They are counted but never stored as Company, People, deal, or activity records. GainTrace may keep a few raw sample values per stream for field discovery; these are captured before filtering.
+- Filters apply from the next sync after you save them. Records already in your workspace stay; saving a filter never deletes existing records.
+- Filtering happens inside GainTrace after records are read from the source, so filters reduce what lands in your workspace but do not reduce your source's API usage.
+
+<Note>
+Filters fail open. If GainTrace cannot evaluate a condition against a record, or a saved rule cannot be read, it keeps the affected records instead of dropping them. The worst outcome of a broken filter is syncing too much, never silently losing records.
+</Note>
+
+## Read the skipped counts
+
+Once at least one record has been skipped, the **Ingestion filters** section shows a running total next to its heading, for example **1,240 skipped to date**, and each stream with its own filter shows its own count. These are cumulative totals across all syncs since the filter was set.
+
+A growing skipped count means the filter is working, not that something is wrong.
+
+## Filters and sync direction
+
+CRM connections show a **Sync direction** section on the same settings page, with three options:
+
+| Direction | What it does |
+|---|---|
+| **Pull only** | Read from the CRM. Nothing is ever written back. This is the default. |
+| **Two-way** | Pull from the CRM and push mapped field changes back. |
+| **Push only** | Only write mapped field changes to the CRM. |
+
+Ingestion filters apply to the pull side only: they govern what syncs into GainTrace. They never gate what GainTrace pushes back to your CRM. Write-back is controlled per field in **Field mapping**, where only mappings set to outbound or both are pushed.
+
+<Note>
+**Two-way** and **Push only** are available for Salesforce, HubSpot, and Close. Other CRM connectors are pull only for now. Enabling a push direction verifies the connection's write access first; if your CRM is connected read-only, reconnect it to grant write access.
+</Note>
+
+## Good to know
+
+- Company conditions work right away, even before the first sync. Stream filters unlock after the first sync, once the connection's real fields have been discovered.
+- Filters are per connection. If you connect the same source twice, each connection keeps its own filters.
+- Changing filters and sync direction requires workspace admin permissions; other members can view them but not edit.
+- Skipped records are never stored as records in GainTrace. To bring previously skipped records in, loosen or remove the filter, then sync again.
+
+## FAQ
+
+**Do filters delete records that already synced?**
+No. Filters apply from the next sync; existing records stay until you remove them yourself.
+
+**Do filters reduce my CRM API usage?**
+No. GainTrace filters after reading records from the source, so filters reduce what lands in your workspace, not the source's API quota.
+
+**Do ingestion filters affect what GainTrace pushes back to my CRM?**
+No. They govern only the pull side; write-back is controlled per field in **Field mapping**.
+
+**Why can't I add a stream filter yet?**
+Stream filters need the connection's real fields, which GainTrace discovers during the first sync. Run one sync, then come back to add stream filters.
+
+## Related articles
+
+<CardGroup cols={2}>
+  <Card title="Integrations" href="/help/integrations/integrations">
+    Browse the catalog and manage your connected sources.
+  </Card>
+  <Card title="HubSpot" href="/help/integrations/hubspot">
+    Connect HubSpot and sync Companies, People, and deals.
+  </Card>
+  <Card title="Salesforce" href="/help/integrations/salesforce">
+    Connect Salesforce, including custom fields and objects.
+  </Card>
+  <Card title="Stripe" href="/help/integrations/stripe">
+    Bring in real revenue so conditions like MRR have data behind them.
+  </Card>
+</CardGroup>

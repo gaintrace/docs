@@ -1,0 +1,164 @@
+---
+title: "Champion tracking"
+description: "Name a champion at every Company, watch their LinkedIn profile for a job change, and get a signal, a health drop, and a task soon after a champion leaves."
+keywords: ["champion tracking", "champion left", "executive sponsor", "LinkedIn monitoring", "job change alert", "single-threaded", "coverage gaps", "champion departure"]
+---
+
+{/* docs-meta: routes=[/champions, /people, /companies/[id], /triage, /settings/signals]; components=champions/page.tsx, champion-tracking-dialog.tsx, champion-coverage-inbox.tsx, champion-overview-band.tsx, monitoring-explainer.tsx, lib/champions/monitor.ts, lib/champions/vocabulary.ts; verified 2026-08 */}
+
+**Champions**, under **Records > Coverage** in the left nav, tracks who is in your corner at each Company and whether they are still there. Losing a champion is one of the strongest single-company churn signals, so GainTrace can watch a champion's public LinkedIn profile and tell you within roughly nine days of the profile changing.
+
+## How champion tracking works
+
+Champion tracking has two layers, and you can use the first without the second.
+
+**Naming** marks a person as one of two seats: **Champion** (your day-to-day advocate, who uses the product and argues for it internally) or **Executive sponsor** (who holds the budget and signs the renewal). A named champion counts toward the Company's coverage, appears with a role badge across People surfaces, and enables champion-loss detection based on activity: the **Champion left** signal fires when every tagged champion at a Company has been inactive for the configured window (default 30 days).
+
+**Watching** adds the person's LinkedIn profile URL. GainTrace verifies the profile, records the person's current employers as the baseline, and then re-checks the profile about every 7 days. A check looks at all of the person's current positions, so a promotion, a new title, or an added board seat is not treated as a departure - only the Company itself disappearing from their profile is.
+
+When the Company disappears from the profile, GainTrace does not call it immediately. It waits 48 hours and checks again. Only if the Company is still gone does it confirm the departure. On a confirmed departure: a critical **Champion left** signal fires on the Company and lowers its health score at the next health refresh - Champion left carries one of the heaviest negative signal weights - the Company's owner gets a task to re-engage, and the Company returns to your coverage gaps.
+
+If the departed champion's new employer is another Company you already track, GainTrace fires an informational **Champion arrived** signal on that Company - a warm intro or expansion opening. This requires the Champion arrived signal to be enabled and the match to clear its confidence setting (see [Tune the champion signals](#tune-the-champion-signals)).
+
+## Monitoring states
+
+Every watched champion is in exactly one state, shown on the **Champions** page and in the tracking dialog.
+
+| State | Meaning |
+|---|---|
+| **Watching** | Checked every 7 days. Still listing the Company. |
+| **Confirming** | They stopped listing the Company. GainTrace checks again in 48 hours before calling it. |
+| **Departed** | Confirmed gone. A critical signal fired and the Company is a coverage gap. |
+| **Paused** | Monitoring off. They keep their role; the tracked seat is freed. |
+| **Not checking** | Five lookups failed in a row, so monitoring stopped. Usually a profile that went private. Re-save to restart. |
+| **Not started** | The first lookup never completed. Re-save the profile to start. |
+
+States that need you - Confirming, Departed, Not checking, Not started - sort to the top of the Watching tab.
+
+## Name a champion
+
+You can name a champion from three places. The first two open the tracking dialog; the **Coverage gaps** door opens a similar dialog that also asks you to pick the person.
+
+<Steps>
+  <Step title="Open the tracking dialog">
+    - From a Company: open the Company and go to its **People** tab. Each row has a button reading **Name** (no seat yet), **Watch** (seat named, not watched), or **Watching** (already monitored).
+    - From **People**: use the same button in the list's Champion column. The **Champions** toggle in the toolbar filters the list to champions and executive sponsors only.
+    - From **Champions > Coverage gaps**: click **Name** on a Company without a champion, then pick the person.
+  </Step>
+  <Step title="Pick their seat">
+    Under **Their seat**, choose **Champion** or **Executive sponsor**.
+  </Step>
+  <Step title="Add their LinkedIn profile (optional)">
+    Paste the person's LinkedIn profile URL into **LinkedIn profile**. GainTrace verifies it and shows the resolved profile so you can confirm it is the right person. Leave the field empty to name the seat without monitoring.
+  </Step>
+  <Step title="Save">
+    Click **Save** (seat only) or **Save and watch** (seat plus monitoring). From **Coverage gaps**, the seat-only button reads **Save champion** instead. With a verified profile, monitoring starts immediately and the first re-check is scheduled 7 days out.
+  </Step>
+</Steps>
+
+<Note>
+Saving a verified profile also refreshes the person's record from it: the photo and job title are updated to the LinkedIn values, and the name is corrected only when the existing value is missing or a placeholder (an email standing in for a name) - a real CRM name is never overwritten. If outbound sync is enabled on your CRM connector, seat changes queue a write-back to the CRM.
+</Note>
+
+## Read the Champions page
+
+Go to **Records > Coverage > Champions**. The page has two tabs, each with a live count:
+
+- **Watching** is the roster of monitored champions, sorted so the ones that need you come first.
+- **Coverage gaps** lists Companies that have an owner but no named champion or executive sponsor, plus any Company whose watched champion departed.
+
+Above the tabs, the overview band shows three meters: how many of the Companies you own have someone in your corner, how many tracked seats your plan allows and how many are used, and when the next check runs. **How this works** replays the intro explainer at any time.
+
+<Note>
+Coverage only counts Companies with an owner assigned. A Company without an owner appears in neither the coverage ratio nor the no-champion gap rows. The one exception is a confirmed champion departure, which surfaces in the gaps list regardless of owner.
+</Note>
+
+## Close coverage gaps
+
+The **Coverage gaps** tab is a live view: a Company leaves the list the moment a champion is named, and a Company with a departed champion re-enters it, ranked first, with a **Replace** button.
+
+To work the list yourself, click **Name** or **Replace** on a row and pick the person. To hand gaps to teammates:
+
+<Steps>
+  <Step title="Select Companies">
+    Use the checkboxes to select Companies, or select the whole page.
+  </Step>
+  <Step title="Pick a teammate">
+    Choose them in the **Assign to...** menu.
+  </Step>
+  <Step title="Create the tasks">
+    Click the create button; its label shows the count, for example **Create 12 tasks**. Each selected Company becomes one task in the teammate's Tasks queue, and each Company stays in the gaps list until a champion is actually named.
+  </Step>
+</Steps>
+
+<Note>
+One delegation covers at most 100 Companies. Selecting more blocks the button rather than silently truncating.
+</Note>
+
+The same gaps list also appears as the **Champion gaps** tab in **Triage**.
+
+## Pause monitoring
+
+To stop watching someone, open their tracking dialog and click **Pause monitoring**. The person keeps their seat and still counts toward coverage; only the LinkedIn checks stop, and the tracked seat is freed for someone else. Re-open the dialog and save the profile again to resume.
+
+## Tune the champion signals
+
+Both champion signals live in the signals catalog. Go to **Settings > Signals**:
+
+- **Champion left** (critical) fires two ways: every tagged champion at a Company inactive for the configured window (**Champion inactive for**, default 30 days), or a confirmed LinkedIn departure. Disabling it suppresses the signal and its health impact on both paths; a confirmed LinkedIn departure still creates the owner's re-engage task.
+- **Champion arrived** (info) fires when a departed champion turns up at another Company you track. Its **Minimum match confidence** setting controls which matches fire: **Low - every match** (the default), **Medium**, or **High only**.
+
+## Plan limits
+
+Each watched champion uses one tracked seat. Naming a seat without a LinkedIn profile does not use one.
+
+| Plan | Tracked champions |
+|---|---|
+| Free | 25 |
+| Pro | 100 per seat, pooled across the workspace |
+| Scale | 2,000 per seat, pooled across the workspace |
+| Enterprise | Unlimited |
+
+The cap is hard: at the limit, **Save and watch** saves the seat but does not start monitoring, and tells you so. Pausing a watched champion frees a tracked seat immediately.
+
+## FAQ
+
+**Does the champion know they are being watched?**
+GainTrace reads only what the person exposes on their public LinkedIn profile - the version visible without signing in. It never connects with them, messages them, or acts through anyone's LinkedIn account. If they turn their public profile off, checks stop working (the **Not checking** state).
+
+**Is a promotion or a board seat treated as leaving?**
+No. GainTrace checks all of the person's current positions, so new roles alongside the Company change nothing. Only the Company disappearing from the profile, confirmed again 48 hours later, counts as a departure.
+
+**Is naming a champion useful without a LinkedIn profile?**
+Yes. The Company counts as covered, the person gets the role badge everywhere, and the Champion left signal still fires if every tagged champion goes quiet for the configured window (default 30 days). You only give up job-change detection.
+
+**Why does a champion show "Not checking"?**
+Five consecutive lookups failed, usually because the profile went private or the URL changed. Open the tracking dialog and re-save the profile to restart monitoring.
+
+**How fast do I hear about a departure?**
+Profiles are checked about every 7 days, and a suspected departure is confirmed 48 hours later. Expect to know within roughly 9 days of the profile changing, not the same day.
+
+## Good to know
+
+- One person holds one monitor. Re-saving an already-watched profile refreshes it without using another tracked seat.
+- A departed champion keeps the **Departed** state on the roster after the departure. Naming a replacement covers the Company again; to clear the departed entry itself, open **Manage** on their row and pause or re-save their monitoring.
+- The health impact comes from the Champion left signal, so disabling it in **Settings > Signals** suppresses the signal and its health effect on both paths. The re-engage task from a confirmed LinkedIn departure is still created even with the signal disabled.
+- Checks are scheduled per champion, so "about every 7 days" is per profile, not one workspace-wide sweep.
+- Failed lookups back off gradually before monitoring stops at five consecutive failures.
+
+## Related articles
+
+<CardGroup cols={2}>
+  <Card title="People" href="/help/records/people">
+    The People records that champions are named on.
+  </Card>
+  <Card title="How health works" href="/help/accounts/health">
+    How signals like Champion left move a Company's health score.
+  </Card>
+  <Card title="Triage" href="/help/accounts/triage">
+    The queue where champion gaps and departure signals land.
+  </Card>
+  <Card title="Plans" href="/help/success/success-plans">
+    Stakeholder mapping inside a Company's living plan.
+  </Card>
+</CardGroup>
