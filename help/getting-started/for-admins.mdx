@@ -1,46 +1,378 @@
 ---
-title: "Setting up your workspace"
-description: "For admins: connect your data, invite your team, and get health scores flowing."
+title: "Set up your workspace: the complete admin checklist"
+sidebarTitle: "For admins"
+description: "The ordered admin setup path: connect data, map fields, define features, lifecycle, and churn, tune health and signals, route ownership, and finish with boards and flows."
+keywords: ["GainTrace setup", "admin setup guide", "workspace setup checklist", "connect CRM", "field mapping", "health scoring setup", "churn definition", "assignment rules", "import Stripe plans", "signal configuration", "onboarding admins"]
 ---
 
-{/* docs-meta: routes=[/onboarding, /integrations, /data/model, /settings] reviewed=2026-07 */}
+{/* docs-meta: routes=[/onboarding, /setup, /settings?section=members, /integrations, /data/sources, /data/import, /data/model, /data/mappings, /settings?section=pricing-model, /features, /settings/lifecycle, /settings/health-scores, /settings/predictor, /settings/signals, /settings?section=assignments, /champions, /settings?section=champion-tracking, /settings/surveys, /boards, /flows]; components=readiness (setup checklist), AccountSetup.tsx, PricingModelSection.tsx, AssignmentRulesSection.tsx, PredictorSetupSection.tsx, SignalsCatalog.tsx, nav-config.ts; verified 2026-08 */}
 
-This guide takes you from an empty workspace to health scores on your accounts. If you're the person setting GainTrace up for your team, start here.
+This is the complete setup path for the person configuring GainTrace for their team. Work through it once, in order, and you end with health scores on every Company, a live churn read, a Triage queue worth working, new Companies routed to owners automatically, and boards and flows running on real data.
 
-Most of the work is quick. The longest part is usually waiting for your first data sync to finish, and that runs in the background while you get on with other things.
+Plan for about an hour of hands-on work. The longest waits are data syncs, which run in the background, so most teams finish over a day or two.
+
+The order below follows the product's real dependency chain: data must flow before field mapping has fields, usage events must arrive before feature adoption produces numbers, features and definitions feed health, owners must exist before assignment rules route anything, and boards and flows come last because they consume everything above. Each stage says why it sits where it does.
+
+<Note>
+GainTrace tracks this work in-app at **Setup**, linked from the setup module on your home page. It is honest about state: a step shows as done only when you did it or real data proves it, shows **Using defaults** when the system provisioned something you have not reviewed, and shows **Switched off** when skipping it has turned a surface off.
+</Note>
 
 ## Before you start
 
-You'll connect a few of the tools you already use, so it helps to have admin access in each one (your CRM, your billing tool, your product analytics). Connecting uses OAuth or an API key from each service, so there's nothing to prepare beyond being able to sign in.
+You will connect tools you already use, so it helps to have admin access in each one: your CRM, your billing tool, and your product analytics. Connecting uses OAuth or an API key, so there is nothing to prepare beyond being able to sign in to each.
+
+## The path at a glance
+
+| # | Stage | Where | What it unlocks |
+|---|---|---|---|
+| 1 | Create your workspace | Signup wizard | Everything: all data and settings live in the workspace |
+| 2 | Invite your team | **Settings > Members** | Owners for Companies, reviewers for everything below |
+| 3 | Connect your data sources | **Integrations**, **Data > Sources** | All downstream surfaces: records, health, signals |
+| 4 | Filter what syncs in | Each connection's settings | A workspace of real customers, not prospects |
+| 5 | Review your data model | **Data > Data Model** | Confidence that records landed in the right shape |
+| 6 | Map source fields | **Data > Field Mapping** | Source data flowing into Companies, health, and boards |
+| 7 | Import your pricing catalog | **Settings > Pricing & Products** | Plan context for billing risk, filters, and rules |
+| 8 | Define your features | **Data > Feature adoption** | Feature adoption and the adoption dimension of health |
+| 9 | Define lifecycle stages | **Setup > Lifecycle** | Journey context for health, flows, and reporting |
+| 10 | Review health scoring | **Setup > Health scoring** | Weights you chose, not defaults nobody reviewed |
+| 11 | Define churn, activate indicators | **Setup > Predictor** | The churn read: off until churn is defined |
+| 12 | Tune signal settings | **Setup > Signals** | A Triage queue and automations tuned to your business |
+| 13 | Set assignment rules | **Settings > Assignments** | New Companies routed to owners automatically |
+| 14 | Name your champions | **Records > Champions** | Champion-loss detection and coverage gaps |
+| 15 | Set up surveys | **Setup > Surveys** | The sentiment dimension of health (optional) |
+| 16 | Create boards and flows | **Boards**, **Automation > Flows** | Reporting and automation on everything above |
+
+## 1. Create your workspace
+
+**Why now:** every record, setting, and teammate lives inside a workspace, so nothing else exists until it does.
+
+The first time you sign in at [app.gaintrace.com](https://app.gaintrace.com), GainTrace walks you through a short wizard: your team size, your function, how you found the product, and the tools in your stack. Answer the stack questions honestly rather than skipping them - your picks seed a **Connect your stack** card on your home page that carries you through stage 3 without hunting the catalog.
+
+**If you skip it:** you cannot. The wizard is the front door. People who join an existing workspace through an invite skip workspace creation entirely.
+
+## 2. Invite your team
+
+**Why now:** assignment rules (stage 13) distribute Companies to members, so owners have to exist before routing can. Inviting early also lets teammates pick up stages in parallel.
 
 <Steps>
-  <Step title="Create your workspace">
-    The first time you sign in, GainTrace walks you through creating a workspace and naming it after your company. A workspace holds all of your customer data and keeps it separate from any other team's.
+  <Step title="Open the invite form">
+    Go to **Settings > Members** and click **Invite team members**.
   </Step>
-  <Step title="Connect your first data source">
-    Open **Integrations** and pick the tool you want to start with. Most teams begin with their CRM, since that's where accounts and owners live. Connecting is quick: authorize GainTrace, choose what to sync, and let the first sync run.
-
-    Not sure where to begin? HubSpot or Salesforce for accounts, Stripe for revenue, and your product analytics (Segment, PostHog, Mixpanel, and others) for usage.
-
+  <Step title="Add emails and pick a role">
+    Paste up to 50 addresses and choose **Member** or **Admin** for the batch. You can also share an invite link instead of addressing each person.
   </Step>
-  <Step title="Check your data model">
-    Once data starts flowing, open **Data > Data Model** to see the objects GainTrace built for you. New workspaces come with a ready-made set, so in most cases there's nothing to configure. It's a good moment to confirm your Companies and People look the way you expect.
-
-  </Step>
-  <Step title="Let health scores fill in">
-    You don't set health up by hand. Once your data is flowing, GainTrace works out a health score for each company and shows it on the **Companies** list and on the company's own page. Health lands in one of three states, healthy, at risk, or churning, so you can scan a list and know where to look.
-  </Step>
-  <Step title="Invite your team">
-    In **Settings > Members**, invite your CSMs and set their roles. Everyone lands in the same workspace with the data already in place, so there's no per-person setup to worry about.
+  <Step title="Send">
+    Click **Send invites**. Invitations expire after 7 days.
   </Step>
 </Steps>
 
-## What good looks like
+Teammates land in the workspace with all data already in place; there is no per-person setup. CSMs can start with the [CSM guide](/help/getting-started/for-csms) while you continue here.
 
-You're set up when you can open **Companies**, see health scores on your accounts, and open **Triage** to a queue worth working through. That's the point where GainTrace starts earning its keep.
+**If you skip it:** everything still works for you alone, but stage 13 has no one to assign Companies to, and champion coverage (stage 14) stays empty because coverage is read across owned Companies.
 
-## Next
+Deep dive: [Members, roles, and teams](/help/admin/members).
 
-<Card title="Bring your CSMs up to speed" href="/help/getting-started/for-csms">
-  The day-to-day path for the people working accounts.
-</Card>
+## 3. Connect your data sources
+
+**Why now:** every downstream surface consumes synced data. Until something flows in, features have no events, health has no inputs, and the churn read has nothing to learn from. This is the one stage nothing else can precede.
+
+<Steps>
+  <Step title="Start from your stack card or the catalog">
+    The **Connect your stack** card on your home page lists the tools you picked during signup with a **Connect** button on each. For anything else, open **Integrations** and browse the catalog.
+  </Step>
+  <Step title="Connect your CRM first">
+    HubSpot, Salesforce, Attio, or another CRM. The CRM brings Companies, People, and deal context - the spine every other source enriches.
+  </Step>
+  <Step title="Connect billing and product analytics">
+    Stripe brings real revenue. PostHog, Mixpanel, Segment, or another analytics tool brings the product usage events that stages 8, 10, and 11 depend on. Support and conversation tools like Intercom and Gong add sentiment and meeting context.
+  </Step>
+  <Step title="Let the first sync run">
+    Syncs run in the background. Before the first big backfill finishes, jump ahead to stage 4 and set Company-condition filters on each connection - they work immediately and apply from the next sync. Manage any connection later from **Data > Sources**.
+  </Step>
+</Steps>
+
+<Note>
+No connectable source yet? Import Companies from a file at **Data > Import CSV**. A CSV-seeded workspace counts as data flowing, and you can connect live sources later.
+</Note>
+
+**If you skip it:** the workspace stays empty. The Setup page marks this step as blocking everything downstream.
+
+Deep dive: [Integrations](/help/integrations/integrations), plus per-tool guides for [HubSpot](/help/integrations/hubspot), [Salesforce](/help/integrations/salesforce), and [Stripe](/help/integrations/stripe).
+
+## 4. Filter what syncs in
+
+**Why now:** filters apply from the next sync and never delete existing records, so the best moment to set them is before the big backfill fills your workspace with prospects, test records, and dead deals.
+
+On each connection's settings page (open **Data > Sources**, click **Manage**), scroll to **Ingestion filters**:
+
+- **Company conditions** work immediately and evaluate the unified Company profile across all connectors - the one-click example seeds the most common rule, only sync paying customers.
+- **Stream filters** target a source's raw fields and unlock once the connection's streams are discovered - run a sync or open **Sync coverage** on the connection, no full sync required. A never-synced stream can load a live sample of 5 records (not ingested) so you can filter it before the first sync.
+
+Filters fail open: a rule that cannot be evaluated keeps records rather than dropping them.
+
+**If you skip it:** everything in the source syncs. Health scores, signals, and the churn read then average in Companies that were never customers. You can add filters later, but already-synced records stay until you remove them yourself.
+
+Deep dive: [Ingestion filters](/help/integrations/ingestion-filters).
+
+## 5. Review your data model
+
+**Why now:** records land in your data model during the first sync, so this is the first moment there is something real to check. Confirm the shape now, before stages 6 through 16 build on it.
+
+<Note>
+Prefer a guided path? **Quick Setup** (linked from your home page and from empty states in the Data section) walks discovery, mapping, and unifying Companies in one flow - it covers the same ground as stages 5 and 6, and you can return here afterwards.
+</Note>
+
+New workspaces come with a ready-made set of system models, so in most cases there is nothing to build. Open **Data > Data Model** and confirm your Companies and People look the way you expect: right companies, right fields, plausible counts. Add custom objects or fields here if your business needs them.
+
+While you are in the **Data** section, two neighboring pages are worth a glance once data has landed: **Identity** shows how records from different sources were merged into one Company or Person, and **Data Quality** flags gaps worth fixing at the source.
+
+**If you skip it:** the defaults usually hold, but a mis-shaped record set discovered in stage 10 or 16 costs far more to unwind than a two-minute check here.
+
+Deep dive: [The data model](/help/records/data-model), [Companies](/help/records/companies), [People](/help/records/people).
+
+## 6. Map source fields
+
+**Why now:** mapping needs the field schema that the first sync discovers, so it cannot usefully happen before stage 3 completes. Mapped fields are what flow into Companies, health, and boards - unmapped fields sit in raw storage and power nothing.
+
+<Steps>
+  <Step title="Open the mapping studio">
+    Go to **Data > Field Mapping**. Each connected source lists its discovered tables and fields.
+  </Step>
+  <Step title="Review the proposed matches">
+    Trace AI proposes the obvious matches with a confidence score. Accept the good ones.
+  </Step>
+  <Step title="Map what remains">
+    Connect each remaining source field you care about to a field in your data model, and save.
+  </Step>
+</Steps>
+
+For CRM connections that support write-back (Salesforce, HubSpot, Close), field mapping is also where you control which fields push back to the CRM, alongside the **Sync direction** setting on the connection.
+
+**If you skip it:** common fields still arrive through the proposed defaults, but anything unmapped - custom CRM properties, plan fields, owner emails - never reaches Companies, so filters, health inputs, and board columns built on those fields stay empty.
+
+## 7. Import your pricing catalog
+
+**Why now:** it needs nothing but an API key from your billing provider, and the plan and tier context it creates feeds billing risk, ingestion filter conditions, and assignment rule conditions in the stages ahead.
+
+<Steps>
+  <Step title="Open Pricing & Products">
+    Go to **Settings > Pricing & Products** and click **Import from Stripe / Paddle**.
+  </Step>
+  <Step title="Pick your provider and authenticate">
+    Choose **Stripe** or **Paddle** and paste the API key (a Stripe secret key, or a Paddle API key with an optional sandbox toggle).
+  </Step>
+  <Step title="Fetch and confirm">
+    Click **Fetch Products**, review the catalog preview - pricing models are auto-detected - deselect anything you do not want, and confirm the import.
+  </Step>
+</Steps>
+
+You can also define products and tiers by hand on the same page, including trial lengths, seat limits, and usage metrics.
+
+<Note>
+This import reads your product catalog - the plans you sell your customers. It is separate from the Stripe connector in stage 3, which syncs live subscriptions and revenue, and separate again from **Settings > Billing**, which is your own GainTrace subscription. Catalog import supports Stripe and Paddle.
+</Note>
+
+**If you skip it:** revenue still syncs through your billing connector, but Companies lack normalized plan and tier context, so plan-based filters, rules, and billing-risk reads have less to work with.
+
+## 8. Define your features
+
+**Why now:** feature adoption is computed from product usage events, so definitions only produce numbers once analytics events are flowing from stage 3. Features also feed the adoption dimension of every health score, which stage 10 weighs.
+
+<Steps>
+  <Step title="Open Feature adoption">
+    Go to **Data > Feature adoption**. To start from templates instead of a blank form, open **Data > Data Model** and use its Features panel - it offers a starter pack of templates to clone, with event patterns, key-feature flags, and adoption thresholds prefilled.
+  </Step>
+  <Step title="Define each feature">
+    Name the feature and list the event patterns that count as using it. Review the template patterns against your real event names before saving.
+  </Step>
+  <Step title="Mark key features and thresholds">
+    Flag the features that define real adoption of your product, and set the usage threshold that counts a Company as adopted.
+  </Step>
+</Steps>
+
+**If you skip it:** the Setup page marks this blocking. Feature adoption stays empty, and the adoption dimension of health has nothing to score, so every health score runs on fewer inputs.
+
+Deep dive: [Feature adoption](/help/accounts/adoption).
+
+## 9. Define lifecycle stages
+
+**Why now:** lifecycle stages are defined by entry and exit conditions over your synced records, so they need real data to evaluate - and they give health, flows, and reporting their journey context before you tune those surfaces.
+
+Open **Setup > Lifecycle** (also reachable from the Setup checklist). For each stage of your customer journey - for example onboarding, adopting, established, renewal - set:
+
+- The stage order and the transitions you allow between stages
+- Entry conditions, and optionally exit conditions
+- An expected duration, so overdue Companies stand out
+- Optionally a capacity per stage
+
+**If you skip it:** Companies have no journey position, so lifecycle context is missing from health reviews, flows cannot react to stage changes, and reporting by stage is empty.
+
+## 10. Review health scoring
+
+**Why now:** every workspace is provisioned with a working default profile, so health starts filling in as soon as data flows - but the weights are defaults nobody chose. Review them after stages 3, 8, and 9, when the dimensions they weigh actually have data behind them.
+
+Open **Setup > Health scoring**. The score is a weighted composite of six dimensions - usage, engagement, adoption, sentiment, revenue, and support - plus a CSM override that is deliberately the single heaviest input when a CSM sets one. Adjust the weights to what predicts retention in your business, and save.
+
+Health lands each Company in one of three states - healthy, at risk, or churning - shown on the **Companies** list and on each Company's page.
+
+**If you skip it:** health still works on the default weights, and the Setup page reports this honestly as **Using default weights (never reviewed)** rather than done. Nothing is off, but the central number of the product reflects assumptions you never confirmed.
+
+Deep dive: [Health scores](/help/accounts/health).
+
+## 11. Define churn and activate indicators
+
+**Why now:** this is the strictest dependency in the product. Until you confirm what churn means for your business, no churn number is served at all - and until at least one indicator is active, nothing can move it. It sits here because the indicators GainTrace suggests are grounded in your real Companies, which need stages 3 through 10 behind them.
+
+Open **Setup > Predictor** and work the stations in order:
+
+<Steps>
+  <Step title="Discover">
+    Review what GainTrace found in your data: Companies, events, and the outcome bands it can model.
+  </Step>
+  <Step title="Outcomes">
+    Choose what counts as churned for your business and confirm it. From this moment the churn read is on.
+  </Step>
+  <Step title="Suggestions">
+    GainTrace proposes indicators grounded in your real Companies. Accept, tune, or dismiss each.
+  </Step>
+  <Step title="Tune">
+    Tune each accepted indicator's window and weight before you activate it.
+  </Step>
+  <Step title="Activate">
+    New indicators start in shadow: they score without moving the churn read. Activate the ones you trust - only active churn indicators move the served number.
+  </Step>
+</Steps>
+
+**If you skip it:** the churn read is off, silently. The Setup page marks both halves - the definition and the indicators - as blocking, because a workspace can look fully set up while serving no churn number at all.
+
+## 12. Tune signal settings
+
+**Why now:** signals decide what lands in Triage and what your flows react to. Tune them before the team starts working the queue, so the first week of Triage builds trust instead of noise.
+
+Open **Setup > Signals**. The catalog lists every signal GainTrace can detect with the exact values it uses right now, alongside each signal's data availability in your workspace. For the signals that matter to you, tune the thresholds, windows, severity, and cooldown. Each signal waits out its own cooldown between fires, so one noisy signal cannot flood the queue.
+
+Automations reference these same settings, so one change here applies everywhere the signal is used.
+
+**If you skip it:** signals fire on stock values. That is a reasonable start, but thresholds tuned for a generic business produce a queue your team learns to ignore - re-tune here the moment Triage feels noisy or quiet.
+
+Deep dive: [Triage](/help/accounts/triage).
+
+## 13. Set assignment rules
+
+**Why now:** rules assign owners to Companies, so they need members (stage 2) to route to and Companies (stage 3) to route - and rules built on plan, segment, or health conditions work best after stages 6 through 10 have populated those fields.
+
+<Steps>
+  <Step title="Open Assignments">
+    Go to **Settings > Assignments**.
+  </Step>
+  <Step title="Create a rule">
+    Name it, add conditions - ARR, plan, segment, region, industry, health status, or health score - and pick a strategy: round robin across a set of members or a team, load balanced by current book size, or a specific person.
+  </Step>
+  <Step title="Order and cap">
+    When several rules match, the highest-priority rule wins, so order them deliberately. Optionally cap the number of Companies per CSM.
+  </Step>
+</Steps>
+
+Rules apply as new Companies sync in, and you can also run them manually or as a rebalance. A Company that already has an owner is left alone except during an explicit rebalance.
+
+**If you skip it:** every Company that syncs in arrives unassigned, and someone hand-assigns owners forever. Champion coverage (stage 14) also stays dormant, since coverage is read across owned Companies.
+
+## 14. Name your champions
+
+**Why now:** champions are People, so People must be synced, and the coverage read runs across owned Companies, so ownership (stage 13) should exist first. Losing a champion is one of the strongest single-Company churn signals there is, which is why this step is on the Setup checklist rather than a nice-to-have.
+
+Open **Champions** in the **Records** section. For each Company that matters, name who is in your corner - your champion, and where relevant the executive sponsor. The page then shows coverage: which owned Companies have no champion at all.
+
+To hear about departures automatically, open **Settings > Champion tracking** and set up the LinkedIn departure monitor. Each actively watched profile consumes a monitoring seat, and pausing a monitor frees the seat while keeping the person's role on the Company.
+
+**If you skip it:** champion-loss detection has no one to watch, so one of the strongest churn signals never fires, and coverage gaps stay invisible.
+
+Deep dive: [Champion tracking](/help/success/champion-tracking).
+
+## 15. Set up surveys
+
+**Why now:** survey responses feed the sentiment dimension of health. This stage is genuinely optional - the product works without it, health is just thinner - which is why it sits late and unblocked.
+
+Open **Setup > Surveys** and click **Create Survey**. Choose the type - NPS, CSAT, or CES - and name it. Responses roll up per Company and flow into the sentiment dimension that stage 10 weighted.
+
+**If you skip it:** nothing turns off. Health scores sentiment from less, and the Setup page lists the step as optional rather than blocking.
+
+## 16. Create boards and flows
+
+**Why now:** boards report on the data every earlier stage produced, and flows automate on the definitions every earlier stage created. Built first, boards render empty and flows have nothing to fire on. This is deliberately the last stage.
+
+**Boards** - open **Boards** and create your first board: a renewals view, a book-of-business overview, or an executive health summary. Board metrics draw on your data model, health, and revenue, so everything you configured above shows up as real numbers.
+
+**Flows** - open **Automation > Flows** and automate the responses your team repeats: alert the owner when health drops, open a task when a champion leaves, notify a channel when a Company enters the renewal window. Flows react to the signals, lifecycle stages, and ownership you defined in stages 9, 12, and 13.
+
+Living **Plans** - one shared success plan per Company, with a customer-facing link - are ready once Companies and owners exist. See [Success plans](/help/success/success-plans).
+
+**If you skip it:** nothing breaks - the operational surfaces (Companies, Triage, Renewals) run without them. You are leaving reporting and automation on the table, not correctness.
+
+Deep dive: [Boards](/help/boards/boards) and [Flows](/help/automation/flows).
+
+## Beyond the core
+
+These surfaces are real configuration but not part of the day-one path. Set them up when the need arrives:
+
+- **General** (**Settings > General**): workspace name and basics.
+- **Email & Calendar** (**Settings > Email & Calendar**): connect your mailbox so customer email and meeting activity enrich engagement.
+- **Notifications** (**Settings > Notifications**): choose what GainTrace tells each person, and where.
+- **Outcome KPI** (**Settings > Outcome KPI**): track your customers' own result metric against per-Company targets, using metrics from your data model.
+- **Teams** (**Settings > Teams**): grouping members into teams for routing and reporting; see [Teams](/help/admin/teams) for current availability.
+- **Brand kit**: your logo and colors on customer-facing surfaces such as shared plans.
+- **Security, Single Sign-On, and Audit Log** (Settings, admin-only): workspace hardening, alongside the main-nav **Governance** section for roles and access reviews; see [Governance](/help/admin/governance).
+- **Feature Flags** (Settings, admin-only): toggle experimental capabilities per workspace.
+- **Developer surfaces** (**Settings > API Keys**, **Webhooks**, **MCP**, **Signal Push**, **Sequences**): programmatic access and outbound event delivery.
+- **AI Models, AI Usage, and AI Permissions**: control which model powers Trace AI and what it may do; see [Trace AI](/help/trace-ai/trace-ai).
+- **Billing** (**Settings > Billing**): your own GainTrace plan and seats; see [Billing and plans](/help/admin/billing).
+
+Profile, Preferences, and Connected accounts are personal settings, not workspace setup - each member manages their own.
+
+## How you know you are done
+
+- The **Setup** page shows every step on - done or a reviewed default - with nothing marked as switched off.
+- The **Companies** list shows a health score on your real customers, and spot-checking a few looks plausible.
+- A churn read is being served, and at least one active indicator is moving it.
+- **Triage** opens to a queue worth working, not silence and not noise.
+- A newly synced Company arrives with an owner, without anyone touching it.
+- At least one board renders real numbers, and at least one flow has fired.
+
+Hand your CSMs the [day-to-day guide](/help/getting-started/for-csms) and let the product start earning its keep.
+
+## FAQ
+
+**Do I have to follow this exact order?**
+Follow the dependencies, not the numbering. Stages 1 through 3 are hard prerequisites for everything after them, stage 11 requires its definition before any churn number exists, and stage 13 needs members and Companies. Within those constraints, stages can run in parallel across teammates.
+
+**Which source should I connect first?**
+Your CRM. It brings Companies, People, and owner context - the spine every other source enriches. Billing and product analytics come right behind it, because revenue and usage are what health and the churn read feed on.
+
+**Can I import plans from Paddle, or only Stripe?**
+The pricing catalog import at **Settings > Pricing & Products** supports both Stripe and Paddle, using an API key from either. Live revenue and subscription sync comes through your billing connector from the integrations catalog.
+
+**Health scores are showing but look wrong. What do I check?**
+In order: ingestion filters (stage 4 - are non-customers polluting the average?), field mapping (stage 6 - are the fields health reads actually mapped?), feature definitions (stage 8 - do event patterns match your real event names?), then the weights themselves (stage 10).
+
+**Why does the Setup page say Using defaults on a step I never touched?**
+Because that is the truth. GainTrace provisions working defaults for some steps, such as the health profile, and refuses to show a checkmark for work you did not do. Review the step and save it to own the configuration; until then it works on defaults.
+
+**Do my teammates have to repeat any of this?**
+No. Everything in this guide is workspace-level. Teammates land with data, definitions, and rules already in place; their only personal setup is profile, notifications, and any personal integrations like email.
+
+## Related articles
+
+<CardGroup cols={2}>
+  <Card title="For CSMs" href="/help/getting-started/for-csms">
+    The day-to-day path for the people working Companies.
+  </Card>
+  <Card title="Integrations" href="/help/integrations/integrations">
+    Browse the catalog and manage your connected sources.
+  </Card>
+  <Card title="Health scores" href="/help/accounts/health">
+    How the composite score works and how to tune it.
+  </Card>
+  <Card title="Members, roles, and teams" href="/help/admin/members">
+    Invites, roles, join policies, and seats.
+  </Card>
+</CardGroup>
