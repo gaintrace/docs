@@ -1,0 +1,81 @@
+---
+title: "Connect Paddle to GainTrace"
+sidebarTitle: "Paddle"
+description: "Sync Paddle Billing customers, subscriptions, and transactions into GainTrace so revenue and billing-risk signals feed health scores and renewals."
+keywords: ["Paddle integration", "GainTrace Paddle", "sync Paddle", "Paddle Billing", "billing integration", "MRR", "involuntary churn"]
+---
+
+{/* docs-meta: catalog=IntegrationsExperience.tsx (sourceId paddle); source=lib/gt/paddle-source.ts; verified 2026-08 */}
+
+Paddle is where your billing lives, so connecting it gives GainTrace the revenue picture behind every account: what they pay, whether they will renew, and whether a payment is at risk.
+
+<Note>
+The connector works with **Paddle Billing**. Accounts still on Paddle Classic cannot use it - the connection check tells you if that is the case.
+</Note>
+
+## What syncs
+
+GainTrace pulls your Paddle Billing objects and ties them to your Companies:
+
+| Paddle object | In GainTrace | Notes |
+| --- | --- | --- |
+| Customers | Companies | Matched by email domain through identity resolution. Archived customers sync too, so history stays complete |
+| Subscriptions | Revenue: MRR, ARR, auto-renew state | A scheduled cancellation shows as auto-renew off |
+| Transactions | Payment history and billing risk | All statuses sync, so overdue and past-due transactions can raise a billing-risk signal |
+| Payment methods | Card expiry for billing risk | Cards expiring before renewal surface before the payment fails |
+
+## Prerequisites
+
+- A Paddle Billing account, live or sandbox.
+- Permission to create API keys in Paddle (Developer tools access).
+
+## Create a Paddle API key
+
+<Steps>
+  <Step title="Open Paddle's authentication page">
+    In Paddle, go to **Developer tools** > **Authentication** and open the **API keys** tab.
+  </Step>
+  <Step title="Create the key">
+    Click **New API key**, name it (for example `GainTrace`), and grant the read permissions the sync needs: **customer.read**, **subscription.read**, **transaction.read**, and **payment_method.read**.
+  </Step>
+  <Step title="Copy the key">
+    Copy the key when it is shown. Live keys start with `pdl_live_`, sandbox keys with `pdl_sdbx_` - GainTrace detects the environment from the key automatically.
+  </Step>
+</Steps>
+
+<Warning>
+Paddle API keys expire - 90 days by default, one year at most. When a key expires the sync stops and the connection check names the problem; create a new key in Paddle and update the connection under **Data** > **Sources**.
+</Warning>
+
+## Connect Paddle
+
+<Steps>
+  <Step title="Open the catalog">
+    Go to **Integrations** in the left nav and pick **Paddle**.
+  </Step>
+  <Step title="Add your API key">
+    Paste the key and confirm. GainTrace verifies it against Paddle before saving, so a failed check saves nothing.
+  </Step>
+  <Step title="Let it sync">
+    Billing data starts flowing in. Manage the connection under **Data** > **Sources**.
+  </Step>
+</Steps>
+
+## What you can do with it
+
+With Paddle connected, Revenue reflects real MRR and renewal state, and billing trouble becomes a signal in Triage: an overdue transaction, a card that expires before renewal, or a subscription going past due raises a billing-risk signal on the company before it turns into involuntary churn.
+
+To also import your product catalog - the plans and prices you sell - use **Settings** > **Pricing & Products** > **Import from Stripe / Paddle**. That import is separate from this connector: the connector syncs live customers and transactions, the import reads your plan catalog.
+
+## Good to know
+
+- Transactions sync incrementally; customers, subscriptions, and payment methods refresh fully on each scheduled sync. Changes appear with the next sync run rather than instantly.
+- If the API key lacks **payment_method.read**, the sync still runs - card details then come only from transaction payment attempts, which cover recently charged cards but not every saved card.
+- This connector is read-only. GainTrace reads your billing data and never changes anything in Paddle.
+
+## Related articles
+
+- [Ingestion filters](/help/integrations/ingestion-filters)
+- [Health scores](/help/accounts/health)
+- [Triage](/help/accounts/triage)
+- [Connect Stripe](/help/integrations/stripe)

@@ -87,6 +87,7 @@
                   "help/integrations/salesforce",
                   "help/integrations/attio",
                   "help/integrations/stripe",
+                  "help/integrations/paddle",
                   "help/integrations/intercom",
                   "help/integrations/slack",
                   "help/integrations/posthog",
