@@ -62,8 +62,8 @@ GainTrace also discards most of what it reads. Only email involving a known Comp
 ## Set up your client
 
 <Steps>
-  <Step title="Open the panel in GainTrace">
-    Go to **Settings > Email & Calendar**. **Your Google OAuth client** is open and marked **Required** until you save one. Keep it open, you will copy a redirect URI from it in step 5.
+  <Step title="Open the setup in GainTrace">
+    Go to **Settings > Email & Calendar** and click the **Google Workspace** tile under **Add Connection**. The guided setup opens in place, with a link to the right Google Cloud Console page at every step. Keep it open, you will copy a redirect URI from it in step 5.
   </Step>
   <Step title="Create a Google Cloud project">
     In Google Cloud Console, create a project owned by your organization, then enable the **Gmail API** and the **Google Calendar API**.
@@ -78,18 +78,18 @@ GainTrace also discards most of what it reads. Only email involving a known Comp
     Copy the URI shown under **Authorized redirect URI** in the GainTrace panel and paste it into **Authorized redirect URIs** on your client. This stays a GainTrace URL. Your client points back to GainTrace after someone consents, so there is nothing to host on your side.
   </Step>
   <Step title="Save it in GainTrace">
-    Paste the client ID and client secret into the panel, add an optional label, and click **Save client**. The secret is encrypted before it is stored and is never shown again.
+    Paste the client ID and client secret into the setup, then click **Save and continue**. The secret is encrypted before it is stored and is never shown again.
   </Step>
-  <Step title="Tell your team to connect">
-    Under **Add Connection**, **Google Workspace** becomes clickable. Each person connects their own mailbox from there.
+  <Step title="Connect your mailbox">
+    Saving takes you straight to **Connect your mailbox**, so setup ends in a working connection rather than a saved form. Everyone else connects from the same Google Workspace tile.
   </Step>
 </Steps>
 
-Until a client is saved, the **Google Workspace** tile reads **Add your OAuth client below to enable this** rather than linking anywhere. Microsoft 365 is unaffected and connects normally.
+Microsoft 365 is unaffected and connects normally, with no client setup of its own.
 
 ## Rotate your client
 
-Paste a new client ID and secret and click **Replace client**.
+Open the Google Workspace tile, click **Replace**, then paste a new client ID and secret.
 
 Existing connections keep working. Google ties a refresh token to the client that issued it, so GainTrace keeps refreshing each connection against the client it was authorized under, not whichever client is current. Nobody is logged out and no sync breaks.
 
@@ -101,7 +101,7 @@ Reconnect everyone before you delete the old client in Google Cloud Console. Del
 
 ## Remove your client
 
-Click **Remove client** and confirm.
+Open the Google Workspace tile, click **Remove**, and confirm.
 
 There is nothing to fall back to, so this ends the workspace's ability to connect Google entirely. Every mailbox authorized through the client is disconnected, because those tokens are only valid for the client being removed and leaving them connected would mean syncs that quietly stop working. The confirmation dialog tells you exactly how many connections will be disconnected before you commit.
 
