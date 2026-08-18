@@ -28,13 +28,9 @@ Meetings work the same way. Only events with an attendee matching a known Compan
 | | Gmail | Outlook |
 |---|---|---|
 | Mail | All mail, received and sent | Inbox and sent items |
-| Calendar | Meetings from 30 days back to 30 days ahead | Not yet supported |
+| Calendar | Meetings from 30 days back to 30 days ahead | Meetings from 30 days back to 30 days ahead |
 | Reply in-thread from GainTrace | Yes | Yes |
 | Pull your mailbox signature | Yes | No |
-
-<Note>
-Calendar sync is Google-only for now. An Outlook connection syncs mail and will show its calendar permission was granted, but meetings do not sync yet.
-</Note>
 
 ## Connect your mailbox
 
@@ -115,8 +111,8 @@ Matched messages only. If nobody on a message matches a Company domain or saved 
 **Does connecting my mailbox let my teammates read my email?**
 They see matched customer email on Company timelines, which is the point of connecting. Nothing unmatched is stored for anyone to see.
 
-**Why is my calendar empty on Outlook?**
-Calendar sync supports Google accounts only right now. Outlook mail syncs normally.
+**Why is my calendar still empty right after connecting?**
+Meetings arrive on the same schedule as mail, so the next check fills them in. Only meetings with an attendee from a known Company appear; internal-only meetings are skipped.
 
 **Why did the first import capture so few emails?**
 It looks back 30 days and keeps only messages involving known Companies or People. A workspace with few Companies matches few messages. Import your CRM, then re-sync.
