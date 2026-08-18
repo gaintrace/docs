@@ -80,6 +80,8 @@
             "pages": [
               "help/integrations/integrations",
               "help/integrations/ingestion-filters",
+              "help/integrations/email-calendar",
+              "help/integrations/google-oauth-client",
               {
                 "group": "Popular integrations",
                 "pages": [

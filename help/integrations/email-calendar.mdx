@@ -1,0 +1,139 @@
+---
+title: "Connect email and calendar"
+sidebarTitle: "Email & Calendar"
+description: "Connect Gmail or Outlook so customer email and meetings land on Company timelines and feed health, sentiment, and signals. Only email involving your Companies is stored."
+keywords: ["connect email", "Gmail integration", "Outlook integration", "calendar sync", "email sync customer success", "GainTrace email", "meeting timeline"]
+---
+
+{/* docs-meta: routes=[/settings?section=email-calendar]; components=EmailCalendarSection.tsx, EmailSignatureSettings.tsx, resonance/sync.ts, cron/email-sync; verified 2026-08 */}
+
+Most of what happens with a customer happens in email and on calls. Connecting your mailbox puts that history on the Company timeline, so a CSM opening a Company sees the actual conversation instead of guessing from CRM fields. It also feeds sentiment, signals, and health scores with something real.
+
+Each person connects their own mailbox. Connecting yours does not give anyone access to it beyond what GainTrace stores, and it does not connect your teammates.
+
+## Only customer email is stored
+
+This is the part worth understanding before you connect anything.
+
+During every sync, GainTrace checks who is on each message. If none of the outside participants match a known Company domain or a saved Person in your workspace, the message is discarded and nothing about it is stored. No subject, no body, no sender.
+
+Messages that do match are stored, including their content, because that is what powers sentiment, signals, and account health. Your personal email, vendor threads, recruiter mail, and anything else unrelated to your customers never lands in GainTrace.
+
+Meetings work the same way. Only events with an attendee matching a known Company domain or saved Person are stored.
+
+## What syncs
+
+| | Gmail | Outlook |
+|---|---|---|
+| Mail | All mail, received and sent | Inbox and sent items |
+| Calendar | Meetings from 30 days back to 30 days ahead | Not yet supported |
+| Reply in-thread from GainTrace | Yes | Yes |
+| Pull your mailbox signature | Yes | No |
+
+<Note>
+Calendar sync is Google-only for now. An Outlook connection syncs mail and will show its calendar permission was granted, but meetings do not sync yet.
+</Note>
+
+## Connect your mailbox
+
+<Steps>
+  <Step title="Open the settings">
+    Go to **Settings > Email & Calendar**.
+  </Step>
+  <Step title="Pick your provider">
+    Under **Add Connection**, click **Google Workspace** or **Microsoft 365**.
+  </Step>
+  <Step title="Approve access">
+    Sign in and approve the permissions in your provider's window. You are sent back to GainTrace when it is done.
+  </Step>
+  <Step title="Let the first import run">
+    GainTrace imports the last 30 days of matched mail right away and tells you how many messages it captured. From then on it keeps up automatically.
+  </Step>
+</Steps>
+
+Your connection appears under **Active Connections** with its status, how many emails it has captured, and when it last synced.
+
+## How often it syncs
+
+The first import is immediate. After that, GainTrace polls your mailbox on a schedule set by your workspace plan:
+
+| Plan | Mailbox checked |
+|---|---|
+| Free | Every 12 hours |
+| Pro | Every 6 hours |
+| Scale | Every 2 hours |
+| Enterprise | Every 15 minutes |
+
+Changing plans takes effect on the next check, with no backfill needed. You can always pull new mail immediately with the re-sync button on the connection.
+
+Each check is incremental. GainTrace asks your provider only for what has changed since last time, so a check stays fast no matter how big your mailbox is.
+
+## Privacy settings
+
+Two switches under **Privacy Settings** control what GainTrace does with matched email. Both are on by default and apply to every active connection.
+
+| Setting | On | Off |
+|---|---|---|
+| **Analyze sentiment & topics** | Score sentiment and pull key phrases to feed account health | Email still appears on timelines, but is not scored |
+| **Auto-generate signals** | Raise a signal when a matched email reads as high-urgency or escalation risk | No signals are raised from email |
+
+Turning either off does not delete anything already stored.
+
+## Your email signature
+
+Under **Email signature**, set the signature GainTrace appends when you reply from inside the product, so replies look like the ones you send from your own client.
+
+On a Gmail connection, click **Pull from Gmail** to bring across the signature already set on your mailbox. On Outlook, or if you would rather write a different one, type it in directly. Both plain text and HTML work.
+
+## Manage your connections
+
+- **Re-sync** pulls new mail immediately instead of waiting for the next scheduled check.
+- **Disconnect** stops the sync and removes the stored tokens. Email already captured stays on your Company timelines.
+- **Connect more than one mailbox** by running through **Add Connection** again. Each mailbox is a separate connection with its own sync and counts.
+
+If a connection shows an error, the message on the connection says what happened. Most errors resolve by disconnecting and connecting again, which issues fresh permissions.
+
+## Good to know
+
+- Connections are personal. Each person connects their own mailbox, and nobody inherits anyone else's.
+- A connection belongs to the workspace you connected it from. If you connect the same mailbox from a different workspace, it moves there and re-imports against that workspace's Companies.
+- Matching depends on your Companies. A message only matches if the Company domain or the Person already exists in your workspace, so connect your CRM first and you will capture far more from the initial import.
+- Free consumer domains like gmail.com are never treated as Company domains, so a customer writing from a personal address matches only if that exact address is saved as a Person.
+- GainTrace never sends email from your mailbox on its own. Replies go out only when someone sends them.
+
+## FAQ
+
+**Will GainTrace read my personal email?**
+Matched messages only. If nobody on a message matches a Company domain or saved Person, it is discarded during sync and nothing is stored.
+
+**Does connecting my mailbox let my teammates read my email?**
+They see matched customer email on Company timelines, which is the point of connecting. Nothing unmatched is stored for anyone to see.
+
+**Why is my calendar empty on Outlook?**
+Calendar sync supports Google accounts only right now. Outlook mail syncs normally.
+
+**Why did the first import capture so few emails?**
+It looks back 30 days and keeps only messages involving known Companies or People. A workspace with few Companies matches few messages. Import your CRM, then re-sync.
+
+**What happens to captured email if I disconnect?**
+It stays on your Company timelines. Disconnecting stops future syncing and removes the stored access tokens.
+
+**Can my organization use its own Google OAuth client?**
+Yes, if you are on Google Workspace. See [Use your own Google OAuth client](/help/integrations/google-oauth-client).
+
+## Related articles
+
+<CardGroup cols={2}>
+  <Card title="Google OAuth client" href="/help/integrations/google-oauth-client">
+    Connect Gmail through a client your own organization owns.
+  </Card>
+  <Card title="Companies" href="/help/records/companies">
+    Company domains are what matched email is matched against.
+  </Card>
+  <Card title="Health scores" href="/help/accounts/health">
+    How email sentiment feeds into account health.
+  </Card>
+  <Card title="Integrations" href="/help/integrations/integrations">
+    Browse the catalog and manage your connected sources.
+  </Card>
+</CardGroup>

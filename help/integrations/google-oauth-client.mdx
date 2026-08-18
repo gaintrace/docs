@@ -1,0 +1,149 @@
+---
+title: "Use your own Google OAuth client"
+sidebarTitle: "Google OAuth client"
+description: "Connect Gmail and Google Calendar through an OAuth client your own Google Workspace organization owns, so your email connection needs no Google verification or security assessment."
+keywords: ["Google OAuth client", "BYO OAuth", "bring your own OAuth client", "Gmail restricted scopes", "CASA assessment", "Google Workspace internal app", "connect Gmail GainTrace"]
+---
+
+{/* docs-meta: routes=[/settings?section=email-calendar]; components=GoogleOAuthClientSettings.tsx, EmailCalendarSection.tsx, oauth-client-actions.ts, google-credentials.ts; verified 2026-08 */}
+
+This is an advanced setting. If you just want to connect a mailbox, see [Connect email and calendar](/help/integrations/email-calendar).
+
+By default, connecting Gmail and Google Calendar to GainTrace uses GainTrace's own Google OAuth client. Most workspaces should leave it that way and connect in one click.
+
+Some organizations would rather the connection ran through a client they own and control. Google also makes this the fastest path in one specific case: reading Gmail uses scopes Google classifies as restricted, and a public app that requests them must pass a Google security assessment before it can serve everyone. An OAuth client that belongs to your own Google Workspace organization skips that queue entirely.
+
+## Why your own client removes the wait
+
+When you create an OAuth client and set its consent screen to **Internal**, the app can only be used by people inside your own Google Workspace organization. Google treats that differently from a public app. In Google's words:
+
+> For apps used only internally by your Google Workspace organization, scopes aren't listed on the consent screen and use of restricted or sensitive scopes doesn't require further review by Google.
+
+So an Internal client needs no verification, no security assessment, and no unverified-app warning screen, and it is not subject to the 100-user cap.
+
+## Before you start
+
+You need all three:
+
+| Requirement | Why |
+|---|---|
+| A **Google Workspace** organization | Only an organization-owned project can set its consent screen to **Internal**. A personal Gmail account cannot. |
+| Access to **Google Cloud Console** for that organization | You create the project and the OAuth client there. |
+| **Owner** or **Admin** in GainTrace | Changing the OAuth client requires settings permissions. Other members can see the panel but not edit it. |
+
+<Warning>
+This is for Google Workspace organizations only. A personal Gmail account cannot select **Internal**, which leaves the client in testing mode, and Google expires refresh tokens issued in testing mode after 7 days. Everyone would have to reconnect weekly. If you are not on Google Workspace, use the built-in client instead.
+</Warning>
+
+## What GainTrace asks for
+
+Your OAuth client grants these scopes. Worth reviewing before you create it, since your organization owns the consent decision:
+
+| Scope | What it is for |
+|---|---|
+| `gmail.readonly` | Read matched email so it can appear on Company timelines and feed sentiment and signals |
+| `gmail.send` | Let your team reply in-thread from GainTrace |
+| `gmail.settings.basic` | Read the mailbox signature so replies match what people send from Gmail |
+| `calendar.readonly` | Read meetings so they appear on Company timelines |
+| `userinfo.email`, `userinfo.profile` | Identify the connected mailbox and show its name and avatar on the connection |
+
+GainTrace only stores email that involves a known Company domain or a saved Person. Everything else is discarded during sync and never stored.
+
+## Set up your client
+
+<Steps>
+  <Step title="Open the panel in GainTrace">
+    Go to **Settings > Email & Calendar** and expand **Use your own Google OAuth client**. Keep this open. You will copy a redirect URI from it in step 5.
+  </Step>
+  <Step title="Create a Google Cloud project">
+    In Google Cloud Console, create a project owned by your organization, then enable the **Gmail API** and the **Google Calendar API**.
+  </Step>
+  <Step title="Set the consent screen to Internal">
+    Under **APIs & Services > OAuth consent screen**, choose **Internal**. This is the step that removes the verification and security-assessment requirement, so do not skip it.
+  </Step>
+  <Step title="Create the OAuth client">
+    Under **Credentials**, create an **OAuth client ID** of type **Web application**.
+  </Step>
+  <Step title="Add the redirect URI">
+    Copy the URI shown under **Authorized redirect URI** in the GainTrace panel and paste it into **Authorized redirect URIs** on your client. This stays a GainTrace URL. Your client points back to GainTrace after someone consents, so there is nothing to host on your side.
+  </Step>
+  <Step title="Save it in GainTrace">
+    Paste the client ID and client secret into the panel, add an optional label, and click **Save client**. The secret is encrypted before it is stored and is never shown again.
+  </Step>
+  <Step title="Connect a mailbox">
+    Under **Add Connection**, click **Google Workspace**. Consent now runs through your client. Existing connections are unaffected until each person reconnects.
+  </Step>
+</Steps>
+
+## What changes and what does not
+
+| | Built-in client | Your own client |
+|---|---|---|
+| Who owns the consent screen | GainTrace | Your organization |
+| Google verification and security assessment | Required for restricted scopes | Not required for an Internal client |
+| Who can connect | Anyone you invite | People in your Google Workspace organization only |
+| What syncs | Gmail and Google Calendar | Identical |
+| Where the data lives | Your GainTrace workspace | Your GainTrace workspace |
+
+Nothing about matching, sentiment, signals, or timelines changes. Only the client that issues the authorization changes.
+
+## Replace or rotate your client
+
+Paste a new client ID and secret and click **Replace client**.
+
+Existing connections keep working. Google ties a refresh token to the client that issued it, so GainTrace keeps refreshing each connection against the client it was authorized under, not whichever client is current. Nobody is logged out and no sync breaks.
+
+Those connections stay on the previous client until each person reconnects, though. The panel shows how many are in that state as **still on a previous client**. Reconnect them before you delete the old client in Google Cloud Console, because deleting it there does break their refresh.
+
+## Revert to the built-in client
+
+Click **Revert to built-in client** and confirm.
+
+<Warning>
+Reverting disconnects every mailbox that was authorized through your client. Their tokens are only valid for the client being removed, so leaving them connected would mean syncs that quietly stop working. The confirmation dialog tells you exactly how many connections will be disconnected before you commit. Each person reconnects once afterwards.
+</Warning>
+
+## Good to know
+
+- Gmail and Google Calendar share one client. Setting it up covers both.
+- Microsoft 365 connections are unaffected. Microsoft has no equivalent requirement, so Outlook mail and calendar connect with no extra setup.
+- The client ID is not a secret. It appears in the consent URL, so every member can see it in the panel. The client secret is encrypted at rest and never returned to the browser after you save it.
+- Setting up a client does not migrate anyone. Existing connections move over only as each person reconnects.
+- Google sets these requirements and can change them. The behavior described here reflects Google's documentation as of August 2026.
+
+## FAQ
+
+**Do I have to do this?**
+No. The built-in client works, and most workspaces should use it. Set up your own only if your organization wants to own the consent decision or you need Gmail reading available sooner than a Google assessment allows.
+
+**Can I use a personal Gmail account?**
+No. Only a Google Workspace organization can set a consent screen to **Internal**. Without it, Google expires refresh tokens after 7 days and everyone reconnects weekly.
+
+**Will people have to reconnect after I save a client?**
+Not immediately. Existing connections keep syncing on the client that authorized them. They move to the new client the next time each person reconnects.
+
+**What happens if I delete the client in Google Cloud Console?**
+Every connection authorized through it stops refreshing and needs reconnecting. Revert in GainTrace first, or reconnect everyone onto a new client, before you delete anything in Google.
+
+**Can regular members set this up?**
+No. Changing the OAuth client requires Owner or Admin. Members see the panel read-only.
+
+**Does this change what GainTrace stores?**
+No. Only email involving a known Company domain or saved Person is stored, on either client.
+
+## Related articles
+
+<CardGroup cols={2}>
+  <Card title="Email & Calendar" href="/help/integrations/email-calendar">
+    Connect a mailbox, and what GainTrace does and does not store.
+  </Card>
+  <Card title="Members and roles" href="/help/admin/members">
+    Owner and Admin roles, and who can change workspace settings.
+  </Card>
+  <Card title="Governance" href="/help/admin/governance">
+    How GainTrace handles your workspace data.
+  </Card>
+  <Card title="Integrations" href="/help/integrations/integrations">
+    Browse the catalog and manage your connected sources.
+  </Card>
+</CardGroup>
