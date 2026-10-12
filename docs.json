@@ -65,7 +65,8 @@
           {
             "group": "Boards",
             "pages": [
-              "help/boards/boards"
+              "help/boards/boards",
+              "help/boards/renewal-forecast"
             ]
           },
           {

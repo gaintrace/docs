@@ -1,0 +1,114 @@
+---
+title: "Renewal forecast"
+sidebarTitle: "Renewal forecast"
+description: "Call every renewal, see the quarter's range, and publish one forecast to leadership."
+keywords: ["renewal forecast", "forecast", "renewals", "Calls", "commit", "best case", "gross renewal rate", "net renewal rate", "publish forecast", "add-on"]
+---
+
+{/* docs-meta: routes=[/boards/forecast, /companies/[id]?tab=renewal, /tasks, /settings?section=billing, /integrations/[connectionId]]; components=ForecastLiveReport, ForecastAddonGate, RenewalCalls, CallsDueReview, RenewalCallSyncSettings; verified 2026-10 */}
+
+The **Renewal forecast** asks for a judgement, called a **Call**, on each upcoming renewal and rolls those Calls into one range for the quarter. Your team reviews the Calls, a forecast leader signs off, and you publish the result to the people who need the number. Open it from **Boards > Renewal forecast**.
+
+<Note>
+  Renewal forecast is an add-on: $99 per month on any paid GainTrace plan, billed with your plan. Enterprise includes it. Self-serve trials don't include it.
+</Note>
+
+## How the forecast works
+
+A **Forecast period** is one fiscal quarter. Your fiscal year comes from **Settings > Analytics > Fiscal year starts in**.
+
+A company enters a period when its renewal date falls inside that quarter. Companies with no renewal date, and hidden companies, don't appear. A renewal with no ARR, or with no exchange rate into your reporting currency, still shows up in the list and its count. It's left out of the totals rather than guessed.
+
+A Call has five parts: a category, the amount you expect to keep, a reason, a Next step, and the Next step's date. When the amount differs from the company's current ARR, the Call also records why, such as fewer seats, a discount, or a price increase.
+
+| Category | What it means |
+| --- | --- |
+| Commit | The customer has agreed to renew, even if the signature is still pending. |
+| Most likely | On track, with one named dependency left. |
+| Best case | Renews only if one named open issue goes your way. |
+| At risk | You're running an active save effort. |
+| Lost | The customer has decided not to renew. The called amount is zero. |
+
+Some renewals count as **Contracted** without a Call. That happens when every contract for the company auto-renews and its notice deadline has passed with no notice of non-renewal. GainTrace reads this from the contract terms recorded on the company, never from a billing default. A renewal stops counting as Contracted if anyone calls it At risk or Lost, or once its Outcome is recorded.
+
+## The range
+
+The forecast adds the Calls up into three points:
+
+| Point | What's in it |
+| --- | --- |
+| Floor | Contracted renewals plus Commit amounts |
+| Base case | Floor plus Most likely amounts |
+| Upside | Base case plus Best case amounts |
+
+At risk renewals show as **Exposure** and Lost renewals as **Lost**. Neither enters the range.
+
+**Call coverage** is the share of renewing ARR that has a Call. Uncalled ARR is never counted as retained. **Gross renewal rate** and **Net renewal rate** are measured over called renewals only. Forecast leaders can set goals for both with **Set goals**.
+
+## Who makes the Calls
+
+- **Trace AI drafts the first Call.** Once a renewal in the current or next quarter is within 90 days of its decision date (or its renewal date, when no notice terms are recorded), Trace AI writes an initial Call from the company's recent conversations, open risks, and renewal deals. It needs an assigned Caller, positive ARR, and at least one of those sources, and Trace AI must be on for your workspace. If the evidence isn't enough, it leaves the renewal uncalled and explains why on the **Renewal** tab. It skips Contracted renewals and renewals with a recorded Outcome. Until a person saves it, Trace AI updates its Call when the evidence changes. It never replaces a Call a person saved or a Final call.
+- **The Caller reviews it.** A company's Caller owns its Call. By default that's the company's primary CSM, and a company with no CSM has no Caller until a leader assigns one. On the company's **Renewal** tab, a forecast leader can set a different **Caller for this company** or change the **Workspace Caller role**. With any role other than CSM, each company needs an assigned Caller; until then Trace AI doesn't draft its Call and it isn't in anyone's Calls due. The **Renewal** tab is also where Calls are edited, next to the evidence behind them.
+- **A forecast leader can set a Final call.** A Final call replaces the Caller's Call in every total, and the Caller's Call stays visible beside it.
+
+Each week that a Caller has renewals needing review, a **Calls due** list appears at the top of **My Focus** on the **Tasks** page (open it from **Tasks** on **Home**). It lists their open renewals with no Call, a missing or overdue Next step, or missing evidence. **Mark reviewed** clears the list for that week without changing any Call.
+
+## Review and publish
+
+<Steps>
+  <Step title="Review the quarter">
+    Open **Boards > Renewal forecast**. Check the range and the renewals table, and open any company to update its Call on the **Renewal** tab.
+  </Step>
+  <Step title="Choose who receives it">
+    Use **Forecast audience** to add the people who should get the forecast. They can include people without a GainTrace seat, and adding them doesn't create a seat.
+  </Step>
+  <Step title="Publish">
+    Choose **Publish** for the period, review the drafted note, and edit it if you like. The note is written from what changed since the last publish, without a model call.
+  </Step>
+</Steps>
+
+Publishing freezes the whole forecast as it stands. Each person in the audience gets an email with a PDF of the published forecast. Members with a seat also get a link to it. Audience members who don't lead the forecast and aren't the CSM or co-owner of any company open the latest published forecast by default.
+
+## Snapshots and accuracy
+
+GainTrace captures one **Snapshot** of the forecast every week automatically. Under **Snapshots**, a leader can pick a **Snapshot day** or choose **Take Snapshot** before a review. The renewals table can then show what changed since the last Snapshot.
+
+To grade accuracy, GainTrace also locks each renewal's Call 90, 60, and 30 days before its decision date (or its renewal date, when no decision date is known). After the renewal, it records the **Outcome** from a CRM deal typed or linked as the renewal, or from your connected billing source. Once a quarter closes, its **Report card** compares the locked Calls with what actually renewed.
+
+## Sync Calls with your CRM
+
+You can sync Calls with HubSpot, Salesforce, or Close. It's off by default. A forecast leader turns it on from the connection's page in **Integrations**, under **Renewal Call sync**, and maps each Call field to a field on the renewal opportunity. Each company's renewal opportunity is linked explicitly. By default the latest edit wins, and you can choose GainTrace wins or CRM wins per field. Final calls are never replaced from the CRM.
+
+## Who can do what
+
+| Action | Who |
+| --- | --- |
+| View the forecast | Every workspace member |
+| Edit a company's Call | That company's Caller (if their role can edit revenue), or a forecast leader |
+| Set Final calls and goals, take Snapshots, manage the audience, publish, change Caller settings, correct Outcomes | Members with **Lead the forecast** (owners and admins by default) |
+
+You can grant or remove **Lead the forecast** with a custom role.
+
+## Add the Renewal forecast
+
+The workspace owner adds it in **Settings > Billing**. On a paid plan, find it under **Add-ons** and choose **Add to plan**. On Free, choose a plan and turn it on in the **Extras** step. It bills at your plan's cadence: $99 a month, $267 a quarter, or $990 a year. Other members see **Ask [owner] to add it** on the forecast page, which notifies the owner.
+
+<Warning>
+  Without the add-on, no forecast work runs for your workspace: no Trace AI Calls, Snapshots, locked Calls, Outcomes, CRM Call sync, or forecast emails. Snapshots and locked Calls start on the day you add it. Locked Calls that fell before that day are marked missing, so your first Report cards grade only renewals locked after you added it. Outcomes can still come from renewal deals your CRM already closed.
+</Warning>
+
+## Good to know
+
+- **A company is missing from the quarter.** Check that it has a renewal date inside the period, and that it isn't hidden.
+- **The totals don't include a company in the list.** It's missing ARR or an exchange rate. The count beside the totals shows how many.
+- **Health is context, not a probability.** Health appears next to a Call as evidence, and Trace AI doesn't use it to draft Calls.
+- **Added the add-on during a trial?** It unlocks with your first paid month.
+- **Removed the add-on?** Your Calls, Snapshots, and published forecasts are kept, and the forecast reopens if you add it back. While it's off, no Snapshots, locked Calls, Outcomes, or CRM Call sync run. Locked Calls missed in that time come from the last Snapshot before them, or are marked missing.
+
+## Related
+
+- [Boards](/help/boards/boards)
+- [Companies](/help/records/companies)
+- [Revenue](/help/records/revenue)
+- [HubSpot](/help/integrations/hubspot) and [Salesforce](/help/integrations/salesforce)
+- [Billing and plans](/help/admin/billing)

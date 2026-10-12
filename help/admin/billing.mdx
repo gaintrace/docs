@@ -1,28 +1,82 @@
 ---
 title: "Billing and plans"
-description: "See your plan and usage, change plans, and manage your subscription."
+description: "How GainTrace pricing works, what Free includes, and how to change your plan, add-ons, and payment details."
+keywords: ["billing", "pricing", "plans", "free plan", "companies tracked", "add-ons", "pay-as-you-go", "invoices", "cancel"]
 ---
 
-{/* docs-meta: routes=[/settings] reviewed=2026-07 */}
+{/* docs-meta: routes=[/settings?section=billing]; components=BillingSection, PlanConfigurator, UpgradeMoment, CancelFlowDialog; verified 2026-10 */}
 
-Your subscription lives in **Settings > Billing**. It shows your current plan, your usage against your plan's limits, and the ways to change plans.
+Your subscription lives in **Settings > Billing**. It shows your plan, your usage against its limits, your add-ons, and the ways to change them.
 
-## Your plan and usage
+## How pricing works
 
-The page lays out what you're on and how much of each limit you've used, like members and other capped resources. When you're getting close to a limit, that's your cue to move up a plan.
+GainTrace has one paid plan, priced by how many companies you track. Every size includes the same features. On the paid plan, seats are unlimited and never billed, so you can invite your whole team.
 
-## Change plans
+| Companies tracked | Monthly | Quarterly | Annual |
+| --- | --- | --- | --- |
+| 100 | $99 | $269 | $990 |
+| 250 | $199 | $539 | $1,990 |
+| 500 | $299 | $799 | $2,990 |
+| 1,000 | $499 | $1,349 | $4,990 |
+| 2,500 | $999 | $2,699 | $9,990 |
 
-GainTrace has a few plans:
+Annual billing costs ten times the monthly price, so you get two months free. Above 2,500 companies, or if you need warehouse connectors or 15-minute sync, talk to us about **Enterprise**. Prices are in USD, with tax added where it applies.
 
-- **Pro**, billed per seat, for growing teams.
-- **Scale**, a flat plan for larger teams.
-- **Enterprise**, arranged with our team.
+The size you choose sets your limits. People, product events, automations, and champions tracked scale with it, and so does your Trace AI allowance. Every size includes 25 connected sources, sync every 2 hours for connectors that poll (webhook sources sync in real time), 24 months of history, and SAML single sign-on.
 
-Pick a plan and choose monthly or annual billing (annual comes with a couple of months free). Checkout runs through Stripe. Once you're subscribed, **Manage billing** opens the Stripe portal, where you can update your card, download invoices, or cancel.
+## Free
+
+New workspaces start on **Free**, with no card needed. Free has no time limit and includes:
+
+| Limit | Free |
+| --- | --- |
+| Companies tracked | 25 |
+| People | 100 |
+| Product events per month | 5,000 |
+| Connected sources | 3 |
+| History | 3 months |
+| Seats (members and pending invites) | 3 |
+
+Free doesn't include SAML single sign-on or premium AI models.
+
+When Free reaches its company or people limit, new companies and people from your connected sources are held back, while everything already imported keeps syncing. They import automatically once there's room, either because you move to a paid plan or because you remove companies. Product events over the monthly limit stop counting until next month. Other limits, such as automations and connected sources, block new additions until you upgrade.
+
+## Choose or change your plan
+
+Only the workspace owner can change the plan. In **Settings > Billing**, pick your size, any **Extras**, and how often you're billed, then review and pay by card through Stripe.
+
+- Your first payment has a 7-day money-back guarantee. Email support to claim it.
+- Moving to a larger size takes effect right away and is prorated.
+- Moving to a smaller size takes effect at your next renewal.
+
+Anyone other than the owner who hits a limit can ask the owner to upgrade from the limit prompt, and the owner gets an in-app notification.
+
+## Add-ons
+
+Add-ons are billed on top of your plan, at your plan's billing cadence.
+
+| Add-on | Price | How to get it |
+| --- | --- | --- |
+| [Renewal forecast](/help/boards/renewal-forecast) | $99 per month | Add it yourself |
+| Whitelabel Customer Portals | $99 per month | Add it yourself |
+| Trace AI Teammate | $199 per month | Talk to sales |
+| Dedicated Success Manager | $99 per month | Talk to sales |
+| Security & Compliance | $99 per month | Talk to sales |
+
+On a paid plan, add or remove them under **Add-ons** in **Settings > Billing**. On Free, choose them in the **Extras** step while you pick a plan. White-glove onboarding is also available as a one-time $999 service.
+
+## Pay-as-you-go
+
+On a paid plan, the owner or an admin can turn on **pay-as-you-go** in **Settings > Billing**. GainTrace then keeps going past your company, people, product event, automation, and Trace AI limits, and bills the extra usage at overage rates. Other limits, such as connected sources and champions tracked, stay fixed. You need a card on file to turn it on. Free doesn't offer pay-as-you-go.
+
+## Payment details, invoices, and cancelling
+
+**Manage billing** opens the Stripe portal, where you can update your card and download invoices.
+
+When you cancel, your plan stays active until the end of the period you've paid for, then your workspace moves to Free. Until then, you can resume the plan from **Settings > Billing**.
 
 ## Good to know
 
-- Only an owner can change the plan or open the billing portal. Admins can view billing and turn pay-as-you-go on or off.
-- You can add up to 50 seats yourself on Pro. Beyond that, Scale includes unlimited seats, or talk to us about Enterprise.
-- Turning on pay-as-you-go lets you go past a limit and pay for the overage instead of being blocked.
+- Only the owner can change the plan or add-ons, open **Manage billing**, or cancel. The owner or an admin can turn pay-as-you-go on or off.
+- On current plans, inviting teammates never changes your bill.
+- If a payment fails, GainTrace emails the owner. Updating the card in **Manage billing** retries the open invoice.
