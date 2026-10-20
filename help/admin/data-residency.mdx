@@ -1,0 +1,48 @@
+---
+title: "Data residency"
+description: "Where GainTrace stores and processes your workspace data, including survey responses."
+---
+
+{/* docs-meta: sources=[infra/variables.tf, infra/versions.tf, instrumentation-client.ts, src/lib/email/sending-domain.ts, .github/workflows/deploy-proof.yml, infra/monitoring.tf, src/lib/surveys/ai-features.ts, src/lib/surveys/reply-ai-feature.ts, src/lib/surveys/probe-ai-feature.ts, src/lib/surveys/inferred-ai-feature.ts, src/lib/surveys/translate-ai-feature.ts, src/lib/agent-tools/tools/surveys.ts] reviewed=2026-10 */}
+
+GainTrace runs in one region: AWS **eu-west-1 (Ireland)**, in the European Union. Your workspace data, including every survey and survey response, is stored there. GainTrace stores your workspace data only in this region, and a workspace can't choose a different one. The providers listed below may keep what they process under their own terms.
+
+## Where data lives
+
+| Data | Where |
+| --- | --- |
+| Application and database (companies, people, revenue, surveys, responses, tasks) | AWS eu-west-1, Ireland |
+| Database backups | AWS eu-west-1, Ireland |
+| Product analytics about how you use GainTrace | PostHog EU cloud |
+| Network edge (TLS and routing into the app) | Cloudflare's global network |
+
+## Services that process data outside the EU
+
+Some features send data to providers outside the EU. Each only receives what that feature needs.
+
+- **Email.** Survey invitations and other GainTrace email go through our email provider. A custom sending domain can be set to send from the **EU (eu-west-1)** region or the US region, which is the default; the domain keeps the region you choose.
+- **Trace AI.** When you ask Trace AI a question, the records it needs, which can include survey responses, go to the AI provider configured for your workspace. On paid plans that is OpenAI, through a dedicated GainTrace project, and its standard processing isn't limited to the EU. If you bring your own key, the request goes to the provider and region on that key. See [AI and your data](/help/trace-ai/ai-and-your-data) for what each provider keeps.
+- **In-app support chat.** The Intercom messenger loads for signed-in users and receives their name and email through Intercom's US endpoint.
+- **Error monitoring.** Error reports go to our error-monitoring provider. Reports from survey pages are scrubbed before they leave GainTrace: respondent names, emails, answers, comments and survey links are removed.
+
+Collecting, scoring, routing and reporting survey responses don't use an AI provider, and themes and sentiment on survey comments are computed inside GainTrace. Survey data goes to the AI provider configured for your workspace when someone uses an AI feature, or when a Flow triggered by a survey response runs an AI step:
+
+- **Ask Trace AI about survey results** sends the scores, comments and labelled answers it reads for your question. For surveys that aren't anonymous that includes the respondent's name and email and the Company, and it returns 10 responses by default.
+- **Summarize feedback** sends the written answers of up to the 200 most recent responses with their scores, never names or emails.
+- **Draft a reply with Trace AI** sends that response's answers, the Company's name, plan and segment, the person's first name and role, earlier replies, your guidance and the survey's name, never their email address.
+- **Draft with Trace AI** in the template gallery sends only the request you type.
+- **Translate with Trace AI** sends the survey's own wording and the target language, never responses or anyone's details.
+- **AI follow-up question**, when turned on for a survey, sends the respondent's own just-saved answers and score, without their name, email or Company.
+- **Inferred satisfaction**, when an owner or admin turns it on, sends short quotes from each person's own emails, calls and support conversations, with people labelled p1 to p8 and email addresses and the person's own name replaced. Other names inside the quotes can still appear.
+- **AI steps in a Flow**, when a Flow triggered by a survey response runs an Understand, Summarize or Draft step, send the trigger fields the step's instruction uses, which can include the response's comment and score.
+
+Translations you type stay in GainTrace. The per-feature detail is in [AI and your data](/help/trace-ai/ai-and-your-data#survey-feedback).
+
+## Survey respondents
+
+People who answer your surveys are covered by the same storage. Their responses are stored in Ireland with your other workspace data and are deleted when the workspace is deleted.
+
+## Good to know
+
+- Storage is in one region, Ireland. Workspaces can't choose a different region.
+- Contact us if your agreement needs a list of sub-processors or a data processing agreement.

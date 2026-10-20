@@ -1,0 +1,79 @@
+---
+title: "Import from other survey tools"
+sidebarTitle: "Import from other tools"
+description: "Pull NPS, CSAT and CES answers from Typeform, SurveyMonkey, Qualtrics and Retently on a schedule, or import a CSV file, and keep them with your own survey results."
+keywords: ["import survey responses", "Typeform", "SurveyMonkey", "Qualtrics", "Retently", "CSV import", "NPS history", "survey migration"]
+---
+
+{/* docs-meta: sources=[src/lib/identity/attribution.ts, src/lib/surveys/imports/contracts.ts, src/lib/surveys/imports/service.ts, src/lib/surveys/imports/runner.ts, src/lib/surveys/imports/actions.ts, src/lib/surveys/imports/csv.ts, src/lib/surveys/imports/csv-hash.ts, src/lib/surveys/imports/scales.ts, src/lib/surveys/imports/typeform.ts, src/lib/surveys/imports/surveymonkey.ts, src/lib/surveys/imports/qualtrics.ts, src/lib/surveys/imports/retently.ts, src/lib/surveys/imports/http.ts, src/lib/surveys/imports/write.ts, src/components/surveys/survey-tool-imports.tsx, src/components/surveys/survey-tool-connect-sheet.tsx, src/components/surveys/survey-csv-import-sheet.tsx, src/components/surveys/survey-data-sources.tsx] reviewed=2026-10 */}
+
+If your feedback lives in another tool, you don't have to start from zero. GainTrace can pull answers from Typeform, SurveyMonkey, Qualtrics and Retently on a schedule, and import a CSV file from any tool. Imported answers keep their original dates and count in reports, [Company scores](/help/surveys/rules#company-scores), your [frequency rule](/help/surveys/rules#frequency) and each person's Feedback tab.
+
+Open the **Surveys** page, choose the **Data sources** tab, and find **Import from other survey tools**. It has two buttons: **Connect a tool** and **Import a CSV file**. If you're leaving Delighted, see [Migrate from Delighted](/help/surveys/migrate-from-delighted).
+
+## What an import does
+
+- **Scales.** NPS is 0-10. CSAT and CES are 1-5 or 1-7, which you choose. A score outside the scale is skipped with a reason and never rescaled.
+- **Matching.** GainTrace matches each respondent's email to an existing Person, and failing that to the one Company whose email domain it is. If the Person belongs to several Companies, the answer is stored against their Primary Company. An email at a free domain such as gmail.com is never matched to a Company by its domain, so it matches only through a Person. The answer is stored against that Company, and against the Person when there is one. A respondent it can't match to a Company is skipped with the reason "No Company matched the respondent email. Sync or import the Company first." An import never creates People or Companies, so sync your CRM or import your People and Companies first.
+- **No duplicates.** Each response is stored once for its tool and response ID. Pulling the same response again updates it if it changed and never duplicates it.
+- **Quiet history.** Answers from before you connected, and every CSV import, arrive quietly. They send no webhooks, start no Flows and post no alerts. Answers that arrive after you connect send a `survey_response.created` or `survey_response.updated` webhook with the channel `import`.
+- **What they count toward.** Imported answers appear in Reports, tagged with their source, and count toward Company scores, coverage, the frequency rule and the CRM fields GainTrace writes. They don't appear in the Response inbox, which is for your own surveys.
+
+## Connect a tool
+
+Choose **Connect a tool**. Owners and admins can connect and disconnect a tool. Name the connection, choose the tool and the measure, and fill in its details:
+
+| Tool | What you provide |
+| --- | --- |
+| **Typeform** | A personal access token with the `forms:read` and `responses:read` scopes. Your Typeform region: United States, Europe (`api.eu.typeform.com`) or Europe (`api.typeform.eu`). The form ID. The score field ID, and optionally the comment field ID. Where the respondent's email is: a hidden field name, or the ID of an email question |
+| **SurveyMonkey** | An access token from your private or draft app with `surveys_read` and `responses_read_detail`. It needs a paid SurveyMonkey plan. Your region: United States, Europe or Canada. The survey ID. The score question ID, and optionally the comment question ID. Where the email is: a custom variable name, or the ID of a question that asks for it |
+| **Qualtrics** | An API token from Account Settings. Your datacenter ID, for example `fra1`, under Account Settings, Qualtrics IDs. The survey ID, which starts with `SV_`. The export key of the score field, and optionally of the comment field. The email field, which defaults to `recipientEmail` |
+| **Retently** | An API key with read permission. The campaign ID. The score, comment and email field names, which default to `score`, `comment` and `email`. They are editable because Retently's public documentation doesn't show the feedback item fields |
+
+Optionally set **Import history from** to the earliest date to bring in. GainTrace tests the credential and the mapping when you connect. A problem it finds, such as a form whose score field has the wrong number of steps, is reported right there.
+
+### Rules for each tool
+
+- **Typeform.** The score field's number of steps has to match the scale you chose.
+- **SurveyMonkey.** The score question needs 11 answer choices for NPS, or as many as your CSAT or CES scale. SurveyMonkey weblinks that don't collect an email carry nothing GainTrace can match, so they import nothing. A SurveyMonkey Basic plan limits what its API returns to 25 responses.
+- **Qualtrics.** Qualtrics prepares an export before GainTrace can read it, so the first pull can take a couple of minutes. The history date isn't applied to the export. GainTrace downloads it and drops answers before that date afterward.
+- **Retently.** If GainTrace can't read the feedback list or the ID, date and score fields, connecting fails with a message that says which one.
+
+### Schedule and limits
+
+GainTrace pulls new answers every 15 minutes for Typeform and Retently, and every hour for SurveyMonkey and Qualtrics once it has caught up. Typeform holds back responses under 30 minutes old, which arrive on the next pull. GainTrace stays inside each tool's published rate limits: 2 requests a second for Typeform, 120 a minute and 500 a day for each SurveyMonkey app (it stops with 50 left and resumes after the reset), and 150 a minute for Retently.
+
+For each connection you can choose **Pull now**, **Pause** or **Resume**, and **Disconnect**. The row shows its status, the last pull, how many answers it imported and skipped, and an error if there is one.
+
+| Status | Meaning |
+| --- | --- |
+| **Active** | Pulling on schedule |
+| **Paused** | You paused it |
+| **Needs attention** | The tool rejected the credential. Pulls stop until you reconnect it |
+
+Disconnecting deletes the saved credential and keeps the responses you already imported. GainTrace stores credentials encrypted and shows only the last characters.
+
+## Import a CSV file
+
+Choose **Import a CSV file**, pick a file format (**Delighted export**, **Retently export** or **Any CSV**) and choose the file. GainTrace suggests a mapping from the column names. Always check it, because you can change any column.
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| **Email** | Yes | The respondent's email |
+| **Score** | Yes | Whole numbers on the measure's scale |
+| **Response date** | Yes | Imports keep each answer's original date |
+| **Comment** | No | |
+| **Response ID** | No | Used to avoid duplicates |
+
+Choose the **Measure** from a **Survey type** column in the file, or pick NPS, CSAT or CES for the whole file, and set the CSAT and CES scale. The sheet previews the first rows and tells you how many can't be imported and why. Rows import in batches, and if one stops partway you can import the file again to finish without duplicating anything.
+
+Re-importing the same file never duplicates. With a **Response ID**, that ID identifies the row. Without one, GainTrace identifies a row by the email, score, date and measure. In **Any CSV**, a response ID is combined with the respondent's email, so two exports that both number their rows from 1 can't overwrite each other, and GainTrace never picks an ID column on its own.
+
+When it finishes, the sheet reports how many rows were imported, updated, unchanged and skipped, with the main reasons. Skip reasons never repeat a respondent's email.
+
+## Where imports show
+
+- **Surveys > Reports** and its **By source** view, tagged with the tool or `csv`.
+- The person's **Feedback** tab and Company scores.
+- **Surveys > Who you hear from**.
+- The [Surveys API](/surveys-api): `GET /api/v1/nps-responses` lists imported and pulled NPS, and you can filter it by `provider`. The API also lists your connections and can pull a connection now, and MCP has matching tools. Imported CSAT and CES answers appear in reporting and Company scores, not in `GET /api/v1/survey-responses`.

@@ -3,7 +3,7 @@ title: "Governance"
 description: "Audit trail, data retention, field access, and IP controls for your workspace."
 ---
 
-{/* docs-meta: routes=[/governance, /governance/audit, /governance/retention, /governance/field-policies] reviewed=2026-07 */}
+{/* docs-meta: routes=[/governance, /governance/audit, /governance/retention, /governance/field-policies] reviewed=2026-10 sources=[src/lib/governance/retention.ts, src/lib/governance/types.ts, src/lib/surveys/erasure.ts] */}
 
 **Governance** is the admin console for security and compliance, reached from the shield icon in the left rail. It opens on an overview of your workspace's security posture, with a set of controls alongside it.
 
@@ -14,6 +14,13 @@ description: "Audit trail, data retention, field access, and IP controls for you
 ## Data retention
 
 Under **Retention**, you set how long GainTrace keeps certain records before pruning them. The prune runs on a daily schedule, and you can also run it on demand.
+
+Each row has a number of days and an **Enabled** switch, and nothing is pruned until you turn a row on. **Survey responses** is one of these rows. It is off unless an owner or admin turns it on, and it starts at 730 days (you can choose 1 to 3,650). When it is on, the daily prune acts on survey answers older than the period:
+
+- Answers to your surveys are anonymized, not deleted. Names, emails, comments and free-text answers are removed, and scores and choice answers stay, so your totals and trends stay correct.
+- Answers imported from other tools that are older than the period are deleted.
+
+To erase one person's survey data immediately, delete the Person. See [When a person is deleted](/help/surveys/across-gaintrace#when-a-person-is-deleted).
 
 ## Field access
 

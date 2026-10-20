@@ -3,6 +3,8 @@ title: "Authentication"
 description: "Authenticate with a Bearer API key, scoped to a workspace."
 ---
 
+{/* docs-meta: sources=[src/lib/api/v1.ts, src/lib/api-keys/validate.ts, src/lib/api-keys/actions.ts, src/lib/api-keys/rotation.ts, src/lib/api-keys/public-key-cors.ts, src/components/settings/ApiKeysSection.tsx, src/config/limits.ts, src/app/api/v1/**] reviewed=2026-10 */}
+
 Every request must include an API key as a Bearer token:
 
 ```bash
@@ -10,29 +12,43 @@ curl https://app.gaintrace.com/api/v1/companies \
   -H "Authorization: Bearer gt_live_your_key_here"
 ```
 
-Create and manage keys in **Settings → API Keys**. A key is shown once at creation — store it securely.
+Create and manage keys in **Settings > API Keys**. A key is shown once at creation, so store it securely.
 
 ## Key types
 
 <Columns cols={2}>
-  <Card title="Secret keys — gt_live_" icon="key">
-    Full server-side keys. Use only from your backend, never in a browser. Gated
-    by the workspace's API-v1 entitlement.
+  <Card title="Secret keys: gt_live_" icon="key">
+    Full server-side keys. Use them only from your backend, never in a browser.
+    They work on every endpoint their scopes allow. The workspace must have API
+    v1 access switched on.
   </Card>
-  <Card title="Publishable keys — gt_pub_" icon="globe">
-    Client-safe, write-only keys for browser ingest. Origin-pinned and
-    CORS-enabled, with only the `write:ingest` scope. Safe to ship in front-end code.
+  <Card title="Publishable keys: gt_pub_" icon="globe">
+    Client-safe, write-only keys for browser ingest. They are origin-pinned and
+    CORS-enabled, and they carry only the `write:ingest` scope. Safe to ship in
+    front-end code.
   </Card>
 </Columns>
 
+Publishable keys are for `POST /events`. A publishable key must send a browser `Origin` header. If you did not set allowed origins when you created the key, the first origin it is used from becomes its only allowed origin.
+
+The survey and NPS endpoints (`/surveys`, `/survey-responses`, `/nps-responses`) accept secret keys only. A publishable key gets `403`.
+
+### Expiry and rotation
+
+When you create a key you choose how long it lives: 30 days, 90 days, 1 year, or never.
+
+To replace a key without downtime, rotate it in **Settings > API Keys**. Rotation issues a new key with the same name, scopes and key type. The old key keeps working for a grace period you choose, from immediately up to 7 days, and then stops. The new key keeps the old key's expiry date. To change scopes, create a new key instead.
+
 ## Scopes
 
-Each key is granted a set of scopes. A request needs the scope its endpoint requires, or it returns `403 Insufficient scope`. A key with the `*` scope passes any check.
+Each key is granted a set of scopes. A request needs the scope its endpoint requires, or it returns `403` with `Insufficient scope`. A key with the `*` scope passes any check.
 
 | Endpoint | Method | Required scope |
 | --- | --- | --- |
 | `/companies`, `/companies/{id}` | GET | `read:companies` |
 | `/companies`, `/companies/{id}` | POST, PATCH | `write:companies` |
+| `/people`, `/people/{id}` | GET | `read:contacts` |
+| `/people`, `/people/{id}` | POST, PATCH, DELETE | `write:contacts` |
 | `/contacts`, `/contacts/{id}` | GET | `read:contacts` |
 | `/contacts`, `/contacts/{id}` | POST, PATCH, DELETE | `write:contacts` |
 | `/signals`, `/signals/{id}` | GET | `read:signals` |
@@ -41,8 +57,31 @@ Each key is granted a set of scopes. A request needs the scope its endpoint requ
 | `/webhooks`, `/webhooks/{id}`, `/webhooks/{id}/test` | POST, PATCH, DELETE | `write:webhooks` |
 | `/events` | POST | `write:events` or `write:ingest` |
 | `/metric-events` | POST | `write:events` |
+| `/surveys` and its sub-paths, `/survey-responses` | GET | `read:surveys` |
+| `/surveys` and its sub-paths | POST, PATCH, PUT | `write:surveys` |
+| `/nps-responses` | GET | `read:surveys` |
+| `/nps-responses` | POST | `write:surveys` |
 
-Grant only what a key needs. Other scopes exist for surfaces not yet on the public API (for example `read:revenue`, `read:health`, `read:deals`).
+`DELETE /people/{id}` is available, but `DELETE /people` with `externalId` or `email` is not. Use `DELETE /contacts` for delete-by-key.
+
+Keys that were created with the older `read:accounts` or `write:accounts` scopes still satisfy `read:companies` and `write:companies`.
+
+Grant only what a key needs. The key creation screen also offers presets, such as a read-only key and a key for the Segment destination.
+
+### Other scopes
+
+The key creation screen lists more scopes than the REST endpoints above use. They cover the MCP server and surfaces that are not on the REST API yet:
+
+- **Read:** `read:deals`, `read:activities`, `read:cortex`, `read:health`, `read:revenue`, `read:flows`, `read:views`, `read:plans`, `read:data`, `read:identity`, `read:sync`, `read:comm`, `read:portal`, `read:workflow_ai`, `read:governance`
+- **Write:** `write:cortex`, `write:health`, `write:flows`, `write:views`, `write:data`, `write:identity`, `write:workflow_ai`
+- **Trace AI:** `use:trace_ai`
+- **Admin:** `admin:governance`
+
+## Rate limits
+
+Each API key can send 60 requests per minute. The limit is counted in fixed one-minute windows. Past it, requests return `429` with the `rate_limit_exceeded` code until the next window starts. Back off and retry.
+
+The limit applies to the key, not the endpoint. Batch endpoints help you stay under it: `POST /events` takes up to 1000 events per request, and `POST /signals/batch` takes up to 1000 signals.
 
 ## Errors
 

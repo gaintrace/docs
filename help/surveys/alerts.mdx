@@ -1,0 +1,115 @@
+---
+title: "Slack and Teams response alerts"
+sidebarTitle: "Alerts"
+description: "Post new survey responses to Slack or Microsoft Teams by score group, let your team assign or resolve them from the message, raise signals, and route promoters to their CSM for a review or reference."
+keywords: ["survey alerts", "Slack survey alerts", "Microsoft Teams survey alerts", "detractor alert", "Slack assign and resolve buttons", "NPS signal", "promoter advocacy", "Slack direct message NPS"]
+---
+
+{/* docs-meta: sources=[src/components/surveys/survey-builder.tsx (AlertsInspector, AdvocacyFields), src/lib/surveys/advocacy.ts, src/lib/surveys/alerts.ts, src/lib/surveys/alert-actions.ts, src/lib/surveys/response-effects.ts, src/lib/surveys/response-signal.ts, src/lib/surveys/response-link.ts, src/lib/surveys/slack-alert-click.ts, src/lib/surveys/contracts.ts, src/lib/surveys/actions.ts, src/lib/signals/catalog.ts, src/lib/signals/config-registry.ts, src/lib/slack/bot.ts, src/lib/crm/slack-templates.ts, src/components/integrations/SlackSettingsSection.tsx, src/app/api/webhooks/slack/interactivity/route.ts, src/app/api/cron/survey-reminders/route.ts] reviewed=2026-10 */}
+
+Response alerts post each new response to a Slack channel, a Microsoft Teams channel or both, so the right people see feedback as it arrives. You set them per survey.
+
+Alerts need an NPS, CSAT or CES survey, because they follow score groups. Custom surveys have no score groups and can't send alerts.
+
+## Turn on alerts for a survey
+
+<Steps>
+  <Step title="Open the alerts panel">
+    In the designer, select **Alerts and advocacy**.
+  </Step>
+  <Step title="Turn on the switch">
+    Turn on **Post new responses to Slack or Microsoft Teams**. Only negative responses are selected at first.
+  </Step>
+  <Step title="Choose the score groups">
+    Under **Alert on**, pick any of the three groups. See [score groups](/help/surveys/overview#how-scores-are-calculated) for how each measure splits.
+  </Step>
+  <Step title="Choose where to post">
+    Pick a **Slack channel**, paste a **Microsoft Teams webhook URL**, or both. You need at least one.
+  </Step>
+</Steps>
+
+The groups are labeled by measure:
+
+| Measure | Negative | Neutral | Positive |
+| --- | --- | --- | --- |
+| **NPS** | Detractors (0-6) | Passives (7-8) | Promoters (9-10) |
+| **CSAT and CES** | Low scores (bottom half of the scale) | Middle scores | Top two scores |
+
+## What an alert contains
+
+Each alert shows a headline such as "Detractor: 3/10 on Relationship NPS", the person and Company ("Ana Silva at Acme"), and the customer's comment when there is one. If the respondent is unknown, it reads "An unidentified respondent".
+
+The headline wording follows the measure: NPS uses Detractor, Passive and Promoter. CSAT uses Unsatisfied, Neutral and Satisfied. CES uses High effort, Neutral and Low effort.
+
+### When an alert is sent
+
+GainTrace sends one alert for each response, when the customer finishes the survey, with their comment. If a customer stops after giving the score, which happens with the one-click score in an email, the first step of a multi-step survey and the in-app survey, GainTrace sends the alert 30 minutes after the score was saved and adds "Left before the follow-up questions." Alerts are checked every 15 minutes, so a score-only alert arrives 30 to 45 minutes after the score.
+
+A comment that arrives after the alert doesn't send a second one. It still appears on the response, the Company timeline and the CRM note. Alerts are best-effort. If Slack or Teams is unavailable, the response is still saved and no error shows to the customer.
+
+## Slack
+
+Connect Slack first. See [Slack](/help/integrations/slack). In the alerts panel the channel list loads from your connection, and:
+
+- If Slack isn't connected, connect it in **Integrations** and reopen the panel.
+- Private channels the Slack app hasn't joined are greyed out. Add the app to the channel in Slack first.
+- If the panel says Slack needs to be reconnected, reconnect it to grant the permissions needed to post.
+
+A Slack alert has three buttons:
+
+| Button | What it does |
+| --- | --- |
+| **Assign to me** | Makes you the owner and sets the response to In progress |
+| **Mark resolved** | Sets the response to Resolved |
+| **Open in GainTrace** | Opens this response: the survey's Responses tab with the response open, ready to assign, reply to or resolve |
+
+After someone clicks **Assign to me** or **Mark resolved**, the message updates to show who did it, for example "Assigned to Ana Silva". GainTrace matches the person who clicked to a member of your workspace by the email on their Slack profile. If there is no match, only that person sees a message asking an admin to invite them.
+
+Only members whose role includes the Surveys **Write** permission can use **Assign to me** and **Mark resolved**. Owners, admins and members have it by default, and custom roles have it only when it's selected. Anyone else sees a message only they can see, and the response doesn't change.
+
+**Assign to me** and **Mark resolved** work when you connected Slack with OAuth. If you connected Slack with a bot token from your own Slack app, use **Open in GainTrace** instead.
+
+### Direct messages for the Company's CSM
+
+Separately from a survey's channel alerts, Slack can message a Company's CSM directly about NPS responses. In **Integrations > Slack > My notification preferences**, each person can opt in to:
+
+- **Low NPS response (0-6) at a company you own**
+- **High NPS response (9-10) at a company you own**
+
+The message goes to the Slack account that has your GainTrace sign-in email, for Companies where you are the CSM. It has the same **Assign to me**, **Mark resolved** and **Open in GainTrace** buttons. **Mute all Slack notifications** stops these messages, and an admin can edit or switch off the **Low NPS response** and **High NPS response** templates for everyone. Direct messages need the Slack app's permission to message people and read their email. If they don't arrive, reconnect Slack in **Integrations**.
+
+## Microsoft Teams
+
+Teams alerts use a Workflow, so you don't install anything.
+
+1. In Teams, create a Workflow from the template that posts to a channel when a webhook request is received.
+2. Copy the Workflow's `https://` URL.
+3. Paste it into **Microsoft Teams webhook URL** in the alerts panel.
+
+A Teams alert shows the same headline, person, Company and comment, with an **Open in GainTrace** link to the response. Teams alerts don't have the Assign and Resolve buttons. Work the response in the [response inbox](/help/surveys/inbox-and-reports).
+
+## Signals for survey responses
+
+Each response can also raise a signal on its Company, at the same moment as the alert. You choose how in **Settings > Signals**:
+
+| Signal | When it fires by default |
+| --- | --- |
+| **NPS response** | Every band. Detractors (0-6) as a warning, passives and promoters as info |
+| **CSAT response** | Low scores only (the bottom half of the scale, 1-2 on a 1-5 scale), as a warning |
+| **CES response** | High-effort scores only (the bottom half of the scale), as a warning |
+
+For NPS, **Fire on** picks the bands and **Detractor severity** the severity. For CSAT and CES, **Fire on** can add neutral and satisfied or low-effort scores, which fire as info, and **Low-score severity** sets info, warning or critical for low scores. A signal fires once for each response and only for an identified response linked to a Company. Older answers from the retired public link, QR code and kiosk, and answers to anonymous surveys, never raise one. The signal carries a link that opens the response.
+
+The response also adds an entry to the Company's activity timeline once it is complete, or 30 minutes after a score-only answer, dated when the person answered. Flows that listen for survey responses start at the same time. See [Deliver a survey](/help/surveys/deliver#start-a-flow-from-a-response).
+
+## Ask promoters to advocate
+
+In the same **Alerts and advocacy** step of the designer, turn on **Ask promoters to advocate** and choose what to ask for: **A review**, **A case study** or **A reference call**.
+
+When someone in the top score group answers (NPS 9 or 10, or the top two points of a CSAT or effort scale), their Company's CSM gets a task such as "Ask Ana Ruiz for a review", with their score and comment. The task is due in seven days, and it is linked to the promoter's response. Linking moves the response to In progress, and makes the CSM its owner if it had none. Opening the task shows who answered, their Company, the score and the response status.
+
+- It needs a known person at a known Company, so anonymous surveys and answers without an identified person never create one.
+- Each person has at most one open ask. A second promoter answer while the first task is still open doesn't create another, and isn't linked to it.
+- The task is unassigned when the Company has no CSM in your workspace.
+
+To show promoters a review link the moment they answer, give promoters their own button on the [thank-you screen](/help/surveys/build#the-thank-you-screen).

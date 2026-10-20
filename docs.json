@@ -23,6 +23,14 @@
               "authentication",
               "errors"
             ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "surveys-api",
+              "surveys-in-app-sdk",
+              "surveys-warehouse-export"
+            ]
           }
         ]
       },
@@ -77,6 +85,30 @@
             ]
           },
           {
+            "group": "Surveys",
+            "pages": [
+              "help/surveys/overview",
+              "help/surveys/build",
+              "help/surveys/translate",
+              "help/surveys/ai-follow-up",
+              "help/surveys/target",
+              "help/surveys/deliver",
+              "help/surveys/in-app",
+              "help/surveys/rules",
+              "help/surveys/alerts",
+              "help/surveys/inbox-and-reports",
+              "help/surveys/across-gaintrace",
+              "help/surveys/link-feedback-to-records",
+              "help/surveys/inferred-satisfaction",
+              "help/surveys/custom-domain",
+              "help/surveys/import-from-other-tools",
+              "help/surveys/migrate-from-delighted",
+              "help/surveys/warehouse-export",
+              "help/surveys/accessibility",
+              "help/surveys/accessibility-conformance-report"
+            ]
+          },
+          {
             "group": "Connecting your data",
             "pages": [
               "help/integrations/integrations",
@@ -103,7 +135,8 @@
           {
             "group": "Trace AI",
             "pages": [
-              "help/trace-ai/trace-ai"
+              "help/trace-ai/trace-ai",
+              "help/trace-ai/ai-and-your-data"
             ]
           },
           {
@@ -112,7 +145,8 @@
               "help/admin/members",
               "help/admin/teams",
               "help/admin/billing",
-              "help/admin/governance"
+              "help/admin/governance",
+              "help/admin/data-residency"
             ]
           }
         ]
@@ -132,10 +166,22 @@
             ]
           },
           {
+            "group": "People",
+            "pages": [
+              "GET /people",
+              "POST /people",
+              "GET /people/{id}",
+              "PATCH /people/{id}",
+              "DELETE /people/{id}",
+              "DELETE /people"
+            ]
+          },
+          {
             "group": "Contacts",
             "pages": [
               "GET /contacts",
               "POST /contacts",
+              "DELETE /contacts",
               "GET /contacts/{id}",
               "PATCH /contacts/{id}",
               "DELETE /contacts/{id}"
@@ -150,6 +196,59 @@
               "GET /signals/{id}",
               "PATCH /signals/{id}",
               "DELETE /signals/{id}"
+            ]
+          },
+          {
+            "group": "Surveys",
+            "pages": [
+              "GET /surveys",
+              "POST /surveys",
+              "GET /surveys/{id}",
+              "PATCH /surveys/{id}",
+              "GET /surveys/{id}/results",
+              "POST /surveys/{id}/status",
+              "POST /surveys/{id}/invitations",
+              "POST /surveys/{id}/responses",
+              "POST /surveys/{id}/session",
+              "GET /surveys/frequency-rule",
+              "PUT /surveys/frequency-rule",
+              "GET /surveys/case-rules",
+              "PUT /surveys/case-rules",
+              "GET /surveys/rollup-rules",
+              "PUT /surveys/rollup-rules",
+              "GET /surveys/coverage",
+              "GET /surveys/nps-drivers",
+              "GET /companies/{id}/survey-scores",
+              "GET /companies/{id}/inferred-satisfaction"
+            ]
+          },
+          {
+            "group": "Survey segments",
+            "pages": [
+              "GET /survey-segments",
+              "POST /survey-segments",
+              "DELETE /survey-segments/{id}"
+            ]
+          },
+          {
+            "group": "Survey imports",
+            "pages": [
+              "GET /survey-imports",
+              "POST /survey-imports/{id}/runs"
+            ]
+          },
+          {
+            "group": "Survey responses",
+            "pages": [
+              "GET /survey-responses",
+              "GET /survey-responses/{id}"
+            ]
+          },
+          {
+            "group": "NPS responses",
+            "pages": [
+              "GET /nps-responses",
+              "POST /nps-responses"
             ]
           },
           {

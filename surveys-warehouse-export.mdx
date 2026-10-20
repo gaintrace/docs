@@ -1,0 +1,198 @@
+---
+title: "Survey warehouse export"
+description: "The tables, columns and behavior of the survey export to BigQuery and Snowflake, with example queries."
+---
+
+{/* docs-meta: sources=[src/lib/warehouse/export/schema.ts, src/lib/warehouse/export/survey-rows.ts, src/lib/warehouse/export/survey-export.ts, src/lib/warehouse/export/sql.ts, src/lib/warehouse/export/actions.ts, src/lib/warehouse/export/settings.ts, src/lib/surveys/webhooks.ts, src/components/warehouse/SurveyWarehouseExportSettings.tsx] reviewed=2026-10 */}
+
+The survey export copies your survey campaigns and every native survey response into two tables in your own warehouse, so you can join them with product and revenue data. This page is the schema reference. Responses carry most of the same fields as the [survey response webhook](/webhooks) and the [Surveys API](/surveys-api), in snake_case.
+
+## Who can use it
+
+- Workspaces on the Enterprise plan with a BigQuery or Snowflake connection. Redshift, Postgres and S3 connections aren't supported.
+- Admins with the permission to change sync settings turn it on. Turning it off works on any plan.
+
+## Turn it on
+
+Create the destination first, then switch export on in GainTrace.
+
+<Tabs>
+  <Tab title="BigQuery">
+    1. Create a dataset in the same location as your connection. The default name is `gaintrace`.
+    2. Give the connection's service account **BigQuery Data Editor** on that dataset. It keeps **BigQuery Job User** on the project.
+  </Tab>
+  <Tab title="Snowflake">
+    Run this as a role that can create schemas, replacing `<db>` and `<role>` with your database and the connection's role.
+
+    ```sql
+    CREATE SCHEMA <db>.GAINTRACE;
+    GRANT USAGE ON DATABASE <db> TO ROLE <role>;
+    GRANT USAGE, CREATE TABLE ON SCHEMA <db>.GAINTRACE TO ROLE <role>;
+    ```
+  </Tab>
+</Tabs>
+
+Then open Integrations, choose the connection, and go to the **Survey export** tab. Enter the dataset (BigQuery) or schema (Snowflake) and turn on **Export survey responses**. GainTrace creates both tables and checks that it can write to them. Names can use letters, numbers and underscores only, up to 128 characters.
+
+## How it runs
+
+- The first export copies everything. Consumers can see a partial table until it finishes.
+- After that it runs every hour with the connection's sync, which needs auto sync on and billing not locked. **Export now** runs it on demand.
+- Rows are upserted by `id`, so you never get duplicates. Edits, follow-up changes and responses a respondent finishes later update the row. A row never moves to an older version.
+- Responses that are deleted in GainTrace get a `deleted_at` value, and every answer and personal column on the row is cleared. A deleted response keeps only `id`, `workspace_id`, `survey_id`, `measure`, `updated_at` and `deleted_at`. Its `updated_at` becomes the deletion time. A deleted campaign gets `deleted_at` on its `surveys` row.
+- Anonymous campaigns, and responses whose personal details were removed (`anonymized_at` is set), never carry `person_id`, `respondent_email` or `respondent_name`.
+- Private reviewer notes and GainTrace's internal answer keys are never exported.
+- Responses imported from other tools (Typeform, SurveyMonkey, Qualtrics, Retently, Delighted and CSV files) and NPS sent to `/nps-responses` aren't included.
+- Turning export off keeps the tables. Turning it on again, or changing the dataset, empties the tables and reloads them.
+
+Every table has one more column, `_gaintrace_synced_at`, a timestamp of when GainTrace last wrote the row.
+
+## Table `survey_responses`
+
+One row per response. Types are shown for BigQuery and Snowflake.
+
+| Column | BigQuery | Snowflake | Description |
+| --- | --- | --- | --- |
+| `id` | `STRING` | `VARCHAR(36)` | Response id. The merge key |
+| `workspace_id` | `STRING` | `VARCHAR(36)` | Workspace the response belongs to |
+| `survey_id` | `STRING` | `VARCHAR(36)` | Campaign. Joins to `surveys.id` |
+| `measure` | `STRING` | `VARCHAR` | `nps`, `csat`, `ces` or `custom` |
+| `channel` | `STRING` | `VARCHAR` | `email`, `in_app` or `api` for new answers. `qr`, `kiosk` and `link` appear only on older answers collected before public links were removed |
+| `language` | `STRING` | `VARCHAR` | Language the respondent answered in |
+| `score` | `INT64` | `NUMBER(38,0)` | Numeric score, empty when the response has none |
+| `scale_max` | `INT64` | `NUMBER(38,0)` | Top of the scale the score was given on |
+| `band` | `STRING` | `VARCHAR` | `positive`, `neutral`, `negative` or `unscored` |
+| `comment` | `STRING` | `VARCHAR` | Free-text comment |
+| `answers` | `JSON` | `VARIANT` | Answers keyed `q0` to `qN`, plus `comment` and hidden fields |
+| `question_answers` | `JSON` | `VARIANT` | Answers with their question text |
+| `is_partial` | `BOOL` | `BOOLEAN` | `true` while the respondent hasn't finished |
+| `company_id` | `STRING` | `VARCHAR(36)` | Company the response is linked to |
+| `person_id` | `STRING` | `VARCHAR(36)` | Person the response is linked to. Empty for anonymous surveys and anonymized responses |
+| `respondent_email` | `STRING` | `VARCHAR` | Respondent email. Empty for anonymous surveys and anonymized responses |
+| `respondent_name` | `STRING` | `VARCHAR` | Respondent name. Empty for anonymous surveys and anonymized responses |
+| `status` | `STRING` | `VARCHAR` | Follow-up status: `new`, `in_progress` or `resolved` |
+| `owner_id` | `STRING` | `VARCHAR(36)` | Teammate who owns the follow-up |
+| `task_id` | `STRING` | `VARCHAR(36)` | Follow-up task |
+| `submitted_at` | `TIMESTAMP` | `TIMESTAMP_TZ` | When the response was submitted |
+| `reviewed_at` | `TIMESTAMP` | `TIMESTAMP_TZ` | When a teammate first reviewed it |
+| `resolved_at` | `TIMESTAMP` | `TIMESTAMP_TZ` | When follow-up was resolved |
+| `anonymized_at` | `TIMESTAMP` | `TIMESTAMP_TZ` | When personal details were removed |
+| `updated_at` | `TIMESTAMP` | `TIMESTAMP_TZ` | Last change in GainTrace. Never moves backwards |
+| `deleted_at` | `TIMESTAMP` | `TIMESTAMP_TZ` | Set when the response, or its campaign, was deleted in GainTrace |
+
+`id`, `workspace_id`, `survey_id` and `updated_at` are never empty.
+
+### The `answers` column
+
+`answers` has the same shape as `answers` on the API and in webhooks. Keys are question positions, `q0`, `q1` and so on, counted from zero. A `comment` key holds the comment. Values you saved with hidden fields are under `hidden`, and an AI follow-up is under `_probe` with `question` and `answer`.
+
+### The `question_answers` column
+
+`question_answers` is a list with one entry per answered question. Statements and unanswered questions are left out.
+
+```json
+[
+  { "key": "q0", "number": 1, "text": "How likely are you to recommend us?", "type": "scale", "value": 9, "display": "9" },
+  { "key": "q1", "number": 2, "text": "What is the main reason for your score?", "type": "text", "value": "Fast support.", "display": "Fast support." }
+]
+```
+
+`number` is the question's position counted from one. `value` is the stored answer. `display` is the same answer as text.
+
+## Table `surveys`
+
+One row per campaign.
+
+| Column | BigQuery | Snowflake | Description |
+| --- | --- | --- | --- |
+| `id` | `STRING` | `VARCHAR(36)` | Campaign id. The merge key |
+| `workspace_id` | `STRING` | `VARCHAR(36)` | Workspace the campaign belongs to |
+| `name` | `STRING` | `VARCHAR` | Campaign name |
+| `measure` | `STRING` | `VARCHAR` | `nps`, `csat`, `ces` or `custom` |
+| `status` | `STRING` | `VARCHAR` | `draft`, `active` or `closed` |
+| `anonymous` | `BOOL` | `BOOLEAN` | `true` when responses carry no respondent identity |
+| `scale_max` | `INT64` | `NUMBER(38,0)` | Top of the first question's scale |
+| `default_language` | `STRING` | `VARCHAR` | Default language of the campaign |
+| `questions` | `JSON` | `VARIANT` | Question definitions |
+| `created_at` | `TIMESTAMP` | `TIMESTAMP_TZ` | When the campaign was created |
+| `updated_at` | `TIMESTAMP` | `TIMESTAMP_TZ` | Last change in GainTrace. Never moves backwards |
+| `deleted_at` | `TIMESTAMP` | `TIMESTAMP_TZ` | Set when the campaign was deleted in GainTrace |
+
+`id`, `workspace_id` and `updated_at` are never empty. Survey settings aren't exported, because they hold alert destinations and in-app origins.
+
+## Example queries
+
+Monthly NPS by campaign. Leave out deleted and unfinished responses.
+
+<Tabs>
+  <Tab title="BigQuery">
+    ```sql
+    SELECT
+      DATE_TRUNC(DATE(r.submitted_at), MONTH) AS month,
+      s.name,
+      COUNT(*) AS responses,
+      100 * (COUNTIF(r.score >= 9) - COUNTIF(r.score <= 6)) / COUNT(*) AS nps
+    FROM `my-project.gaintrace.survey_responses` r
+    JOIN `my-project.gaintrace.surveys` s ON s.id = r.survey_id
+    WHERE r.deleted_at IS NULL
+      AND r.measure = 'nps'
+      AND NOT r.is_partial
+      AND r.score IS NOT NULL
+    GROUP BY month, s.name
+    ORDER BY month, s.name;
+    ```
+
+    Read one answer out of the JSON column:
+
+    ```sql
+    SELECT id, JSON_VALUE(answers, '$.q1') AS reason
+    FROM `my-project.gaintrace.survey_responses`
+    WHERE deleted_at IS NULL;
+    ```
+  </Tab>
+  <Tab title="Snowflake">
+    ```sql
+    SELECT
+      DATE_TRUNC('month', r.submitted_at) AS month,
+      s.name,
+      COUNT(*) AS responses,
+      100 * (COUNT_IF(r.score >= 9) - COUNT_IF(r.score <= 6)) / COUNT(*) AS nps
+    FROM my_db.gaintrace.survey_responses r
+    JOIN my_db.gaintrace.surveys s ON s.id = r.survey_id
+    WHERE r.deleted_at IS NULL
+      AND r.measure = 'nps'
+      AND NOT r.is_partial
+      AND r.score IS NOT NULL
+    GROUP BY 1, 2
+    ORDER BY 1, 2;
+    ```
+
+    Read one answer out of the VARIANT column:
+
+    ```sql
+    SELECT id, answers:q1::STRING AS reason
+    FROM my_db.gaintrace.survey_responses
+    WHERE deleted_at IS NULL;
+    ```
+  </Tab>
+</Tabs>
+
+## Troubleshooting
+
+| Message | What to do |
+| --- | --- |
+| Couldn't create the export tables in the dataset | BigQuery: create the dataset, give the service account **BigQuery Data Editor** on it, then turn export on again. Snowflake: create the schema and grant the connection's role `USAGE` and `CREATE TABLE` on it, then turn export on again |
+| Failed to export survey responses | BigQuery: check that the service account has **BigQuery Data Editor** on the dataset. Snowflake: check that the connection's role can use the schema and write to its tables. Then select **Export now** |
+| Dataset names can use letters, numbers and underscores only | Choose a name with letters, numbers and underscores, up to 128 characters |
+| Survey export needs the Enterprise plan | Upgrade to Enterprise to turn export on or run **Export now** |
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Surveys API" icon="code" href="/surveys-api">
+    Read the same responses over REST.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/webhooks">
+    Get responses as they arrive.
+  </Card>
+</CardGroup>

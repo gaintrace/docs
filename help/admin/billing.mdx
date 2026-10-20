@@ -4,7 +4,7 @@ description: "How GainTrace pricing works, what Free includes, and how to change
 keywords: ["billing", "pricing", "plans", "free plan", "companies tracked", "add-ons", "pay-as-you-go", "invoices", "cancel"]
 ---
 
-{/* docs-meta: routes=[/settings?section=billing]; components=BillingSection, PlanConfigurator, UpgradeMoment, CancelFlowDialog; verified 2026-10 */}
+{/* docs-meta: routes=[/settings?section=billing]; sources=[src/config/billing.ts]; components=BillingSection, PlanConfigurator, UpgradeMoment, CancelFlowDialog; verified 2026-10 */}
 
 Your subscription lives in **Settings > Billing**. It shows your plan, your usage against its limits, your add-ons, and the ways to change them.
 
@@ -37,7 +37,7 @@ New workspaces start on **Free**, with no card needed. Free has no time limit an
 | History | 3 months |
 | Seats (members and pending invites) | 3 |
 
-Free doesn't include SAML single sign-on or premium AI models.
+Surveys, with every channel, question type, report and Trace AI survey feature, are in every plan, including Free. On Free, Trace AI survey features use your own AI key ([details](/help/trace-ai/ai-and-your-data)). Free doesn't include SAML single sign-on or premium AI models.
 
 When Free reaches its company or people limit, new companies and people from your connected sources are held back, while everything already imported keeps syncing. They import automatically once there's room, either because you move to a paid plan or because you remove companies. Product events over the monthly limit stop counting until next month. Other limits, such as automations and connected sources, block new additions until you upgrade.
 
@@ -58,10 +58,12 @@ Add-ons are billed on top of your plan, at your plan's billing cadence.
 | Add-on | Price | How to get it |
 | --- | --- | --- |
 | [Renewal forecast](/help/boards/renewal-forecast) | $99 per month | Add it yourself |
-| Whitelabel Customer Portals | $99 per month | Add it yourself |
+| [White-label portals and surveys](/help/surveys/custom-domain) | $99 per month | Add it yourself |
 | Trace AI Teammate | $199 per month | Talk to sales |
 | Dedicated Success Manager | $99 per month | Talk to sales |
 | Security & Compliance | $99 per month | Talk to sales |
+
+**White-label portals and surveys** puts customer portals and surveys on your own domain, sends survey email from your own domain and hides Powered by GainTrace. Custom domains aren't generally available yet; see the [custom domain page](/help/surveys/custom-domain) if adding one is unavailable.
 
 On a paid plan, add or remove them under **Add-ons** in **Settings > Billing**. On Free, choose them in the **Extras** step while you pick a plan. White-glove onboarding is also available as a one-time $999 service.
 

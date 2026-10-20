@@ -1,0 +1,79 @@
+---
+title: "Accessibility"
+sidebarTitle: "Accessibility"
+description: "How accessible GainTrace surveys are for the people who answer them and the teammates who build them, how we test, and what we still need to fix."
+keywords: ["survey accessibility", "WCAG 2.2", "accessibility statement", "VPAT", "ACR", "screen reader survey"]
+---
+
+{/* docs-meta: sources=[src/components/surveys/survey-form.tsx, src/components/surveys/survey-scale-input.tsx, src/components/surveys/survey-ranking-input.tsx, src/app/survey/[id]/survey-client.tsx, src/app/survey/embed/[id]/embed-client.tsx, public/sdk/surveys.js, src/lib/surveys/invite-email.tsx, src/components/surveys/survey-builder.tsx, src/components/surveys/survey-form-axe.test.tsx, src/components/surveys/survey-form-a11y.test.tsx, src/lib/surveys/sdk-widget-a11y.test.ts, src/lib/surveys/invite-email.test.ts, scripts/audit-surveys-ui.ts] reviewed=2026-10 */}
+
+We want everyone your customers ask for feedback to be able to answer, and every teammate to be able to build a survey.
+
+## Standard
+
+We aim for WCAG 2.2 Level AA.
+
+## Scope
+
+This statement covers:
+
+- The survey page opened from a personal invitation link.
+- The embedded survey.
+- The in-app survey widget (`surveys.js`).
+- Survey invitation and reminder emails.
+- The survey designer in GainTrace.
+
+It doesn't cover the rest of the GainTrace app, your own pages that host the in-app widget, or custom CSS and brand colors you add.
+
+## Status
+
+GainTrace surveys partially conform to WCAG 2.2 Level AA. Partially conform means some parts don't fully meet the standard yet.
+
+<Warning>
+  This is a self-assessment by GainTrace. No third party has audited it, and we haven't yet tested with a screen reader.
+</Warning>
+
+The criterion-by-criterion result is in the [Accessibility Conformance Report](/help/surveys/accessibility-conformance-report).
+
+## How we test
+
+- Automated axe-core checks on twelve respondent states that cover ten of the eleven question types (Multiple choice is not yet scanned), against the WCAG 2.0, 2.1 and 2.2 Level A and AA rules, in a simulated browser without layout. Color contrast and target size are not checked there.
+- Unit tests for keyboard use, focus, announcements, right-to-left layout and the in-app widget.
+- A contrast test of invitation emails in dark-mode inboxes.
+- Code review against each criterion.
+
+A browser check in Chromium at desktop and phone widths exists, but no run of it is on record yet.
+
+## What works today
+
+- One question per screen, with the question as the heading and focus moved to it.
+- Every answer type can be used with a keyboard. Space picks a score and Enter confirms it. Ranking has Move up and Move down buttons.
+- Errors are named next to the field.
+- The page language and right-to-left direction are set for the survey's language.
+- The in-app widget announces itself, closes with Escape and returns focus to your page.
+- Email score buttons stay readable in dark-mode inboxes.
+
+## Known limitations
+
+- No screen-reader pass yet with NVDA, JAWS, VoiceOver or TalkBack.
+- Color contrast, target size, reflow and text spacing aren't measured in a real browser yet (WCAG 1.4.3, 1.4.10, 1.4.11, 1.4.12, 2.5.8).
+- A brand color you choose sets the selected answer and the focus ring. GainTrace guarantees contrast only for text on that color, not for the color against the page (1.4.11).
+- Custom CSS can reduce contrast or hide focus.
+- Tapping a score with a mouse or finger moves straight to the next screen, while the keyboard confirms with Enter. Customers can go **Back** to change it (3.2.2).
+- The AI follow-up label and its disclosure are always English and aren't marked as English inside a translated survey, (3.1.2).
+- Pressing ? opens the GainTrace keyboard shortcuts panel on survey pages and in the survey designer, and it can't be turned off (2.1.4).
+- CSAT faces show a word inside each answer, but the accessible name is the number, so speech-input users can't say the visible word (2.5.3).
+- The automated scan doesn't yet include the Multiple choice question type.
+- The survey designer has no automated accessibility scan yet.
+
+## Technical requirements
+
+Current versions of Chrome, Edge, Firefox and Safari, with JavaScript on. The in-app widget runs inside your page.
+
+## Feedback
+
+If something on a survey or in the survey designer doesn't work for you, email support@gaintrace.com with the survey link and what went wrong.
+
+## Date
+
+This statement was last reviewed in October 2026.

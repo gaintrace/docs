@@ -1,0 +1,152 @@
+---
+title: "Deliver a survey"
+sidebarTitle: "Deliver"
+description: "Send email invitations or hold them for approval, set send windows and reminders, test your survey, and understand how every answer arrives through a personal link."
+keywords: ["survey invitations", "invitation review", "survey approval", "survey reminders", "send window", "personal survey link", "short survey link", "survey cooldown", "recurring survey", "survey test email"]
+---
+
+{/* docs-meta: sources=[src/components/surveys/survey-detail.tsx, src/components/surveys/survey-builder.tsx, src/components/surveys/survey-schedule-setup.tsx, src/components/surveys/survey-sending-dialog.tsx, src/lib/surveys/invite-review-setting.ts, src/lib/flows/engine-internal.ts, src/components/surveys/survey-segment-invite.tsx, src/components/triage/survey-invitation-thread-view.tsx, src/components/flows/SendSurveyFields.tsx, src/components/people/person-feedback-tab.tsx, src/lib/surveys/commands.ts, src/lib/surveys/invite-review.ts, src/lib/surveys/invite-review-setting.ts, src/lib/surveys/sending-actions.ts, src/lib/surveys/invite-approvals.ts, src/lib/surveys/invite-retry-policy.ts, src/lib/surveys/send.ts, src/lib/surveys/send-window.ts, src/lib/surveys/delivery-jobs.ts, src/lib/surveys/fatigue.ts, src/lib/surveys/automation-actions.ts, src/lib/surveys/response-effects.ts, src/lib/surveys/invite-email.tsx, src/lib/surveys/token.ts, src/lib/surveys/short-links.ts, src/lib/surveys/short-link-code.ts, src/lib/surveys/channels.ts, src/lib/surveys/company-limit.ts, src/app/s/short-link-page.tsx, src/lib/flows/resolution/entity-models.ts, src/app/survey/[id]/survey-client.tsx, src/app/api/survey/[id]/respond/route.ts] reviewed=2026-10 */}
+
+Open a survey and choose the **Distribute** tab. It has two channels: **Email** and **In-app**. A survey must be **Active** before it collects anything. For the in-app channel, see [In-app surveys](/help/surveys/in-app).
+
+Every answer comes through a personal entry point: an emailed invitation link made for one person, or an in-app or embedded survey shown to a person your app has identified. There is no public link, QR code or kiosk mode. See [Personal links only](#personal-links-only).
+
+## Email invitations
+
+<Steps>
+  <Step title="Choose recipients">
+    On the **Email** channel, search for people and select them. Only active people with an email address appear, and you can request up to 100 at a time. To invite a saved segment or a set of Company and People rules, switch **Invitation audience** to **Segment or rules**. See [Choose who gets a survey](/help/surveys/target). Archived people are never invited.
+  </Step>
+  <Step title="Review the list">
+    Check each name, email and Company, then continue.
+  </Step>
+  <Step title="Send, or send for approval">
+    The button reads **Send N invitations** when your workspace sends invitations as soon as they are requested, and **Request N invitations** when it holds them for approval. See [Invitation review](#invitation-review).
+  </Step>
+</Steps>
+
+People are skipped, and the count tells you how many, when they already have an invitation waiting, are inside this survey's cooldown, or were surveyed recently under your [workspace frequency rule](/help/surveys/rules), including its optional [Company limit](/help/surveys/rules#company-limit). A person skipped by the Company limit shows **Company limit** as the reason.
+
+### Invitation review
+
+Your workspace decides what happens to an invitation after you request it. Owners and admins set this in **Settings > Surveys**, or with **Sending and identity** at the top of the Surveys page, under **Invitation review**:
+
+| Setting | What happens |
+| --- | --- |
+| **Send when requested** (default) | Invitations requested from a survey or the API send at once, or at the survey's next [send window](#send-window) |
+| **Hold for approval** | Every invitation requested from a survey or the API waits in [Triage](/help/accounts/triage) until a teammate approves it |
+
+Invitations that Trace AI or an MCP agent requests always wait for approval, whichever setting you choose, and an agent can't approve them. Invitations from [Flows](#flows-that-send-surveys) follow their own setting, **Invitations from Flows**, which holds them for approval unless an admin chooses **Send when the Flow runs**. In every setting, the survey's cooldown, your frequency rule, unsubscribes, email limits and send windows apply. A person in two surveys at once gets at most one invitation, because the frequency rule is checked for each person at the moment an invitation is released.
+
+### Invitations from Flows
+
+Owners and admins also choose what happens to invitations from a Flow's **Send Survey** step, in **Settings > Surveys > Sending and identity**, under **Invitations from Flows**:
+
+| Setting | What happens |
+| --- | --- |
+| **Hold for approval** (default) | Each invitation from a Flow waits in [Triage](/help/accounts/triage) until a teammate approves it |
+| **Send when the Flow runs** | Active Flows with a Send Survey step start sending as soon as you choose this, and each invitation goes out as the Flow reaches the step |
+
+Sampling, cooldowns, your frequency rule, unsubscribes, email limits and send windows apply in both settings. Every change is recorded in the audit log.
+
+### Review invitations in Triage
+
+Invitations that are requested together form one thread in Triage: one **Distribute** request, one API call, or one segment or rules audience of up to 1,000 people. When Flow invitations are held for approval, a Flow makes one thread for each run and approver, and an event-triggered Flow makes one for each day and approver. A thread counts once in **Needs you**, in the Triage badge and on Home.
+
+A thread shows:
+
+- The survey, linked, with its measure, who asked for the invitations and from where, the approver, and when the thread auto-declines. An invitation that nobody approves is declined after 14 days.
+- The invitation email as it will send, with its subject, greeting, first question and answer scale, in your workspace brand kit.
+- The survey's cooldown and your workspace frequency rule.
+- Each person, linked to their Feedback tab, with their Company and a status: **Clear to send**, or **Won't send** because of the survey cooldown, the frequency rule, the do-not-email list, an archived person or a changed email.
+
+People who won't send start unchecked. Uncheck anyone else to leave them in Triage. Choose **Approve and send N** (<kbd>A</kbd>) or **Decline N** (<kbd>X</kbd>) to act on the checked people. Both give you a 5-second **Undo**. Approved invitations are scheduled and checked again when each one sends, so the cooldown, the frequency rule, unsubscribes, email limits and the send window still apply. The outcome appears in the survey's [Delivery history](#delivery-history).
+
+You can reach a thread from:
+
+- A survey's **Delivery history** tab, where **Review N waiting in Triage** appears while invitations wait.
+- The alert after you request invitations, which links to **Review invitations in Triage**.
+- A person's **Feedback** tab, where **Review in Triage** opens the thread with that person highlighted.
+- Triage itself, where `?survey=` on the address filters to one survey's pending invitations.
+
+When Flow invitations are held for approval, an approver that a Flow assigns gets one notification for each batch. If the survey has been closed when you open a thread, reopen it in Surveys to send, or decline the invitations.
+
+### What the customer receives
+
+The invitation carries your workspace's brand kit, not GainTrace's. It shows the survey question with each score as a clickable button, plus a plain link for email apps that strip styled links, and a plain-text version for text-only mail. For CSAT and CES on a 1-7 scale, all seven scores are clickable.
+
+The score buttons are built to render in every major email app: Outlook for Windows, Mac and the web, Gmail, Apple Mail and the mobile apps. They are table cells with inline colors, no images or web fonts, so they show even when images are blocked, and they shrink to fit a phone screen. In dark mode, apps that recolor email keep the digits readable.
+
+Choosing a score in the email opens the survey with that score selected. The score is recorded once the customer taps, clicks, presses a key or turns the mouse wheel on the page, even if they leave before the follow-up questions. Opening the link records nothing, and neither does scrolling, moving the pointer, or anything a script does on the page. Email security tools that open every link in a message (such as Microsoft Safe Links, Mimecast or Proofpoint) load the page without a person, so they don't record an answer. A tool that simulates real clicks could still record one.
+
+Each invitation links to a short personal address that looks like `https://app.gaintrace.com/s/aB3dE5gH7jK9`, and a score button adds the score, as in `/s/aB3dE5gH7jK9/10`. The address is unique to one person and one invitation. Invitations sent before short links existed keep their longer addresses, and those keep working. When your workspace uses a [custom survey domain](/help/surveys/custom-domain), the short link uses your domain.
+
+The link is personal and stays valid for 30 days from approval. A response through it is attributed to that person and their Company without asking them to type anything. This works for anonymous surveys too, which then store no identity with the response. Invitations follow your email governance: suppression lists, sending limits and the unsubscribe footer all apply.
+
+### Cooldowns and frequency
+
+Two rules stop people from being over-surveyed:
+
+- **Campaign cooldown.** Set per survey in **Branding and privacy**, from 0 to 730 days. A person who already received, answered or saw a survey that measures the same thing (NPS, CSAT, CES or custom) inside this window is skipped. It applies across surveys, email and in-app. A new survey starts at 90 days.
+- **Workspace frequency rule.** One gap between any two surveys for the same person, set in [Survey rules](/help/surveys/rules).
+
+### Delivery history
+
+The **Delivery history** tab lists every invitation with its outcome, such as sent, scheduled, retry, suppressed, cooldown or failed, so you can see why someone didn't get one. A person's own **Feedback** tab shows the same outcomes in words, for example **Awaiting approval**, **Scheduled**, **Retrying: send failed** and **Skipped: surveyed recently**.
+
+#### If sending fails
+
+If the email service is briefly unavailable (it doesn't respond, returns a server error, or hits a rate or daily sending limit), GainTrace sends the invitation again automatically. It makes 3 attempts in total, the second about 15 minutes and the third about 2 hours after the one before it, and only inside the survey's send window. While it waits, the invitation shows as a retry.
+
+Each attempt checks the person again: the survey must still be active, the person must not be archived, unsubscribed or bounced, and the cooldown and frequency rule must still allow it. A retry reuses the same invitation, so the person can answer only once whichever email they open. If the email service refuses the invitation outright, it fails at once. After 3 failed attempts the invitation shows **Failed**, and you invite the person again once sending works.
+
+### Send a test to yourself
+
+On the **Email** channel, choose **Send a test to me**. GainTrace emails the real invitation to your own address with "[Test]" in the subject. You can send a test from a draft survey. The page shows a test notice and nothing you answer is saved. Tests skip cooldowns and sending limits, and the test link works for 7 days. The link opens only while the survey is Active, so activate the survey first, or use the designer's live preview to check a draft.
+
+## Send window
+
+Open **Email delivery** in the designer and turn on **Only send invitations during set hours**. Choose a start and end hour (the end must be after the start) and, optionally, **Weekdays only**.
+
+The window uses your workspace time zone. An invitation requested or approved outside the window waits and is scheduled for the next quarter hour inside it. Delivery history shows it as scheduled until then.
+
+## Reminders
+
+In **Email delivery**, turn on **Remind people who have not answered** and choose:
+
+- **Days before each reminder**: 1 to 14 days.
+- **Reminders at most**: 1, 2 or 3.
+
+Reminders go only to people who haven't answered. Anyone who answered, even partly, is never reminded. Reminders stop 28 days after the invitation, respect your send window and the same email governance, and have "Reminder:" at the start of the subject. A reminder link answers the original invitation, so each person can answer once, whichever email they open.
+
+## Personal links only
+
+GainTrace has no public survey link, QR code or kiosk mode. Every answer comes through one of two personal entry points:
+
+| Entry point | How the person is identified |
+| --- | --- |
+| Emailed invitation link | The link is made for one person at one Company, so the answer is attributed to them without asking them to type anything |
+| In-app or embedded survey | Your app shows the survey to a signed-in person, verified with your workspace's identity key or a session your backend creates. See [In-app surveys](/help/surveys/in-app) |
+
+Opening a survey without a personal link shows "This survey only takes answers from a personal invitation. Ask the team that sent it for your link." Nothing is recorded. Ask the team that sent the survey for a new invitation, or [send one yourself](#email-invitations).
+
+Answers that arrived by a public link, QR code or kiosk before this change still appear in the response inbox and in reports, with their original channel, such as **Public link**, **QR code** or **Kiosk**. Those channels are historical values only: no new answer arrives through them.
+
+## Flows that send surveys
+
+Use the **Send Survey** step in a [Flow](/help/automation/flows) to send a survey when something happens, such as before a renewal or after onboarding. Flow survey sends wait for approval in Triage by default. An admin can choose to send them as the Flow runs; see [Invitations from Flows](#invitations-from-flows). After you pick a survey in the step, a link opens it in Surveys in a new tab. A draft or closed survey shows **Activate it in Surveys** instead.
+
+To ask about one record, such as the deal that started the Flow, set **Ask about** in the step. See [Link feedback to deals, tickets, plans and records](/help/surveys/link-feedback-to-records).
+
+To survey on a rhythm, open the **Email** channel and choose **Create recurring survey Flow**. Pick **Quarterly** (the first day of January, April, July and October) or **Monthly**. GainTrace creates a draft Flow with this survey already selected, starting on the first day of the period at 9 AM in your workspace time zone. Open it with **Review audience and activate Flow**, set the Company audience, then activate it. Invitations still follow the cooldown, unsubscribe rules and email limits.
+
+### Start a Flow from a response
+
+A Flow can also start when a response arrives. In the Flow's **Event** trigger, choose:
+
+- **NPS response**, with the NPS category (promoter 9-10, passive 7-8 or detractor 0-6) and optionally a survey, to follow up by category.
+- **Survey response**, with a survey, a survey type or a sentiment (positive, neutral or negative), for one specific survey or for CSAT and CES.
+
+The Flow starts once for each response, when the person finishes the survey, or 30 minutes after they saved a score and stopped. The event carries the comment and a link to the response, and says if the person left before the follow-up questions. Only identified answers start Flows, which means answers to a personal link or an in-app survey that are linked to a Company on a survey that isn't anonymous. Imported and API responses, and older answers from the retired public link, QR code and kiosk, don't start Flows. Identified responses also add an entry to the Company's timeline.
+
+A survey's **Overview** lists, under **Collection**, every Flow that sends the survey or starts on its responses. Each row shows how the Flow uses the survey and its status, and opens the Flow at the step that uses it. Unpublished edits to a live Flow don't appear there until you publish them.

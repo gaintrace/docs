@@ -1,0 +1,183 @@
+---
+title: "Build a survey"
+sidebarTitle: "Build"
+description: "Question types, logic and endings, jumps, the question library, personalization, hidden fields, branding, anonymous surveys and the thank-you screen."
+keywords: ["survey designer", "question types", "matrix question", "ranking question", "product-market fit", "display logic", "logic", "jumps", "endings", "question library", "piping", "hidden fields", "anonymous survey", "survey branding", "thank-you screen"]
+---
+
+{/* docs-meta: sources=[src/lib/surveys/contracts.ts, src/lib/surveys/answered.ts, src/lib/surveys/question-types.ts, src/lib/surveys/templates.ts, src/lib/surveys/commands.ts, src/lib/surveys/anonymous-invite.ts, src/lib/surveys/ui-strings.ts, src/components/surveys/survey-builder.tsx, src/lib/surveys/logic.ts, src/lib/surveys/logic-fields.ts, src/components/surveys/survey-logic-fields.tsx, src/components/surveys/survey-logic-review.tsx, src/components/surveys/survey-question-fields.tsx, src/components/surveys/survey-question-inputs.tsx, src/components/surveys/survey-ranking-input.tsx, src/components/surveys/metric-scale-choice.tsx, src/components/surveys/survey-ai-probe-field.tsx, src/components/surveys/survey-form.tsx, src/app/survey/[id]/survey-client.tsx] reviewed=2026-10 */}
+
+Choose **Create survey** on the Surveys page to open the designer. It lists your questions and settings, lets you edit the one you select, and shows a live preview of what customers see.
+
+New to Surveys? Read the [overview](/help/surveys/overview) first.
+
+## Questions
+
+A survey can have up to 20 questions. Each question text can be up to 1,000 characters. Choose a question's type under **Answer type**.
+
+| Answer type | What the customer does |
+| --- | --- |
+| **Rating** | Picks a value on a scale. The score question of NPS, CSAT and CES is a rating with a fixed scale |
+| **Numeric scale** | Picks a number on a scale you define |
+| **Multiple choice** | Picks one answer from 2 to 20 options |
+| **Checkboxes** | Picks any number of answers from 2 to 20 options |
+| **Dropdown** | Picks one answer from a list of 2 to 100 options |
+| **Matrix** | Answers several rows against the same scale. 2 to 15 rows and 2 to 10 columns |
+| **Ranking** | Puts up to 10 items in order, most preferred first |
+| **Date** | Enters a calendar date |
+| **Written response** | Types an answer of up to 5,000 characters |
+| **Statement** | Reads a message. There is nothing to answer |
+| **Consent checkbox** | Ticks a box to agree to something |
+
+Enter options one per line. Answer choices must all be different. For a matrix, enter the rows one per line and the scale columns one per line, lowest first.
+
+### Settings for each type
+
+- **Rating and numeric scale.** On follow-up questions, set the lowest and highest values (between 0 and 10, with the highest above the lowest) and optional labels for each end.
+- **Rating display.** A follow-up rating can show **Numbers** or **Stars**. Stars are for 1 to 5 only, so use numbers for a longer scale. The CSAT score question defaults to **Faces** and can also show stars or numbers. NPS and CES always show numbers. Email invitations always keep numbered score buttons, so the display applies to the survey page, the embed and the in-app survey.
+- **Checkboxes.** Set a **Minimum answers** and a **Maximum answers** if you need them. Leave a limit empty for no limit. At the maximum, the other boxes lock.
+- **Statement and consent checkbox.** Add an optional description of up to 2,000 characters, and an optional link with a label of up to 40 characters and an `https://` address.
+- **CSAT.** Choose **Faces 1-5** or **Numbers 1-7** under **Satisfaction scale**. On a 1-7 scale, 6 and 7 count as satisfied.
+- **CES.** Choose **Agreement 1-7** (a statement such as "Getting set up was easy") or **Ease 1-5** (a question about how easy the task was) under **Effort scale**.
+
+### Save questions to a library
+
+Save your own questions to the library and reuse them in other surveys. See [Question library](/help/surveys/overview#question-library).
+
+### Required answers
+
+Turn **Required answer** on for any question except the score question, which is always required. Some types follow their own rules:
+
+| Type | Required rule |
+| --- | --- |
+| **Matrix** | Every row must be answered |
+| **Ranking** | Every item must be ranked |
+| **Statement** | Can't be required, because it has no answer |
+| **Consent checkbox** | Always required |
+
+### Product-market fit
+
+Add **Product-market fit (Sean Ellis)** from **Add from library** to ask "How would you feel if you could no longer use this product?". It keeps four fixed answers so your result stays comparable: **Very disappointed**, **Somewhat disappointed**, **Not disappointed** and **I no longer use it**. Choose **Edit answers** if you want different wording, and the question then becomes an ordinary multiple choice question. The **Product-market fit** template is built around this question. See [Inbox and reports](/help/surveys/inbox-and-reports#question-results) for how the share is read.
+
+### One question per screen
+
+Customers see one question at a time. A scored survey starts with the score, then shows each follow-up that applies, one screen each. If your survey has no written question, GainTrace adds a final "why" comment screen. Customers can go back with **Back** on any screen after the first, and can change their score from the later screens. Each question is the heading of its screen, and keyboard and screen-reader users land on it when the screen changes. When the survey is narrow, for example in the in-app widget on most phones, the 0 to 10 NPS row wraps to two rows, 0 to 5 and 6 to 10, so each button stays large enough to tap.
+
+The score is saved the moment the customer confirms it on the first screen. A person who leaves before the follow-ups still counts, with a score and no comment.
+
+If the connection drops while a customer sends their answers, the answers are kept in their browser and sent automatically when the connection returns, or the next time a survey page from the same site opens. They are kept for up to 30 days, and your team receives them once. If the browser blocks site storage, as some private windows do, the page retries for a few seconds and then asks the customer to send again.
+
+### Logic and endings
+
+Show a question only when the answers so far match, and send customers to a later question or a different thank-you screen. Select a question, then choose **Show this question**: **Always** or **When conditions match**.
+
+A condition can read:
+
+| What it reads | Conditions |
+| --- | --- |
+| **Rating** or **Numeric scale** answer | **is at most**, **is at least** or **is exactly** a score |
+| **Multiple choice** or **Dropdown** answer | **is** or **is not** one of its answers |
+| **Checkboxes** answer | **includes** or **does not include** one of its answers |
+| **Date** answer | **is before** or **is after** a date |
+| **Question 1 score group**, on the NPS, CSAT or CES score question | **is** a group: Detractors (0 to 6), Passives (7 to 8) or Promoters (9 to 10) for NPS, and Low scores, Middle scores or Top scores for CSAT and CES |
+| **Hidden field: name** | **is** or **is not** a value, ignoring upper and lower case |
+
+Combine up to 10 conditions and choose whether **all** or **any** of them must match. A matrix, ranking, consent or written question can't be the condition. The first question is always shown. A question that depends on a skipped question stays hidden, even if the customer answered it before going back. **Required answer** applies only when the question is shown. In the [response inbox](/help/surveys/inbox-and-reports), a hidden question reads "Not shown for this score".
+
+#### Jumps
+
+Under **After this question**, add up to 10 jumps. Each one has conditions, using the same choices as above, and a destination: **Go to** a later question, **Go to** a named ending, or **End of survey**. The first jump whose conditions match wins, and jumps only move forward. A question that a jump skips never counts as answered. Reorder jumps with **Move jump up** and **Move jump down**, and delete one with **Remove jump**.
+
+#### Endings
+
+An ending is a named thank-you screen that only a jump reaches. You can add up to 10. Each has a name for your team, and optionally a title, a message and a button. Whatever you fill in overrides the score-group and default thank-you copy, field by field, so an ending with only a title still shows the default message.
+
+#### Review your logic
+
+The **Logic and endings** row in the designer lists every rule in plain words, with **Edit** beside each. It also lists your endings and lets you preview them. With no rules it reads "No logic yet".
+
+### Personalize question text
+
+Add these placeholders to a question:
+
+| Placeholder | Filled with |
+| --- | --- |
+| `{{first_name}}` | The first name of the person who opened their personal link |
+| `{{company}}` | Their Company |
+| `{{score}}` | The score they chose on the first screen |
+
+Add a fallback after a bar, such as `{{company|your team}}`. Without a fallback, a placeholder with no value disappears. Names fill in only for people who open a personal invitation link. They never fill in for anonymous surveys. `{{score}}` fills in on any link, once the customer has chosen a score.
+
+Placeholders fill question text and the descriptions of statements and consent checkboxes. They never fill in answer choices. They fill in on the survey page only. The email invitation shows your first question exactly as written, so keep placeholders out of the score question if you send by email.
+
+## Branding and privacy
+
+Select **Branding and privacy** to set:
+
+- **Brand color**: a hex color such as `#a66c1d`, used for the selected answer and the send button.
+- **Logo URL**: an `https://` image address.
+- **Contact cooldown, in days**: how long to wait before inviting the same person to this survey again, from 0 to 730. See [Deliver](/help/surveys/deliver#cooldowns-and-frequency).
+- **Hidden fields**: link parameters to save with each response.
+- **Custom CSS**: styling for the survey page.
+- **Collect anonymous feedback**: see below.
+- **Ask one AI follow-up question**: see [Ask an AI follow-up question](/help/surveys/ai-follow-up).
+
+Survey pages, the embedded survey and survey emails show a small "Powered by GainTrace" line. Workspaces with the White-label portals and surveys add-on can hide it. See [Custom survey domain and white-label](/help/surveys/custom-domain).
+
+To offer a survey in more than one language, see [Translate a survey](/help/surveys/translate).
+
+### Hidden fields
+
+Name up to 10 hidden fields in lowercase letters, numbers and underscores, starting with a letter, such as `plan` or `source`. When a customer opens their personal survey link with a parameter added, like `https://app.gaintrace.com/s/aB3dE5gH7jK9?plan=pro`, GainTrace saves `pro` with the response. Parameters you didn't name are dropped, and each value is cut at 200 characters.
+
+### Custom CSS
+
+Custom CSS styles the survey page and the in-app survey, and nothing else. It can be up to 10,000 characters. If your CSS is rejected, the error names the part to fix. Two groups of CSS are rejected.
+
+Rejected because it loads files or runs scripts: `<`, `@import`, `url(`, `image-set(`, `src(`, `expression(`, `javascript:`, `-moz-binding` and `behavior:`.
+
+Rejected because it would style things outside the survey:
+
+- The `~` sibling selector, and the `+` sibling selector outside parentheses (a `+` inside parentheses, such as in `calc()`, is fine).
+- `:has(`, `:root`, `html`, `body` and `@scope`.
+- `&` inside parentheses, such as `:not(&)`.
+- Backslash escapes outside quoted strings.
+- A `}` without a matching `{`, an unclosed `{`, an unclosed comment, or a quoted string that isn't closed on its line. Braces inside comments and quoted strings don't count.
+
+Custom CSS can't reach the label of the [AI follow-up question](/help/surveys/ai-follow-up), so it can't hide or restyle it out of view.
+
+### Anonymous surveys
+
+With **Collect anonymous feedback** on, GainTrace stores no name, email, person or Company with a response, even when the customer opened a personal link. GainTrace also doesn't store anything with an anonymous response that can be matched to the invitation or in-app prompt it answered. It still records that an invitation was answered, so reminders stop and each invitation can be answered only once. With a very small audience, the answers themselves can still hint at who wrote them. Because of that:
+
+- Responses can't be attributed to a Company, so follow-up tasks and automatic assignment are unavailable.
+- `{{first_name}}` and `{{company}}` stay empty.
+
+[Alerts](/help/surveys/alerts) still work and show the respondent as unidentified.
+
+## The thank-you screen
+
+Select **Thank-you screen** to change what customers see after they send feedback.
+
+- **Title** (up to 120 characters) and **Message** (up to 1,000 characters). The defaults are "Thank you for your feedback" and "Your response has been recorded. Thank you for helping us improve."
+- **Different message by score** lets you thank promoters, passives and detractors differently, each with its own title, message and button. Empty fields fall back to the title, message and button set for everyone. Give promoters a review site button, for example, and detractors your help center. Use **Preview the thank-you screen as** to check each group.
+- **Button after thanks** adds an optional next step, such as your help center or a review site. Give it a label of up to 40 characters and an `https://` address. It opens in a new tab, on the survey page and in the in-app survey.
+- **After someone answers** decides what a customer sees when they open their personal link again:
+  - **Let them change their answer** (the default) shows the thank-you screen with a **Change my answer** button. It reopens the form with their earlier scores and choices filled in; comments and other written answers are typed again, because a forwarded link must not show them. The new answer replaces the earlier one. Clicking a different score in the invitation email also updates it.
+  - **Lock their answer** shows the thank-you screen only. The answer can't be changed from that link.
+
+## Keep surveys purely feedback
+
+Surveys must stay feedback-only, so they can be sent without marketing consent. GainTrace rejects promotional wording in the survey name (customers see it as the page title), question text, descriptions, button labels, answer options, matrix rows, scale end labels, the thank-you title, message and button, and each score group's thank-you title, message and button, in every language. Phrases that trigger the guard include "20% off", "discount code", "promo code", "coupon code", "special offer", "limited time", "buy now", "upgrade now", "sign up now", "free gift" and similar. The error names the exact phrase to remove.
+
+Single words such as "discount" or "upgrade" are fine, so you can still ask customers about pricing and plans.
+
+## Preview, save and launch
+
+Use the preview to try each step and the thank-you screen. Previews never save a response. Switch **Preview device** between **Desktop** and **Mobile** (390 px wide), and choose **Reset preview** to start over. With [languages](/help/surveys/translate) added, pick a preview language too. Choose **Save draft** (or **Save changes** on an existing survey), then **Activate survey** on the survey page when you are ready. Activating checks the survey against the same rules as saving.
+
+### What you can change after launch
+
+Once a survey is Active or has any responses, its questions, measure and anonymity setting are locked, so old answers keep their meaning. You can still change the name, branding, thank-you screen, delivery settings, alerts and in-app settings.
+
+To change the questions, choose **Duplicate**. The copy is a new Draft named "(copy)" with the same questions and settings and none of the feedback.

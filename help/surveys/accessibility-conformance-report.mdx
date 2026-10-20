@@ -1,0 +1,122 @@
+---
+title: "GainTrace Accessibility Conformance Report"
+sidebarTitle: "Conformance report (VPAT)"
+description: "Self-assessed VPAT 2.5Rev WCAG edition report for GainTrace surveys: every WCAG 2.2 Level A and AA criterion."
+keywords: ["VPAT", "ACR", "accessibility conformance report", "WCAG 2.2", "survey accessibility", "self-assessed"]
+---
+
+{/* docs-meta: sources=[src/components/surveys/survey-form.tsx, src/components/surveys/survey-scale-input.tsx, src/components/surveys/survey-ranking-input.tsx, src/app/survey/[id]/survey-client.tsx, src/app/survey/embed/[id]/embed-client.tsx, public/sdk/surveys.js, src/lib/surveys/invite-email.tsx, src/components/surveys/survey-builder.tsx, src/components/surveys/survey-form-axe.test.tsx, src/components/surveys/survey-form-a11y.test.tsx, src/lib/surveys/sdk-widget-a11y.test.ts, src/lib/surveys/invite-email.test.ts, scripts/audit-surveys-ui.ts, src/lib/brand-kit/color.ts, src/app/auth/login/page.tsx] template=https://www.itic.org/policy/accessibility/vpat (VPAT 2.5Rev WCAG) reviewed=2026-10 */}
+
+**WCAG Edition, based on VPAT® Version 2.5Rev**
+
+<Warning>
+  This is a self-assessment by GainTrace. No third party has audited it, and no screen-reader pass has been done yet.
+</Warning>
+
+| | |
+| --- | --- |
+| **Name of Product/Version** | GainTrace Surveys (respondent surfaces and survey designer), web version as of October 2026 |
+| **Report Date** | October 2026 |
+| **Product Description** | GainTrace Surveys collects customer feedback. This report covers the survey page opened from a personal invitation link, the embedded survey, the in-app survey widget (surveys.js), survey invitation and reminder emails, and the survey designer in GainTrace. |
+| **Contact Information** | support@gaintrace.com |
+| **Notes** | Self-assessed by GainTrace. No third-party audit. Not yet tested with screen readers. One table covers all surfaces: each row gives the lowest level found on any surface in scope, and the remarks name the surface. Customer brand colors and custom CSS are out of scope. |
+| **Evaluation Methods Used** | Automated axe-core run in a simulated browser, tagged wcag2a, wcag2aa, wcag21a, wcag21aa and wcag22aa, over twelve respondent states that cover ten of the eleven question types (Multiple choice is not yet scanned). Color contrast is turned off in that run, and target size is not judged because there is no layout. Unit tests for keyboard use, focus, announcements, right-to-left layout and the in-app widget. A contrast test of invitation emails in dark-mode inboxes. Code review against each criterion. Rows for contrast, target size, reflow, text spacing and resize say "Code review only". |
+
+## Applicable Standards/Guidelines
+
+| Standard/Guideline | Included in report |
+| --- | --- |
+| Web Content Accessibility Guidelines 2.2, Level A | Yes |
+| Web Content Accessibility Guidelines 2.2, Level AA | Yes |
+| Web Content Accessibility Guidelines 2.2, Level AAA | No |
+
+## Terms
+
+The terms used in the Conformance Level information are defined as follows:
+
+- **Supports**: The functionality of the product has at least one method that meets the criterion without known defects or meets with equivalent facilitation.
+- **Partially Supports**: Some functionality of the product does not meet the criterion.
+- **Does Not Support**: The majority of product functionality does not meet the criterion.
+- **Not Applicable**: The criterion is not relevant to the product.
+
+Level AAA criteria are not part of this report, so no row needs a term beyond these four.
+
+## WCAG 2.x Report
+
+Each Conformance Level below is the lowest one found on any surface in scope. Respondent surfaces means the personal-link survey page, embed, in-app widget and invitation email. Designer means the survey designer.
+
+### Table 1: Success Criteria, Level A
+
+| Criteria | Conformance Level | Remarks and Explanations |
+| --- | --- | --- |
+| 1.1.1 Non-text Content | Supports | Respondent surfaces: the logo has alt text (survey-form.tsx), and icon-only buttons have an accessible name. Email: the logo uses the brand name as its alt text and decorative images use empty alt (src/lib/email/components.tsx). The survey designer uses labelled icon buttons. |
+| 1.2.1 Audio-only and Video-only (Prerecorded) | Not Applicable | No audio or video on any surface in scope. |
+| 1.2.2 Captions (Prerecorded) | Not Applicable | No audio or video on any surface in scope. |
+| 1.2.3 Audio Description or Media Alternative (Prerecorded) | Not Applicable | No audio or video on any surface in scope. |
+| 1.3.1 Info and Relationships | Partially Supports | Respondent surfaces: each screen's question is its heading, controls are grouped and labelled, and the axe-core run passes on twelve respondent states covering ten of the eleven question types, with Multiple choice not yet scanned (survey-form-axe.test.tsx). Email layout tables and the survey designer have no automated check. |
+| 1.3.2 Meaningful Sequence | Supports | Respondent surfaces show one question per screen in DOM order, and right-to-left languages set dir on the page. |
+| 1.3.3 Sensory Characteristics | Supports | Scale ends and faces carry text labels (survey-scale-input.tsx), so no instruction relies on shape, color or position alone. |
+| 1.4.1 Use of Color | Partially Supports | Not verified in a browser that every selected state differs by more than color. Code review only. |
+| 1.4.2 Audio Control | Not Applicable | No audio plays on any surface in scope. |
+| 2.1.1 Keyboard | Partially Supports | Respondent surfaces are keyboard operable: Space selects a score and Enter confirms it (survey-scale-input.tsx), ranking has Move up and Move down buttons (survey-ranking-input.tsx), and Escape closes the in-app widget (public/sdk/surveys.js). No recorded keyboard-only walkthrough of the survey designer exists. |
+| 2.1.2 No Keyboard Trap | Supports | The in-app widget is non-modal in its banner and card positions. Escape and Close survey return focus to the page (sdk-widget-a11y.test.ts). |
+| 2.1.4 Character Key Shortcuts | Does Not Support | Pressing ? opens the GainTrace keyboard shortcuts panel on the survey page, the embed and the survey designer, and it can't be turned off or remapped (keyboard-shortcuts-panel.tsx, mounted for every route outside /auth in providers.tsx). The in-app widget runs on your own page and doesn't load it. |
+| 2.2.1 Timing Adjustable | Supports | Personal links last 30 days. |
+| 2.2.2 Pause, Stop, Hide | Supports | Nothing moves or updates on its own. The in-app widget fades instead of sliding when the person prefers reduced motion. |
+| 2.3.1 Three Flashes or Below Threshold | Supports | Nothing flashes on any surface in scope. |
+| 2.4.1 Bypass Blocks | Supports | Survey pages have no repeated blocks to skip. The survey designer sits in the GainTrace app shell, which is outside this report. |
+| 2.4.2 Page Titled | Supports | The survey name is the page title. |
+| 2.4.3 Focus Order | Partially Supports | Respondent surfaces: focus moves to each step's heading (survey-form.tsx, survey-form-a11y.test.tsx) and returns to the page after the in-app widget closes (sdk-widget-a11y.test.ts). The survey designer's focus order has not been walked. |
+| 2.4.4 Link Purpose (In Context) | Supports | The thank-you link is named as opening in a new tab (survey-form-a11y.test.tsx). Email score links are named by their digit, and the email button names its action (invite-email.test.ts). |
+| 2.5.1 Pointer Gestures | Supports | No multipoint or path-based gestures are required. Ranking drag has Move up and Move down buttons. |
+| 2.5.2 Pointer Cancellation | Supports | Standard buttons and radios act on release. |
+| 2.5.3 Label in Name | Partially Supports | CSAT faces show a word inside each answer, such as Very satisfied, but the accessible name is the number (survey-scale-input.tsx). A speech-input user can't say the visible word to pick it. Other score and choice controls start their accessible name with the visible text. |
+| 2.5.4 Motion Actuation | Not Applicable | No function is triggered by device motion. |
+| 3.1.1 Language of Page | Supports | lang and dir follow the survey language on the survey page, the embed, the in-app widget and the email (survey-client.tsx, embed-client.tsx, public/sdk/surveys.js, survey-form-i18n.test.tsx). |
+| 3.2.1 On Focus | Supports | Focusing a control never changes context. |
+| 3.2.2 On Input | Partially Supports | On respondent surfaces, tapping a score with a pointer moves to the next screen without notice. The keyboard selects with Space and confirms with Enter. Back and changing the score undo the move. |
+| 3.2.6 Consistent Help | Supports | Survey pages offer no help mechanism. In the survey designer, help sits in the same place on every app page. |
+| 3.3.1 Error Identification | Supports | Errors are named next to the field with aria-invalid and aria-describedby (survey-form.tsx). |
+| 3.3.2 Labels or Instructions | Supports | Fields have visible labels, and optional fields say so. |
+| 3.3.7 Redundant Entry | Supports | Identity comes from the personal link, answers survive Back, and unsent answers are kept in the browser and sent again. |
+| 4.1.1 Parsing | Not Applicable | WCAG 2.2 (obsolete and removed) - Does not apply. |
+| 4.1.2 Name, Role, Value | Partially Supports | Respondent surfaces: the axe-core aria rules pass on twelve respondent states covering ten of the eleven question types (Multiple choice is not yet scanned), and the in-app widget buttons are named Close survey and Ask me later. The survey designer uses Radix and shadcn primitives and has no axe-core scan. |
+
+### Table 2: Success Criteria, Level AA
+
+| Criteria | Conformance Level | Remarks and Explanations |
+| --- | --- | --- |
+| 1.2.4 Captions (Live) | Not Applicable | No live audio or video. |
+| 1.2.5 Audio Description (Prerecorded) | Not Applicable | No audio or video on any surface in scope. |
+| 1.3.4 Orientation | Supports | No surface locks the screen orientation. |
+| 1.3.5 Identify Input Purpose | Supports | The email field has autocomplete set to email (survey-form.tsx). |
+| 1.4.3 Contrast (Minimum) | Partially Supports | Code review only. Text on the customer's brand color is chosen for 4.5:1 (src/lib/brand-kit/color.ts), and email score digits keep 4.5:1 in dark-mode inboxes (invite-email.test.ts). No browser contrast run is on record, and customer colors and CSS can lower contrast. |
+| 1.4.4 Resize Text | Partially Supports | Code review only. Type is rem-based, and it has not been measured at 200 percent. |
+| 1.4.5 Images of Text | Supports | No images of text. A customer's logo is exempt. |
+| 1.4.10 Reflow | Partially Supports | Code review only. The 0 to 10 NPS row wraps to two rows, 0 to 5 and 6 to 10, when its container is under 19rem (survey-scale-input.tsx). It has not been measured at 320 CSS pixels, and some report tables in the app do not reflow. |
+| 1.4.11 Non-text Contrast | Partially Supports | The selected state and focus ring take the customer's brand color, and GainTrace does not check that color for 3:1 against the page (src/lib/brand-kit/color.ts). Not measured in a browser. |
+| 1.4.12 Text Spacing | Partially Supports | Code review only. Not tested with overridden text spacing. |
+| 1.4.13 Content on Hover or Focus | Supports | Survey designer tooltips can be dismissed with Escape and hovered (Radix). Respondent surfaces show no hover or focus content. |
+| 2.4.5 Multiple Ways | Supports | A survey is one step in a process, which is an exception. The survey designer is reachable from navigation and search. |
+| 2.4.6 Headings and Labels | Supports | Each question is the heading of its screen, and fields have descriptive labels. |
+| 2.4.7 Focus Visible | Supports | Controls show a focus-visible ring. Ring contrast is covered under 1.4.11. |
+| 2.4.11 Focus Not Obscured (Minimum) | Partially Supports | The in-app bottom banner pads the host page so a focused control stays visible (sdk-widget-a11y.test.ts). The survey designer has not been measured. |
+| 2.5.7 Dragging Movements | Supports | Ranking and question reorder have Move buttons (survey-ranking-input.tsx, survey-builder.tsx). |
+| 2.5.8 Target Size (Minimum) | Partially Supports | Code review only. Score keys are sized to stay at least 24 px (survey-scale-input.tsx) and in-app widget buttons are at least 44 px tall. Not measured in a browser. |
+| 3.1.2 Language of Parts | Partially Supports | Language names carry their own lang. The AI follow-up label and disclosure stay English with no lang attribute inside a translated survey (survey-client.tsx). |
+| 3.2.3 Consistent Navigation | Supports | Navigation order is the same on every step. |
+| 3.2.4 Consistent Identification | Supports | Back, Next and Send feedback are named the same way on every step. |
+| 3.3.3 Error Suggestion | Supports | Error messages name the fix. |
+| 3.3.4 Error Prevention (Legal, Financial, Data) | Not Applicable | Surveys make no legal or financial commitment, and respondents can change a score before sending. |
+| 3.3.8 Accessible Authentication (Minimum) | Supports | Respondents never sign in. The designer sign-in allows password managers and email links (src/app/auth/login/page.tsx). |
+| 4.1.3 Status Messages | Supports | role=status and role=alert announce the in-app widget opening, loading and restart (sdk-widget-a11y.test.ts, survey-client.tsx). Toasts in the designer are announced. |
+
+## Known gaps
+
+The rows marked Partially Supports above are the honest list. The largest gaps are measurement gaps: contrast, target size, reflow, text spacing and resize are checked by code review only, because the browser accessibility check in Chromium (scripts/audit-surveys-ui.ts) has no run on record yet. A screen-reader pass with NVDA, JAWS, VoiceOver and TalkBack has not been done. The survey designer has no automated accessibility scan. Three further gaps are named in their rows: pressing ? opens the GainTrace shortcuts panel on survey pages and cannot be turned off (2.1.4, Does Not Support), CSAT faces have the number as their accessible name instead of the visible word (2.5.3), and the automated scan does not yet include the Multiple choice question type (1.3.1, 4.1.2).
+
+## Legal Disclaimer (GainTrace)
+
+This report describes GainTrace's own assessment at the date above. It is not a certification.
+
+Read the plain-language version in the [accessibility statement](/help/surveys/accessibility).

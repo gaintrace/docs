@@ -1,0 +1,422 @@
+---
+title: "Surveys API"
+description: "Create surveys, request invitations, record responses and read results with the GainTrace REST API."
+---
+
+{/* docs-meta: sources=[src/lib/surveys/rollup.ts, src/lib/surveys/fatigue.ts, src/lib/surveys/company-limit.ts, src/app/api/v1/surveys/rollup-rules/route.ts, src/app/api/v1/surveys/coverage/route.ts, src/app/api/v1/companies/[id]/survey-scores/route.ts, src/app/api/v1/surveys/**, src/app/api/v1/survey-responses/**, src/lib/surveys/contracts.ts, src/lib/surveys/commands.ts, src/lib/surveys/api-responses.ts, src/lib/surveys/api-serializers.ts, src/lib/surveys/fatigue.ts, src/lib/surveys/in-app.ts, src/lib/surveys/webhooks.ts, src/lib/surveys/audience.ts, src/lib/surveys/targeting-contracts.ts, src/lib/surveys/invite-review.ts, src/lib/surveys/subject-contracts.ts, src/lib/surveys/subjects.ts, src/lib/surveys/translations.ts, src/lib/surveys/languages.ts, src/lib/surveys/white-label.ts, src/lib/surveys/imports/service.ts, src/app/api/v1/survey-segments/**, src/app/api/v1/survey-imports/**, src/app/api/v1/surveys/[id]/invitations/route.ts, src/lib/warehouse/export/schema.ts, src/lib/api/v1.ts, src/config/limits.ts] reviewed=2026-10 */}
+
+The Surveys API lets your systems run the same NPS, CSAT, CES and custom surveys you build in the app. You can create and launch a survey, request invitations, record answers your own product collected, and read every response back.
+
+This page explains the concepts. The endpoint pages in the API reference list every field. For surveys shown inside your product, see [In-app survey SDK](/surveys-in-app-sdk).
+
+## Before you start
+
+- Every Surveys endpoint needs a **secret key** (`gt_live_`). Publishable keys (`gt_pub_`) are refused with `403`.
+- Reading needs the `read:surveys` scope. Creating, editing, launching, inviting, recording and changing rules need `write:surveys`. See [Authentication](/authentication).
+- Lists use `limit` (default 50, max 100) and `offset`. There is no cursor.
+- Each key can make 60 requests per minute. Past that, the API returns `429` with the code `rate_limit_exceeded`. Back off and retry.
+- Errors use the standard envelope. A body that isn't valid JSON is `400`. A value that fails its own field's validation is `422`. Rules that compare several fields are different: on `PATCH /surveys/{id}` and when you launch a survey, a failure (a missing first question, an NPS scale outside 0-10, a CSAT or CES scale outside 1-5 or 1-7, promotional copy, `showWhen` rules) returns `400` `bad_request` with a generic message and no field detail. Answers that don't fit their questions, or a `subject` that can't be linked, on `POST /surveys/{id}/responses` are `422`. The session endpoint returns `422` for any invalid or malformed body. Rules the survey enforces, such as editing locked questions, are `400`. See [Errors](/errors).
+
+## Measures and scales
+
+A survey has one `type`, which the API returns as `measure`.
+
+| Measure | Scale | What it measures |
+| --- | --- | --- |
+| `nps` | 0 to 10 | How likely someone is to recommend you |
+| `csat` | 1 to 5 or 1 to 7 | How satisfied someone is |
+| `ces` | 1 to 5 or 1 to 7 | How easy something was |
+| `custom` | Your choice | Anything else. Responses are never banded |
+
+For `nps`, `csat` and `ces`, the first question carries the score. It must be a required `rating` or `scale` question. A survey can have up to 20 questions. Each has a `type`:
+
+| Type | Notes |
+| --- | --- |
+| `rating` | A numeric rating. `display` can be `faces`, `stars` or `numbers`. The first CSAT score on a 1-5 scale shows faces unless you set another display. Stars need a 1-5 scale. NPS and CES scores always show numbers |
+| `scale` | A numeric scale with `scaleMin`, `scaleMax` and optional `scaleLabels` |
+| `text` | A free-text answer |
+| `multiple_choice` | One answer from `options` |
+| `multi_select` | Several answers from `options`. `minSelections` and `maxSelections` limit how many |
+| `dropdown` | One answer from a long list of `options`, up to 100 |
+| `matrix` | `rows` (2 to 15 statements) answered against shared `options` as columns, lowest first |
+| `ranking` | `options` put in order, at most 10 |
+| `date` | A calendar date |
+| `statement` | Text only, with no answer. It can't be required. Use `description` and an optional `link` |
+| `consent` | A checkbox that must be required. Use `description` and an optional `link` |
+
+Choice questions need at least two different `options`. A multiple-choice question can set `preset: "pmf"` to ask the product-market fit question with its four standard answers.
+
+A question can use `showWhen` to appear only after a matching earlier answer, such as "ask why" when the first score is 6 or lower. `showWhen` names an earlier question by its zero-based index (`question`, the first question by default), an `operator` and a `value`. The operators depend on the question it reads:
+
+| Earlier question | Operators |
+| --- | --- |
+| `rating`, `scale` | `lte`, `gte`, `eq` with a number |
+| `multiple_choice`, `dropdown` | `is`, `is_not` with one of its options |
+| `multi_select` | `includes`, `excludes` with one of its options |
+| `date` | `before`, `after` with a date |
+
+Surveys must stay purely feedback. Copy with promotional phrases such as "discount code" or "limited time" is rejected, so the survey can be sent without marketing consent.
+
+### Bands
+
+Every response gets a `band`. Use it to route feedback without knowing the scale.
+
+| Measure | `positive` | `neutral` | `negative` |
+| --- | --- | --- | --- |
+| `nps` | 9 to 10 | 7 to 8 | 0 to 6 |
+| `csat`, `ces` | The top two points of the scale | Everything between | The bottom half of the scale |
+| `custom` | Never | Never | Never |
+
+A response with no score, and every response to a `custom` survey, is `unscored`.
+
+## Survey lifecycle
+
+<Steps>
+  <Step title="Create a draft">
+    `POST /surveys` creates a survey with `status: "draft"`. Nothing is collected yet.
+  </Step>
+  <Step title="Launch it">
+    `POST /surveys/{id}/status` with `{ "status": "active" }` validates the survey again and starts collection. GainTrace sends the `survey.launched` webhook.
+  </Step>
+  <Step title="Close or reopen it">
+    Send `closed` to stop collecting and `active` to start again. A launched survey can't go back to draft.
+  </Step>
+</Steps>
+
+### What you can still change
+
+`PATCH /surveys/{id}` edits any part of the survey while it is a draft. Once a survey is `active`, or has any responses, three things lock: `type`, `questions` and `settings.anonymous`. Changing one returns `400` with the message "Duplicate this survey to change questions or anonymity after launch." This keeps old answers meaningful. Name, cooldown, thank-you copy, reminders, send window, in-app rules and the other settings stay editable.
+
+When you send `settings`, each top-level key you include replaces that key and the rest are kept. Nested objects such as `reminders` are replaced as a whole.
+
+## Channels
+
+A response arrives through one channel. The `survey_response` webhooks name it in `channel`.
+
+| Channel | How it arrives |
+| --- | --- |
+| `email` | A person answers from a signed invitation email |
+| `in_app` | A person answers a survey shown inside your product |
+| `api` | Your system records it with `POST /surveys/{id}/responses` |
+
+The values `link`, `qr` and `kiosk` are historical only. They label answers collected before public links, QR codes and kiosks were removed, and no new answer arrives through them. A survey object has no `links` field: every answer comes through a personal entry point.
+
+Invitation emails link to short personal addresses such as `https://app.gaintrace.com/s/aB3dE5gH7jK9`. While the white-label add-on is active and your survey domain is verified, they use your own domain. Links already sent keep working. The REST API stays on the GainTrace address.
+
+Answers that arrive from an imported survey tool (see [Import from other survey tools](#import-from-other-survey-tools)) use the channel `import` on webhooks.
+
+Signed invitation links and identified in-app sessions tie each answer to a person and company. A survey page opened without a personal link shows "This survey only takes answers from a personal invitation. Ask the team that sent it for your link." and records nothing.
+
+A survey can name up to 10 `hiddenFields`, such as `plan`. When a personal link carries that parameter, for example `?plan=pro`, the value is saved with the response. Parameters the survey doesn't name are dropped.
+
+## Record responses from your own system
+
+Use `POST /surveys/{id}/responses` when your product, support tool or bot already collected the answer. The response goes through the same validation, attribution, signals, Flows, timeline and webhooks as an emailed survey.
+
+```bash
+curl -X POST "https://app.gaintrace.com/api/v1/surveys/$SURVEY_ID/responses" \
+  -H "Authorization: Bearer $GAINTRACE_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "personId": "c3d24e5f-6a7b-4c8d-9e0f-1a2b3c4d5e6f",
+    "externalId": "ticket-48213-csat",
+    "score": 5,
+    "answers": { "q1": "Quick and helpful." }
+  }'
+```
+
+- The survey must be `active`. A draft or closed survey returns `404`.
+- `personId` must be an active person in your workspace.
+- `answers` are keyed by question index: `q0`, `q1` and so on. Required questions that are visible must be answered, and each value must fit its question.
+- `score` is the first question's score. If you also send `answers.q0`, the two must match.
+- `hidden` is an optional object of hidden-field values, such as `{ "plan": "pro" }`. Only names the survey lists in `hiddenFields` are saved.
+- `subject` is an optional record the answer is about. See [Link a response to a record](#link-a-response-to-a-record).
+
+### Idempotency
+
+`externalId` is your own stable id for the answer, up to 255 characters. GainTrace turns it into a deterministic key for that survey. If you send the same `externalId` for the same survey again, you get the first response back with `duplicate: true` and status `200`. The new body is ignored and nothing is created twice. The first call returns `201` with `duplicate: false`.
+
+Use a stable id from your system, such as a ticket id. It's safe to retry after a timeout.
+
+On an anonymous survey, the response is stored without a person or company.
+
+## Link a response to a record
+
+A response can be about one record: a deal, a ticket, a Company's plan or a record in a custom data model. Send a `subject` and the response shows up on that record, and you can filter responses by it.
+
+`subject` takes one of these shapes:
+
+| Shape | Use it for |
+| --- | --- |
+| `{ "type": "deal" \| "ticket" \| "plan" \| "record", "id": "<GainTrace id>" }` | Any record, by its GainTrace id |
+| `{ "type": "deal" \| "ticket", "externalId": "...", "source": "hubspot" }` | A deal or ticket by the id in your CRM or help desk. `source` is optional and narrows the match to one system, such as `zendesk` or `salesforce` |
+| `{ "type": "record", "model": "<model slug>", "externalId": "..." }` | A record in a custom data model, by the model's slug and your id |
+
+You can send `subject` in three places:
+
+- the body of `POST /surveys/{id}/responses`
+- the body of `POST /surveys/{id}/session`, for an in-app survey
+- the `subject` claim of a signed in-app token (see [In-app survey SDK](/surveys-in-app-sdk#step-2-sign-a-token-on-your-server))
+
+The public respondent endpoints never accept a subject, so a respondent can't change it.
+
+GainTrace checks the record before it saves anything. The record must exist in your workspace and still be live. If both the person and the record belong to a Company, it must be the same Company. If an `externalId` matches more than one ticket, add `source` or use the GainTrace `id`. Each failure returns `422` with a message that says which check failed and how to fix it.
+
+A response to an anonymous survey doesn't keep its subject. Responses carry `subject` as `{ "type", "id" }`, or `null`, on the API and in webhooks. Filter `GET /survey-responses` with `subjectType` and `subjectId`. `subjectId` needs `subjectType`.
+
+## Invitations and approval
+
+`POST /surveys/{id}/invitations` requests email invitations. Send exactly one of these in the body:
+
+| Body | Who is invited |
+| --- | --- |
+| `{ "personIds": [...] }` | 1 to 100 people by id |
+| `{ "segmentId": "..." }` | Everyone in a [saved segment](#target-people-with-segments) |
+| `{ "audience": { "company": {...}, "person": {...} } }` | Everyone who matches Company and People rules. Add at least one rule |
+
+A segment or audience can match up to 1,000 people in one request. A larger audience returns `400`. Narrow the rules or split it into segments.
+
+What happens next depends on the workspace's **invitation review** setting, which admins change in **Sending and identity** in Surveys. You can't set it through the API.
+
+- **Send** (the default). Invitations go out at once, or at the survey's next allowed hour if it has a `sendWindow`.
+- **Approve.** Each invitation joins the Triage approval queue. A teammate approves it, and only then does the email go out. Approvals expire after 14 days.
+
+Invitations requested through the MCP server always wait for approval, whatever the setting.
+
+If the survey has `reminders`, people who haven't answered get a reminder after `afterDays` days, up to `max` times. People who answered are never reminded.
+
+The survey must be `active`, and every person must be active with an email address and a company. If any person in `personIds` fails that check, the whole request returns `400` and nothing is queued.
+
+People are skipped, not failed, in three cases:
+
+- An invitation for the same email is already waiting, scheduled or just released.
+- The person is inside the survey's `cooldownDays`. That counts the last survey of the same measure they got: an email sent, an invited answer or an in-app view.
+- The person was surveyed within the workspace frequency rule.
+
+The request returns `202` with counts:
+
+```json
+{
+  "data": {
+    "mode": "send",
+    "queued": 0,
+    "sending": 41,
+    "skipped": 9,
+    "batchId": "d1c9a7e4-6b2f-4a3d-9c8e-5f4a3b2c1d0e",
+    "sendAt": null
+  }
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `mode` | `send` or `approve`, the setting that applied |
+| `queued` | Invitations waiting for approval in Triage |
+| `sending` | Invitations released to send |
+| `skipped` | People skipped by the rules above. The response doesn't name them |
+| `batchId` | Groups this request's invitations |
+| `sendAt` | The earliest time a scheduled invitation goes out, as an ISO timestamp, or `null` |
+
+A `segmentId` or `audience` request adds `matched`, the number of people the rules found.
+
+To preview a list before anything is queued, use the `gt_survey_request_invitations` tool in the [MCP server](/mcp-server). It defaults to a dry run that reports who would be invited and why anyone is skipped.
+
+## Target people with segments
+
+A segment is a saved set of Company and People rules. Use one to invite the same group again, or to choose who sees an in-app survey.
+
+- `GET /survey-segments` lists the workspace's segments.
+- `POST /survey-segments` saves one and returns `201`. Send a `name` (unique in the workspace, ignoring case) and `rules`, an object with a `company` group and a `person` group. Each group has a `logic` of `and` or `or` and up to 20 rules. At least one rule is required.
+- `DELETE /survey-segments/{id}` archives a segment and returns `204`. Surveys that still point at it stop matching anyone.
+
+Reading needs `read:surveys` and writing needs `write:surveys`, both with a secret key.
+
+A rule is `{ field, operator, value }`. People rules can use `email`, `name`, `role`, `contactRole`, `isChampion`, `lastSeenAt`, `engagementScore`, `createdAt`, or `traits.<name>` for a trait on the person. Any other People field returns `422`. Company rules use Company data-model fields.
+
+```bash
+curl -X POST "https://app.gaintrace.com/api/v1/survey-segments" \
+  -H "Authorization: Bearer $GAINTRACE_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Enterprise champions",
+    "rules": {
+      "company": { "logic": "and", "rules": [] },
+      "person": {
+        "logic": "and",
+        "rules": [{ "field": "isChampion", "operator": "eq", "value": true }]
+      }
+    }
+  }'
+```
+
+For in-app surveys, a survey can also target pages and moments. See [Targeting](/surveys-in-app-sdk#targeting).
+
+## Frequency and follow-up rules
+
+Two workspace-wide rules keep people from being over-surveyed and make sure feedback gets an owner.
+
+### Frequency rule
+
+`GET` and `PUT /surveys/frequency-rule` read and replace it.
+
+| Field | Meaning | Default |
+| --- | --- | --- |
+| `recontactDays` | Days after contact from another survey before the same person is surveyed again. Email sent, in-app shown, answered and imported answers all count. The survey being evaluated doesn't count against itself | `30` |
+| `dismissedRecontactDays` | Days after someone dismisses an in-app survey before any in-app survey shows to them again | `7` |
+| `companyLimit` | Optional. `{ "people": 3, "days": 30 }` asks at most `people` different people at one Company within `days`, across every survey and channel. `null` turns it off | `null` |
+
+`recontactDays` and `dismissedRecontactDays` accept 0 to 365, and `0` turns the rule off. In `companyLimit`, `people` is 1 to 1,000 and `days` is 1 to 365. People are matched by email address, so a person counts once however often they are asked, and reminders don't count. Leave `companyLimit` out of a `PUT` to keep the saved limit. Send `null` to turn it off. An invitation skipped by the limit counts in `skipped`, and an in-app session for a person it blocks returns `eligible: false` with the reason `company_limit`. For in-app surveys, a person's recent surveys and dismissals count across every Company they belong to. Each survey also has its own `cooldownDays` (0 to 730). It sets the minimum days since the person last got a survey of the same measure (an email sent, an invited answer or an in-app view) before this survey can invite them or show to them in-app. It doesn't block responses you record through the API.
+
+### Response rules
+
+`GET` and `PUT /surveys/case-rules` read and replace how new responses are handled.
+
+| Field | Meaning | Default |
+| --- | --- | --- |
+| `slaHours` | Hours an open response can wait before it is overdue. 1 to 720 | `48` |
+| `autoAssign` | Assign new responses to the company's CSM: `none`, `negative` or `all` | `negative` |
+
+Both `PUT` calls need every field, except `companyLimit` on the frequency rule. Saving one rule doesn't change the other.
+
+## Webhooks
+
+Subscribe a webhook endpoint to survey events instead of polling. The payloads and signature check are on [Webhooks](/webhooks).
+
+| Event | Fires when |
+| --- | --- |
+| `survey_response.created` | Someone answers a survey, including an answer you record through the API |
+| `survey_response.updated` | A response gets an owner, status or follow-up task, a person finishes the follow-up questions after their score was saved, or a teammate edits the response |
+| `survey.launched` | A survey moves to `active` |
+| `survey.closed` | A survey moves to `closed` |
+
+A `survey_response.created` event from an email or in-app survey can carry only the score. The comment and other answers arrive in a later `survey_response.updated`.
+
+`survey.launched` and `survey.closed` carry `id`, `name`, `measure`, `status`, `previousStatus` and `changedAt`. A status call that doesn't change the status fires nothing.
+
+## Read results
+
+- `GET /survey-responses` lists responses from every native survey, newest first. Filter by `surveyId`, `companyId`, `measure`, `band`, `status` (`new`, `in_progress`, `resolved`, `open` meaning not resolved, or `overdue` meaning open past your hours-to-close rule), `theme`, `subjectType` with `subjectId`, and a `from` and `to` window on submission time. Filters combine, and an unknown parameter returns `422`.
+- `theme` limits the list to responses whose written feedback was tagged with one of 14 themes: `onboarding`, `reliability`, `performance`, `usability`, `missing_functionality`, `integrations`, `support_quality`, `documentation`, `pricing_value`, `billing_admin`, `security_compliance`, `account_management`, `reporting_analytics` or `mobile`.
+- `GET /survey-responses/{id}` reads one response.
+- `GET /surveys` and `GET /surveys/{id}` read survey definitions and status.
+
+## Company scores and coverage
+
+A Company's NPS, CSAT and effort score count each person once, under one workspace rule:
+
+- `GET /surveys/rollup-rules` and `PUT /surveys/rollup-rules` read and set that rule: each person's `latest` answer, or the `mean` or `median` of their answers, inside `windowDays`, with optional `roleWeights` for decision makers, executive sponsors and champions.
+- `GET /companies/{id}/survey-scores` returns one Company's scores under the rule, how many people each rests on, whether a decision maker answered, and a `method` sentence to show beside the numbers.
+- `GET /surveys/coverage` returns who you hear from: Companies and ARR with a scored answer in the window, at how many a decision maker answered, and Companies renewing in the next 90 days with no feedback in 180 days. ARR is in the workspace reporting currency; currencies with no exchange rate yet are listed in `unconvertedCurrencies` and left out.
+
+Imported NPS scores count toward both.
+
+A response carries the same fields as the `survey_response` webhook payload: `score`, `scaleMax`, `band`, `comment`, `answers`, `companyId`, `personId`, `subject`, `status` and `submittedAt`. Reviewer notes never leave GainTrace.
+
+## Survey templates
+
+Use `GET /survey-templates` to list the templates your workspace saved, each with its full survey definition (scope `read:surveys`). Use `POST /survey-templates` to save one (scope `write:surveys`). Send `name`, an optional `folder`, and either `surveyId` to save an existing survey or `input` with a survey definition. It returns `201` with the template. Both need a secret server key: a `gt_pub_` key returns `403`. A name another template uses returns `422`.
+
+## Logic, jumps and endings
+
+A question can carry `logic`, `jumps` and `libraryId`, and `settings.endings` holds named thank-you screens.
+
+- `logic` is `{ "match": "all" | "any", "conditions": [...] }` with 1 to 10 conditions. A condition is either an earlier answer, `{ "question", "operator", "value" }`, or a hidden field, `{ "hidden", "operator": "is" | "is_not", "value" }`. Answer operators are `lte`, `gte`, `eq`, `is`, `is_not`, `includes`, `excludes`, `before`, `after` and `band`. Don't send `logic` and `showWhen` together.
+- `jumps` is up to 10 rules, each `{ "when": <logic group>, "to": { "question": n } | { "ending": id } | { "end": true } }`. The first matching rule wins.
+- `settings.endings` is up to 10 entries with `id`, `name`, and optional `title`, `message` and `link`.
+- `libraryId` links a question to the workspace question library.
+
+## Languages
+
+A survey is written in a `defaultLanguage` and can offer translations. Both live in `settings`, so you set them with `POST /surveys` and `PATCH /surveys/{id}`. You can change them after launch.
+
+- `settings.defaultLanguage` is one of 44 language codes, such as `en`, `fr`, `de`, `pt-BR`, `zh-TW` or `ar`. Without it, the default is English.
+- `settings.translations` is an object keyed by language code, with up to 15 entries. The default language's entry holds only `ui` overrides.
+
+Each translation can carry a page `title`, a `questions` array, a `thankYou` object, an `endings` object keyed by ending `id` (each with `title`, `message` and `linkLabel`) and `ui` overrides for the buttons and labels around the survey.
+
+```json
+{
+  "settings": {
+    "defaultLanguage": "en",
+    "translations": {
+      "fr": {
+        "title": "Votre avis compte",
+        "questions": [
+          { "text": "Quelle est la probabilité que vous nous recommandiez ?" },
+          null,
+          { "text": "Qu'est-ce qui pourrait être amélioré ?" }
+        ],
+        "thankYou": { "title": "Merci", "message": "Votre réponse a bien été enregistrée." }
+      }
+    }
+  }
+}
+```
+
+In `questions`, the entry at each position translates the question at the same position. Use `null` to leave a question in the default language. An entry can translate `text`, `description`, `linkLabel`, `options`, `rows` and `scaleLabels`.
+
+GainTrace stamps each question translation with a `source` fingerprint of the default copy when you save. A translation shows only while the default copy is unchanged. If you edit a question's default copy, respondents see the default copy until you update the translation.
+
+Respondents see the language picked from, in order:
+
+1. The language the request asks for: the `?lang=` parameter on the survey link, such as `/survey/{id}?lang=fr`, or `lang` in an in-app session request.
+2. The person's `locale` trait, then their `language` trait, on personal links, in-app surveys and email.
+3. The browser's language.
+4. The survey's `defaultLanguage`.
+
+A code matches exactly, or by its base language, so `fr-CA` shows `fr`. The survey link page sets the page language, and lays out right to left for Arabic, Hebrew, Persian and Urdu. Choice answers are stored against the default-language options, so reports stay comparable. Each response records the language it was answered in. The API returns it as `language`, and warehouse exports carry it as `language`.
+
+The AI follow-up label and its disclosure aren't translatable. They stay in English. In-app surveys and invitation emails use the same translations. See the [in-app SDK guide](/surveys-in-app-sdk#language) for `lang`.
+
+## AI follow-up question
+
+`settings.aiProbe` is `{ "enabled": true }` or `{ "enabled": false }`, and it is off unless you turn it on. When it is on, Trace AI can ask one optional follow-up question after a respondent's feedback is saved. Respondents always see that the question was written by AI.
+
+The question and the answer come back inside the response as `answers._probe`, with `question` and `answer` (`null` until answered). It appears only when a follow-up was asked. `survey_response.updated` fires when the respondent answers it.
+
+## Import from other survey tools
+
+GainTrace can pull answers from Typeform, SurveyMonkey, Qualtrics and Retently, and import CSV exports. Connect a tool in the app, under Surveys, **Data sources**. The API reads those connections and lets you pull one on demand. It doesn't create connections or return credentials.
+
+- `GET /survey-imports` lists connected sources. Each has `id`, `provider`, `name`, `externalSurveyId`, `measure`, `scaleMin`, `scaleMax`, `status` (`active`, `paused` or `error`), `credentialHint`, `connectedAt`, `lastRunAt`, `lastSuccessAt`, `lastError`, `nextRunAt` and `lastRun` (`imported`, `updated` and `skipped` counts, or `null`). It needs `read:surveys`.
+- `POST /survey-imports/{id}/runs` pulls one source now, for up to 60 seconds, and needs `write:surveys`. It returns `404` for an unknown id, and `409` while another pull is running or when the source's credential was rejected.
+
+```json
+{
+  "data": {
+    "runId": "9a3f6c1d-2b4e-4d5a-8c7b-1e2f3a4b5c6d",
+    "status": "succeeded",
+    "fetched": 120,
+    "imported": 96,
+    "updated": 4,
+    "unchanged": 12,
+    "skipped": 8,
+    "skip_reasons": [{ "reason": "No Company matched the respondent email. Sync or import the Company first.", "count": 8 }],
+    "error": null
+  }
+}
+```
+
+`status` is `succeeded`, `partial` (the pull stopped early and continues on the next pull) or `failed`. `skipped` is the total. `skip_reasons` lists up to 20 reasons with counts, and never includes email addresses.
+
+Imported answers are matched to People by email and keep their original dates. Pulls repeat safely, because each answer is identified by its provider and response id. History from before you connected arrives quietly, with no webhooks, Flows or alerts. Answers dated after you connected fire `survey_response.created` and `survey_response.updated` with the channel `import`.
+
+Imported NPS appears in `GET /nps-responses` (filter by `provider`). Imported CSAT and CES appear in survey reporting and Company scores, but not in `GET /survey-responses`.
+
+## Bulk export to your warehouse
+
+For analytics in BigQuery or Snowflake, Enterprise workspaces can export every survey and response to tables in their own warehouse. See [Survey warehouse export](/surveys-warehouse-export) for the table schema.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="In-app survey SDK" icon="window" href="/surveys-in-app-sdk">
+    Show a survey inside your product.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/webhooks">
+    Get survey events as they happen.
+  </Card>
+  <Card title="Survey warehouse export" icon="database" href="/surveys-warehouse-export">
+    Query responses in BigQuery or Snowflake.
+  </Card>
+</CardGroup>

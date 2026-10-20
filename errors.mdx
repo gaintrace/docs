@@ -34,7 +34,7 @@ The HTTP status tells you the broad category; the `code` tells you exactly what 
 
 ### bad_request
 
-**HTTP 400.** We couldn't parse your request, usually because the JSON body is malformed. Check the payload is valid JSON and resend.
+**HTTP 400.** We couldn't parse your request, usually because the JSON body is malformed. Check the payload is valid JSON and resend. It is also returned when ids you send don't match each other, for example an NPS import whose `contactId` belongs to a different Company than the `accountId` you sent.
 
 ### unauthorized
 
@@ -42,7 +42,7 @@ The HTTP status tells you the broad category; the `code` tells you exactly what 
 
 ### payment_required
 
-**HTTP 402.** You've reached a plan limit (for example the monthly event cap) or billing is locked. Upgrade the plan, or turn on pay-as-you-go to keep going past the limit.
+**HTTP 402.** You've reached a plan limit (for example the monthly event cap, or your limit on Companies, People or webhooks) or billing is locked. Upgrade the plan, or turn on pay-as-you-go to keep going past the limit.
 
 ### forbidden
 
@@ -54,7 +54,7 @@ The HTTP status tells you the broad category; the `code` tells you exactly what 
 
 ### conflict
 
-**HTTP 409.** The request clashes with a resource that already exists, like creating a contact with an email that's already taken. Use a unique value, or update the existing record instead.
+**HTTP 409.** The request clashes with a resource that already exists, like creating a contact with an email that's already taken. Use a unique value, or update the existing record instead. To create or update a Person in one call, send `upsert: true` to `POST /people`.
 
 ### unprocessable_entity
 
@@ -62,7 +62,7 @@ The HTTP status tells you the broad category; the `code` tells you exactly what 
 
 ### rate_limit_exceeded
 
-**HTTP 429.** You've sent too many requests in a short window. Back off and retry after a short pause.
+**HTTP 429.** You've sent more than 60 requests in one minute with the same API key. Back off and retry after a short pause. See [Authentication](/authentication#rate-limits).
 
 ### internal_server_error
 

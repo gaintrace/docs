@@ -5,7 +5,7 @@ description: "Sync Salesforce accounts, contacts, and opportunities into GainTra
 keywords: ["Salesforce integration", "GainTrace Salesforce", "sync Salesforce", "Salesforce customer success", "CRM integration"]
 ---
 
-{/* docs-meta: catalog=IntegrationsExperience.tsx (sourceId salesforce); verified 2026-07 */}
+{/* docs-meta: catalog=IntegrationsExperience.tsx (sourceId salesforce); verified 2026-07; sources=[src/lib/crm/survey-fields.ts, src/lib/crm/survey-writeback-actions.ts, src/lib/crm/survey-dispatch.ts, src/lib/crm/survey-push.ts, src/components/integrations/SurveyWriteBackSettings.tsx] reviewed=2026-10 */}
 
 Salesforce holds the accounts, owners, and pipeline for a lot of teams. Connecting it gives GainTrace the customer records and revenue context it needs to score health and stay ahead of renewals.
 
@@ -37,6 +37,32 @@ Salesforce discovers your object schema automatically, so custom fields on these
 ## What you can do with it
 
 Once Salesforce is connected, health scores reflect real account and pipeline data, signals catch changes worth acting on, and renewals surface in Revenue so nothing slips.
+
+## Write survey results back
+
+GainTrace can send survey results to Salesforce, so your team sees a customer's feedback where they already work. Open the connection under **Data > Sources** and find **Survey results** in its settings. The connection must send data to Salesforce (two-way or outbound sync), or the switches stay off.
+
+- **Send survey results** sends, for each Salesforce Contact, the latest score, comment and answered date for NPS, CSAT and CES, the NPS category, and the last measure they answered. A person's fields show their latest answer across every Company they belong to, and the same values go to every Salesforce Contact linked to that person. For each Salesforce Account it sends Company NPS (-100 to 100), CSAT (the percent satisfied, 0 to 100), CES and the date anyone last answered, using your [Company score rules](/help/surveys/rules#company-scores). Results are sent within a minute of an answer and rechecked every 10 minutes.
+- **Log each response** adds a completed Task with the score and comment to the Contact and Account. It covers only responses after you turn it on.
+
+An older answer never replaces a newer one already in Salesforce. If a send fails, the item is listed under the switches, you can download the errors as a CSV, and the next sync sweep sends it again.
+
+These fields are only sent to Salesforce. GainTrace never reads them back in.
+
+Salesforce needs custom fields that a Salesforce admin creates first. Create these, then choose **Check Salesforce fields**. GainTrace maps each one it finds and lists any that are missing.
+
+| Object | Field (API name, type) |
+| --- | --- |
+| Contact | `GainTrace_NPS_Score__c` Number(2,0), `GainTrace_NPS_Category__c` Text(20), `GainTrace_NPS_Comment__c` Long Text Area(32768), `GainTrace_NPS_Date__c` Date/Time |
+| Contact | `GainTrace_CSAT_Score__c` Number(2,0), `GainTrace_CSAT_Comment__c` Long Text Area(32768), `GainTrace_CSAT_Date__c` Date/Time |
+| Contact | `GainTrace_CES_Score__c` Number(2,0), `GainTrace_CES_Comment__c` Long Text Area(32768), `GainTrace_CES_Date__c` Date/Time, `GainTrace_Last_Survey_Measure__c` Text(8) |
+| Account | `GainTrace_NPS__c` Number(3,0), `GainTrace_CSAT__c` Number(3,0), `GainTrace_CES__c` Number(3,1), `GainTrace_Last_Survey_Date__c` Date/Time |
+
+<Note>
+  This write-back is tested against simulated Salesforce APIs. It hasn't been verified against a live Salesforce org.
+</Note>
+
+See [Inbox and reports](/help/surveys/inbox-and-reports) for where the same scores show in GainTrace.
 
 ## Good to know
 

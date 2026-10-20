@@ -1,0 +1,59 @@
+---
+title: "AI and your data"
+description: "What Trace AI sends to AI providers, what they keep, and what never leaves GainTrace, including survey feedback."
+---
+
+{/* docs-meta: sources=[specs/ai-runtime/prd.md (managed AI: OpenAI API, store:false), src/lib/surveys/ai-features.ts, src/lib/surveys/reply-ai-feature.ts, src/lib/surveys/probe-ai-feature.ts, src/lib/surveys/inferred-ai-feature.ts, src/lib/surveys/translate-ai-feature.ts, src/lib/surveys/translate-actions.ts, src/lib/surveys/ai-setting.ts, src/lib/surveys/inferred-evidence.ts, src/lib/surveys/inferred-batching.ts, src/lib/ai/runtime/registry/features.ts, src/lib/ai/runtime/index.ts, src/lib/agent-tools/tools/surveys.ts, src/lib/ai/tool-sets.ts, src/lib/voc/extract.ts (deterministic themes), src/lib/observability/sentry-scrub.ts] reviewed=2026-10 */}
+
+Trace AI answers questions about your customers. To do that it sends the records a question needs to an AI model. This page explains which model, what the provider keeps, and what stays inside GainTrace.
+
+## Which model processes your data
+
+| Plan | Model | Who processes it |
+| --- | --- | --- |
+| Paid plans (managed AI) | GPT-6 Luna | OpenAI, through a dedicated GainTrace project on the OpenAI API |
+| Bring your own key | The model you choose | The provider that issued your key (OpenAI, Anthropic, Google and others), under your own agreement with them |
+
+## What the provider keeps
+
+- **No training.** Data sent through the OpenAI API is not used to train OpenAI's models.
+- **Nothing stored for retrieval.** Every managed request is sent with storage turned off, so a request can't be fetched again later.
+- **Abuse monitoring.** OpenAI may keep API requests for up to 30 days to detect abuse. We have asked OpenAI for zero data retention for the managed project, and this page will say so when it applies.
+- **Location.** Managed requests use OpenAI's standard processing, which is not limited to the EU. Your workspace data itself stays in the EU (see [Data residency](/help/admin/data-residency)).
+
+With your own key, the provider's own retention and training terms apply.
+
+## What Trace AI sends
+
+Only what a question needs: the records it reads to answer, and your question. GainTrace never sends your API keys, passwords or connector credentials to a model, and AI output saved back into GainTrace is marked as AI-generated.
+
+## Survey feedback
+
+Collecting, scoring, routing and reporting survey responses don't use an AI model. Themes and sentiment on survey comments are computed inside GainTrace. Survey data reaches a model when someone uses one of the features below or when a Flow triggered by a survey response runs an AI step. They run on the same models and the same AI allowance as the rest of Trace AI: the managed model on paid plans, or your own key.
+
+| Feature | What starts it | What the model reads |
+| --- | --- | --- |
+| **Ask Trace AI about survey results** | You ask in the Trace AI panel. It reads only what your Surveys read permission allows. | Scores, comments and labelled answers for the matching responses. For surveys that aren't anonymous, also the respondent's name and email, the Company and person names, the response status and the internal note. A lookup returns 10 responses by default and its result is capped in size. |
+| **Summarize feedback** | A teammate chooses it on a survey. | The written answers of up to the 200 most recent responses, each cut to 600 characters, with their scores, plus the survey's name, type, response count and headline score. Never names or emails. |
+| **Draft with Trace AI** (template gallery) | A teammate types a request. | Only the request you type, up to 500 characters. No customer data. |
+| **Translate with Trace AI** | A teammate chooses it in the designer's Languages panel. | The survey's own wording: page heading, question text, descriptions, answer choices, statements, scale labels, thank-you and ending screens, page words, and the target language. Never responses, names, emails or Company data. Up to 150 phrases per request. |
+| **Draft a reply with Trace AI** | A teammate chooses it on one response. | That response's answers and score, the survey's name and type, the Company's name, plan and segment, the person's first name and role, up to two earlier replies on the response, your guidance and, when you redraft, the text in the editor. Your first name is added for the sign-off when you have no email signature. Never their email address, ARR, health or churn data. |
+| **AI follow-up question** | A respondent sends feedback on a survey where you turned it on. | The respondent's own just-saved answers, the question wording with names and Company left as placeholders, the score and the survey language. Never a name, email, Company, hidden field or the survey's internal name. |
+| **AI steps in a Flow** | A Flow triggered by a survey response runs an Understand, Summarize or Draft step. | The trigger fields the step's instruction uses, which can include the response's comment and score. |
+| **Inferred satisfaction** | A daily background job, once an owner or admin turns it on in Settings > Surveys. | For each person, up to 6 recent emails, call and meeting transcripts, and support tickets or chats from the last 90 days, each cut to 700 characters, for up to 8 people per request. People are identified only as p1 to p8, and email addresses and the person's own name are replaced with placeholders. Other names inside the quoted text, such as colleagues or Company names, can still appear. Survey answers are never read. |
+
+Each of these is one Trace AI request, except translation, which sends up to 150 phrases per request. All of them count against your AI allowance (your own key on Free, the managed model metered on paid plans). Repeating an identical translation request within 24 hours reuses the earlier result. Two have a daily limit per workspace when you use the managed model: 2,000 AI follow-up questions and 60 inferred-satisfaction batches.
+
+- **Customer text is data, not instructions.** Answers, emails and transcripts are passed to the model as quoted data, never as instructions.
+- **AI follow-up question.** It's off by default for each survey. A respondent sees at most one AI-written question per response, after their answer is saved, and it's labelled as AI-generated with a note that answering is optional. You can't hide or remove that label. It isn't asked for responses sent through the API or test invitations. On your own AI key, it needs **Let scheduled AI use this key** turned on in **Settings > AI provider**.
+- **Inferred satisfaction.** It's off by default and only owners and admins can turn it on. The estimates stay separate from survey scores: they never enter NPS, CSAT or CES. Turning it off deletes the stored estimates. On your own AI key, it also needs **Let scheduled AI use this key**.
+- **Anonymous surveys stay anonymous.** Anonymous responses carry no name, email or Company, so no identity can reach a model. Their written answers can still be summarized, and can still prompt an AI follow-up question.
+- **Respondents are never answered by AI without a person.** Replies to a customer go out only after a teammate sends them, and replies drafted by Trace AI are marked in the response panel.
+- **Translations are reviewed.** Trace AI fills only missing or out-of-date phrases. A teammate reviews every proposal before it is added, and nothing reaches customers until the survey is saved. Translations you type stay in GainTrace.
+- **Survey AI switch.** It's on by default. Owners and admins can turn it off in **Settings > Surveys > Survey AI**. When it's off, summaries, survey drafts, reply drafts, translation, the AI follow-up question, inferred satisfaction and Trace AI chat questions about surveys don't send survey content to a model. AI steps in Flows that a survey response starts are not affected; turn those steps off in the Flow. MCP and API reads of survey data are not AI and aren't affected.
+
+For where the provider processes data, see [Data residency](/help/admin/data-residency).
+
+## Questions
+
+Contact us if you need our list of sub-processors, a data processing agreement, or zero data retention confirmation for your organization.

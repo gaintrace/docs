@@ -1,0 +1,92 @@
+---
+title: "In-app surveys"
+sidebarTitle: "In-app"
+description: "Choose where, when and to whom GainTrace shows a survey inside your product. Your developer installs the script once."
+keywords: ["in-app survey", "NPS in product", "survey placement", "survey sampling", "Ask me later", "identity key", "signed token", "survey triggers"]
+---
+
+{/* docs-meta: sources=[src/components/surveys/survey-in-app-setup.tsx, src/components/surveys/survey-in-app-targeting.tsx, src/components/surveys/survey-sending-dialog.tsx, src/lib/surveys/contracts.ts, src/lib/surveys/in-app.ts, src/lib/surveys/in-app-targeting.ts, src/lib/surveys/targeting.ts, src/lib/surveys/identify.ts, src/lib/surveys/identify-token.ts, src/lib/surveys/sending-actions.ts, src/lib/surveys/fatigue.ts, src/lib/surveys/anonymous-invite.ts, src/app/api/survey/[id]/identify/route.ts, public/sdk/surveys.js] reviewed=2026-10 */}
+
+An in-app survey appears inside your own product while a customer uses it. Your developer installs a small script once. After that, you decide who sees the survey, where it appears and how often, all from the survey's **Distribute** tab under **In-app**.
+
+<Info>
+  Installation is a developer task. Send them the [In-app surveys SDK guide](/surveys-in-app-sdk). The **Installation** tab in GainTrace also gives them copy-ready code for their server and browser.
+</Info>
+
+## Before you start
+
+- The survey must be **Active** and **Enable in-app collection** must be on, with your product origin allowed. This applies to test mode too. You can save settings on a draft, but nothing shows until it is active.
+- Your developer tells GainTrace which signed-in customer is looking at the page, so GainTrace knows which person and Company is answering. The survey is never shown to someone GainTrace can't identify.
+- Use the survey's **Rules** tab for the settings below. Turn on **Enable in-app collection** when you are ready, then choose **Save in-app settings**.
+
+## Choose an install method
+
+In the survey's **Installation** tab, your developer chooses one of two ways to identify the signed-in customer.
+
+| Method | How it works |
+| --- | --- |
+| **Signed token** | Your server signs a short-lived token for the signed-in person. The browser hands it to GainTrace, with no GainTrace API call on each page. Needed for event and time-on-page triggers |
+| **Backend session** | Your server calls the GainTrace API with a secret API key on each page and returns a survey session to the browser |
+
+### Signed token
+
+<Steps>
+  <Step title="Create an identity key">
+    An admin opens **Settings > Surveys**, or **Sending and identity** at the top of the Surveys page, and chooses **Create key** under **In-app identity**. GainTrace shows the secret once, so copy it then. Keep it on your server and never put it in browser code.
+  </Step>
+  <Step title="Sign a token for each signed-in person">
+    On your server, sign an HS256 token with that key. Put the key's id (it starts with `gtk_`) in the token header as `kid`. Set `sub` to your user id for the person, which GainTrace matches to the person's external id and then to their email. You can add the `email` and `company` claims. Set `exp` no more than 24 hours ahead, and sign a fresh token each time the page loads.
+  </Step>
+  <Step title="Install the script in the browser">
+    Load the survey script, call `GaintraceSurveys.identify(token)` and then `GaintraceSurveys.show({ survey })`. Call `GaintraceSurveys.reset()` when the person signs out.
+  </Step>
+</Steps>
+
+A workspace can have 2 active identity keys. To rotate, create a second key, switch your server to it, and revoke the old key once its **Last used** date stops changing. Revoking a key stops pages that still sign with it from showing surveys. GainTrace doesn't accept unsigned identify calls, and only HS256 tokens work.
+
+Your Content Security Policy must allow the script, the survey frame and the connection. List the GainTrace app origin in `script-src`, `frame-src` and `connect-src`, and also your custom survey domain if you use one, because the survey follows the address the script loaded from. Browser calls from origins other than the ones you allowed for the survey are refused. For all calls, claims and error codes, see the [In-app surveys SDK guide](/surveys-in-app-sdk).
+
+When a survey is closed, or in-app collection is turned off, `identify` answers that the person isn't eligible and nothing shows. `GaintraceSurveys.reset()` removes a survey from the page without recording a dismissal. The script's own `destroy()` and the survey's **Close survey** button do record one.
+
+### Backend session
+
+Your server asks GainTrace for a session for one person at one Company and returns it to the browser. The browser snippet in the **Installation** tab sends the page address to your server as a `url` parameter, and your server passes it to GainTrace. If you use page rules and it doesn't, the rules can't match and the survey doesn't show. Event and time triggers aren't available with this method. See the [SDK guide](/surveys-in-app-sdk).
+
+## Rules you set
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| **Allowed product origins** | The exact addresses of your product where the survey may appear, one per line, without a path or trailing slash, such as `https://app.yourcompany.com`. Use HTTPS. Localhost works for development. You need at least one to enable collection | None |
+| **Placement** | **Bottom banner**, **Corner, right**, **Corner, left** or **Centered** | Bottom banner |
+| **Minimum customer age (days)** | How long ago the person was first recorded in GainTrace. Use it to skip brand-new people | 7 |
+| **Minimum daily sessions** | How many separate days the person has used your product since installation, counting one session per day | 1 |
+| **Maximum displays per cooldown window** | Stop showing after this many displays within the survey's cooldown. The maximum is 10 | 3 |
+| **Display delay (milliseconds)** | How long to wait after the page loads, so customers settle in first | 5000 |
+| **Share of eligible people (%)** | Show the survey to a sample, from 1 to 100. The same people stay in or out of the sample on every visit | Everyone |
+| **Who sees it**, **Where** and **When** | Show the survey to a segment or rules, on certain pages, after an event or after time on the page. See [Choose who gets a survey](/help/surveys/target#target-an-in-app-survey) | Everyone, on every page, at page load |
+
+A banner or corner card leaves the page usable, so people answer when it suits them. **Centered** blocks the page until they answer or close it. A banner or corner survey doesn't take focus from where the customer is working. When it opens, screen readers hear "Feedback survey opened at the end of this page.", and closing it returns focus to where it was. The centered survey takes focus.
+
+## Asking less often
+
+Every in-app survey offers two buttons:
+
+- **Ask me later** hides the survey for a day.
+- **Close survey** counts as a dismissal. No in-app survey shows to that person again until your workspace's rest period passes (7 days by default). Set it in [Survey rules](/help/surveys/rules).
+
+Besides your settings, two limits always apply:
+
+- The survey's cooldown, set in **Branding and privacy**, applies across surveys that measure the same thing, across email and in-app.
+- Your workspace [frequency rule](/help/surveys/rules) applies to every channel.
+
+Each person sees at most one prompt per survey per day (UTC).
+
+## Test before you go live
+
+Activate the survey and turn on **Enable in-app collection** first. Then your developer can run it in **test** mode. A test shows the survey without recording a session or a response, and it ignores your targeting rules, so you can check the look and the placement. Live collection starts when they switch the code from test to live mode.
+
+## Reading the results
+
+On the survey's overview, the in-app strip shows **views**, **starts**, **responses**, **skipped** and **completion**. Skipped counts people who closed the survey without answering, and is reported separately from responses. Completion is responses divided by views.
+
+For anonymous surveys, in-app responses are stored without the person, and without anything that links the response to the prompt it answered. See [Build a survey](/help/surveys/build#anonymous-surveys).

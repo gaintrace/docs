@@ -1,0 +1,144 @@
+---
+title: "Survey rules"
+sidebarTitle: "Rules"
+description: "Set how often one person can be surveyed, who owns new feedback, how long a response can stay open, how Company scores are built, whether invitations wait for approval, and how identity keys work."
+keywords: ["survey fatigue", "survey frequency", "auto-assign survey responses", "survey SLA", "overdue responses", "company NPS", "account-level NPS rollup", "invitation review", "identity keys", "inferred satisfaction setting"]
+---
+
+{/* docs-meta: sources=[src/components/surveys/survey-rules-dialog.tsx, src/components/surveys/survey-rules-form.tsx, src/components/surveys/survey-sending-dialog.tsx, src/components/surveys/inferred-satisfaction-setting.tsx, src/components/settings/SurveysSettingsSection.tsx, src/lib/surveys/fatigue.ts, src/lib/surveys/company-limit.ts, src/lib/surveys/in-app.ts, src/lib/identity/attribution.ts, src/lib/surveys/rollup.ts, src/lib/surveys/settings-actions.ts, src/lib/surveys/sending-actions.ts, src/lib/surveys/inferred-actions.ts, src/lib/surveys/identify.ts, src/lib/surveys/identify-token.ts, src/lib/surveys/invite-review-setting.ts, src/lib/surveys/company-score-contracts.ts, src/lib/surveys/company-scores.ts, src/lib/surveys/actions.ts, src/lib/surveys/service.ts, src/lib/cortex/ml/survey-satisfaction.ts, src/lib/auth/permissions.ts] reviewed=2026-10 */}
+
+**Survey rules** apply to every survey, measure and channel in your workspace. Choose **Survey rules** at the top of the Surveys page, or open **Settings > Surveys**, to change them. Owners, admins and members can change the rules. Admins also manage **Sending and identity** and the **Inferred satisfaction** switch, which are in the same place.
+
+If you never change the rules, a workspace uses the defaults shown below.
+
+## Frequency
+
+| Rule | What it does | Default |
+| --- | --- | --- |
+| **Days between surveys for one person** | The gap before the same person gets another survey | 30 |
+| **Days of rest after someone closes an in-app survey** | No in-app survey shows to that person until this many days pass | 7 |
+
+Both accept 0 to 365 days. Set **Days between surveys for one person** to 0 to turn that rule off.
+
+For in-app surveys, both rules follow the person, not one Company record. Someone who belongs to several Companies is treated as one person, so an in-app survey they were shown, or a dismissal, at one Company also counts at the others.
+
+The first rule counts emailed invitations, in-app surveys shown, answers, and imported scores. It applies to email invitations you request, to Flows that send surveys, and to in-app eligibility. Invitations you request from a survey are skipped before they reach Triage. A Flow's invitation that falls inside the gap is skipped when it would send.
+
+Each survey's own cooldown still applies on top of this rule. See [Deliver a survey](/help/surveys/deliver#cooldowns-and-frequency).
+
+### Company limit
+
+Turn on **Company limit** to cap how many different people at one Company are asked, across every survey and channel. It is off by default. When you turn it on, two fields appear:
+
+| Field | What it does | Default | Accepts |
+| --- | --- | --- | --- |
+| **Ask at most this many people at one Company** | The number of people who can be asked at one Company | 3 | 1 to 1,000 |
+| **Within this many days** | The period the count covers | 30 | 1 to 365 |
+
+How it counts:
+
+- It counts people who were sent an email invitation or shown an in-app survey at that Company in the period, across every survey.
+- A person counts once, however often they are asked. People are matched by email address, so the same person is never counted twice.
+- Reminders and retries don't count, because they reuse the original invitation.
+- Someone already counted can still be asked again, under the other rules above. Once the Company is full, only people not yet asked are skipped.
+- A person who belongs to two Companies counts at each Company where they were asked.
+
+It applies to invitations you request from a survey, to the invitation preview, to recurring survey runs, to approved invitations in Triage, to Flows that send surveys, and to in-app surveys. A skipped invitation shows **Company limit** as the reason, for example "Won't send: Company limit" in [Triage](/help/accounts/triage), and an in-app survey is not shown. The limit is checked again at the moment each invitation sends.
+
+## Follow-up
+
+### Assign new responses to the company's CSM
+
+Choose who owns new feedback the moment it arrives. GainTrace assigns the response to the CSM of the person's Company, as long as that CSM is a member of your workspace.
+
+| Option | Assigns |
+| --- | --- |
+| **Low scores only** (default) | Negative responses: NPS 0-6, and the lower half of a CSAT or CES scale |
+| **Every response** | All responses |
+| **Nobody** | Nothing. Responses start unassigned |
+
+Responses stay unassigned when:
+
+- The Company is unknown, including every response to an anonymous survey.
+- The Company has no CSM, or the CSM is no longer in the workspace.
+- The survey is custom and you chose **Low scores only**. Custom surveys have no score groups, so only **Every response** assigns them.
+
+You can always change the owner in the [response inbox](/help/surveys/inbox-and-reports).
+
+### Hours to close a response
+
+Set how long a response can stay open before it counts as **overdue**, from 1 to 720 hours. The default is 48.
+
+A response is overdue when it is still New or In progress after that many hours. Overdue responses get an **Overdue** tag in the inbox, and the **Overdue** filter lists them. The header of the Surveys page also shows the number overdue, the share of responses closed on time over the last 90 days, and the median hours to close. Resolving the response, or completing its follow-up task, closes it.
+
+Changing the number changes which open responses are overdue right away.
+
+## Company scores
+
+A Company's NPS, CSAT and effort score come from one score per person, so one person who answers often can't outweigh the rest. A person is identified by email address, so one person counts once at a Company even when one of their answers is linked to their record and another is linked only by their email. These rules decide how that score is built. The Company's **Feedback** tab, [coverage](/help/surveys/inbox-and-reports#who-you-hear-from) and the `gt_survey_company_rollup` MCP tool all use them, and each score shows the sentence that describes the method beside it.
+
+| Rule | Options | Default |
+| --- | --- | --- |
+| **Each person counts with** | **Latest answer**, **Average of their answers** or **Median of their answers** | Latest answer |
+| **Days an answer counts** | 30 to 730 days. Older answers stop counting | 365 |
+| **Decision makers**, **Executive sponsors** and **Champions** count | 1 to 5 times. Everyone else counts once | 1 |
+
+Roles come from each person's role on their record. Scores imported from other tools count alongside your own surveys. An imported answer is matched to the person by email. If that person belongs to several Companies, it is stored against their Primary Company. An email at a free domain such as gmail.com is never matched to a Company by its domain. Answers whose personal details were removed, and answers to anonymous surveys, never count toward a Company score.
+
+How the Company score is computed from the people's scores:
+
+- **NPS**: the percent of people with 9 or 10 minus the percent with 0 to 6, using the role weights. An average of 8.5 counts as a passive.
+- **CSAT**: the percent of people in the top two points of their scale.
+- **Effort (CES)**: the average of people's scores, or the median when you choose **Median of their answers**.
+
+When a person answered on two different scales, older answers are mapped onto the scale of their latest answer before they are combined.
+
+### Where Company scores are used
+
+Changing these rules changes every place that shows a Company score:
+
+- The Company header and **Feedback** tab, and the **NPS** column and filter on the Companies list. The list refreshes every 15 minutes and whenever a Company is opened.
+- **Surveys > Reports**: the **By company** view, **Lowest NPS by company**, and [NPS against usage and revenue](/help/surveys/inbox-and-reports#nps-against-usage-and-revenue).
+- Boards, in the **Customer feedback** metrics.
+- Lifecycle stage conditions on NPS, CSAT and CES.
+- The survey score fields that GainTrace writes to your CRM, when you turn that on in HubSpot or Salesforce.
+- Trace AI churn risk, which reads a Company's NPS and its CSAT exactly as the Feedback tab shows them. CES isn't an input. A Company with no answers in the window counts as unknown, never as unhappy, and only an NPS detractor counts as churn evidence.
+
+See [Feedback across GainTrace](/help/surveys/across-gaintrace) for what each place shows.
+
+## Sending and identity
+
+**Sending and identity** holds five settings that apply to every survey: **Invitation review**, **Invitations from Flows**, **AI agents**, **Suppressed addresses** and **In-app identity**.
+
+### Invitation review
+
+Choose **Send when requested** (the default) or **Hold for approval**. With **Send when requested**, invitations requested from a survey or the API send at once, or at the survey's next send window. With **Hold for approval**, every one waits in Triage for a teammate. Invitations that Trace AI or MCP agents request always wait, whichever you choose, and cooldowns, your frequency rule, unsubscribes, email limits and send windows apply either way. Only owners and admins can change this. See [Deliver a survey](/help/surveys/deliver#invitation-review).
+
+### Invitations from Flows
+
+Choose **Hold for approval** (the default) or **Send when the Flow runs**. With the default, each invitation from a Flow's Send Survey step waits in Triage. With **Send when the Flow runs**, active Flows start sending as the Flow reaches the step. The same guards apply in both. See [Invitations from Flows](/help/surveys/deliver#invitations-from-flows).
+
+### AI agents
+
+The **Let Trace AI and MCP agents change surveys** switch is on by default, and only owners and admins can change it. Agents can draft surveys, update responses and survey rules, and request invitations. Invitations an agent requests always wait for a teammate to approve them in Triage, and an agent can't approve them. When the switch is off, every survey change from Trace AI or MCP is refused with "Can't change surveys from an AI agent in this workspace. An admin can allow agents in Settings > Surveys > Sending and identity." Reads still work.
+
+### Suppressed addresses
+
+This shows how many addresses are suppressed and links to the list. The same list stops Flows, plan reminders and Trace AI outreach. Only owners and admins can see the addresses.
+
+### In-app identity keys
+
+Identity keys let your server sign a token for the person using your product, so an [in-app survey](/help/surveys/in-app#signed-token) knows who is answering without a GainTrace API call on each page.
+
+- An admin chooses **Create key**. GainTrace shows the key id and the secret once, so copy the secret then.
+- A workspace can have 2 active keys. To rotate, create a second key, switch your server to it, then revoke the old one once its **Last used** date stops changing.
+- Each key shows the last characters of its secret, when it was created and when it was last used or revoked.
+- Only admins can create or revoke keys. Members can see them.
+
+## Inferred satisfaction
+
+Turn on **Infer satisfaction from conversations** to have Trace AI estimate how satisfied each person sounds in their own emails, calls and support tickets. It is off by default, and only owners and admins can change it. Below the switch, a status line reads **Calibrated on N people, X% agreement** or **Not calibrated yet (n of 20)**, followed by the date and outcome of the last run. Turning it off deletes the stored estimates and clears the calibration. See [Inferred satisfaction](/help/surveys/inferred-satisfaction).
+
+## Related settings
+
+The **Related settings** list in **Settings > Surveys** links to your **Brand kit** (the logo, colors and name on every survey invitation email), **Suppressed addresses** (unsubscribes, bounces and spam complaints, admins only) and **Import past NPS**.

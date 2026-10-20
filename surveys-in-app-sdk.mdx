@@ -1,0 +1,461 @@
+---
+title: "In-app survey SDK"
+description: "Show a GainTrace survey inside your product with a signed token or a server-minted session, plus targeting, placement and CSP."
+---
+
+{/* docs-meta: sources=[public/sdk/surveys.js, src/lib/surveys/in-app.ts, src/lib/surveys/in-app-targeting.ts, src/lib/surveys/targeting.ts, src/lib/surveys/targeting-contracts.ts, src/lib/surveys/identify.ts, src/lib/surveys/identify-token.ts, src/lib/surveys/fatigue.ts, src/lib/surveys/contracts.ts, src/lib/surveys/subject-contracts.ts, src/lib/surveys/languages.ts, src/lib/surveys/person-language.ts, src/app/api/survey/[id]/identify/route.ts, src/app/api/v1/surveys/[id]/session/route.ts, src/app/survey/embed/[id]/embed-client.tsx, src/components/surveys/survey-in-app-setup.tsx, src/proxy.ts] reviewed=2026-10 */}
+
+The in-app SDK shows a survey inside your product, on top of the page your customer is already using. GainTrace decides whether the signed-in person should see it, and your page displays it.
+
+You can install it in two ways. Both end in the same survey, with the same rules about who sees it and how often.
+
+| | Signed token | Backend session |
+| --- | --- | --- |
+| How GainTrace learns who the person is | Your server signs a short-lived token and the page hands it to GainTrace | Your server calls the GainTrace API for each session |
+| Credential in your code | An identity key that can only sign tokens | A secret API key (`gt_live_`) with the `write:surveys` scope |
+| Page rules | Yes, the SDK sends the page URL | Yes, if your backend passes `context.url` |
+| Event and time-on-page triggers | Yes | Only if your backend passes `context.event` or `context.dwellSeconds` |
+
+Your API key never reaches the browser in either method.
+
+## Before you start
+
+- A survey that is `active`, with in-app collection turned on and at least one allowed origin. You can set this in the survey's in-app settings, or with `settings.inApp` on the [Surveys API](/surveys-api).
+- The GainTrace person who is signed in to your product. A signed token matches them by its `sub` claim. A backend session uses the `contactId` and `accountId` you send.
+
+### Allowed origins
+
+`settings.inApp.allowedOrigins` lists the exact origins that may show the survey, such as `https://app.example.com`. No paths, no trailing slash, no wildcards. Use HTTPS. For development, `http://localhost` and `http://127.0.0.1` are also accepted. You can list up to 20.
+
+## Install with a signed token
+
+Your server signs a token for the signed-in person. Your page passes it to the SDK, and GainTrace checks the signature and decides whether to show the survey. Your backend makes no call to GainTrace per session.
+
+### Step 1: create an identity key
+
+In Surveys, open **Sending and identity** and create an identity key. You need the permission to manage API keys, which admins have by default.
+
+- GainTrace shows the secret once, when you create the key. Store it as a server secret.
+- The key has an id that starts with `gtk_`. You put it in the token header as `kid`.
+- A workspace can have 2 active keys at a time. Revoked keys stay listed for 90 days.
+- Revoking a key stops tokens signed with it from verifying at once.
+
+To rotate a key, create the second key, deploy it to your server, then revoke the first. Until a workspace has an active key, client-side identify is off and the endpoint refuses requests with `403`.
+
+### Step 2: sign a token on your server
+
+Sign a JWT with HS256, using the key's secret as the HMAC secret and the key id as `kid`. GainTrace accepts only HS256. Tokens with any other algorithm are refused.
+
+| Part | Rule |
+| --- | --- |
+| Header `alg` | `HS256` |
+| Header `kid` | The identity key id, such as `gtk_0123456789ab` |
+| `sub` | Required. Who the person is, 1 to 255 characters. GainTrace matches it to a person's external id first, then to their email when `sub` contains an `@` |
+| `exp` | Required. A Unix timestamp in whole seconds, at most 24 hours ahead. GainTrace allows 60 seconds of clock skew |
+| `email` | Optional. Used to match the person when `sub` doesn't. Up to 255 characters, must contain an `@` |
+| `company` | Optional. A GainTrace Company id or the Company's domain. Use it when the same person could belong to more than one Company |
+| `iat`, `nbf` | Optional. They can't be more than 60 seconds in the future |
+| `subject` | Optional. The record the survey asks about. See [Link a response to a record](/surveys-api#link-a-response-to-a-record) |
+
+A token can be at most 4,096 characters.
+
+<CodeGroup>
+
+```javascript Node
+import jwt from "jsonwebtoken";
+
+const token = jwt.sign(
+  { sub: user.id, email: user.email, company: company.domain },
+  process.env.GAINTRACE_IDENTITY_SECRET,
+  {
+    algorithm: "HS256",
+    expiresIn: "1h",
+    keyid: process.env.GAINTRACE_IDENTITY_KEY_ID,
+  }
+);
+```
+
+```python Python
+import time
+import jwt  # PyJWT
+
+token = jwt.encode(
+    {
+        "sub": user.id,
+        "email": user.email,
+        "company": company.domain,
+        "exp": int(time.time()) + 3600,
+    },
+    GAINTRACE_IDENTITY_SECRET,
+    algorithm="HS256",
+    headers={"kid": GAINTRACE_IDENTITY_KEY_ID},
+)
+```
+
+</CodeGroup>
+
+Sign a new token each time the page loads. An expired token returns `401`.
+
+### Step 3: identify and show
+
+Load the script, hand the token to the SDK, and ask for the survey.
+
+```html
+<script src="https://app.gaintrace.com/sdk/surveys.js" defer></script>
+<script>
+  window.addEventListener("load", () => {
+    GaintraceSurveys.identify(window.GAINTRACE_TOKEN);
+    GaintraceSurveys.show({ survey: "7b6f2c1e-4d3a-4b5c-9e8f-1a2b3c4d5e6f" });
+  });
+</script>
+```
+
+The SDK keeps the token in memory only. It never writes it to storage. Call `GaintraceSurveys.reset()` when the person signs out. It forgets the token, stops any pending checks and removes an open survey without recording a dismissal.
+
+`show({ survey })` returns a promise. It resolves to the open survey, or to `null` when the person doesn't qualify yet. If the survey is waiting on a page rule or a trigger, the SDK keeps checking, as described in [Targeting](#targeting).
+
+| Call | What it does |
+| --- | --- |
+| `GaintraceSurveys.identify(token)` | Stores the signed token. It throws if the value isn't shaped like a JWT |
+| `GaintraceSurveys.show({ survey, mode?, position?, lang? })` | Asks GainTrace whether this person qualifies on this page, and shows the survey if so. Call `identify` first. `survey` is the survey id |
+| `GaintraceSurveys.track(name)` | Tells the SDK a moment happened, so event-triggered surveys can show |
+| `GaintraceSurveys.reset()` | Forgets the person and removes the survey |
+
+The delay comes from the survey's settings (`delayMs`). The `delay` option doesn't apply to this install.
+
+### What the browser sends
+
+The SDK calls `POST /api/survey/{id}/identify` on the address the script was loaded from. It is a browser endpoint: it needs an `Origin` header and only answers origins on the survey's allowed list. It allows 120 requests a minute for each network address.
+
+A request that works returns `200`. If the person qualifies you get `eligible: true` and an `embedUrl`. If not, you get `eligible: false` and a `reason` (see [Who sees the survey](#who-sees-the-survey)). The reason `unknown_person` means the token's `sub`, `email` and `company` didn't match anyone in your workspace.
+
+| Status | Meaning |
+| --- | --- |
+| `401` | The token can't be verified: wrong signature, unknown or revoked `kid`, an algorithm other than HS256, bad claims, or it expired |
+| `403` | Client-side identify is off because the workspace has no active identity key, the page's origin isn't on the allowed list, the survey id is wrong (an unknown survey answers like an origin that isn't allowed), or the request had no `Origin` |
+| `404` | The survey id isn't a valid id |
+| `409` | The person matches more than one Company. Add a `company` claim |
+| `422` | The body is malformed, the page URL isn't on the origin that is showing the survey, or the `subject` claim can't be linked to a record |
+| `429` | Too many requests from one network |
+
+`show` rejects with an `Error` that carries the status as `status`.
+
+## Install with a backend session
+
+Your server asks GainTrace for a session for the signed-in person. Your page loads the SDK and shows the URL the session returned.
+
+### Step 1: get a session from your backend
+
+Create a route in your application that makes this request with the signed-in person's ids, then returns the `data` object to the browser. You need a secret server key (`gt_live_`) with the `write:surveys` scope.
+
+<CodeGroup>
+
+```javascript Node
+// GET /api/feedback-session?url=<page the person is on>
+const pageUrl = new URL(request.url).searchParams.get("url");
+const response = await fetch(
+  `https://app.gaintrace.com/api/v1/surveys/${SURVEY_ID}/session`,
+  {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.GAINTRACE_SERVER_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      contactId: gaintraceContactId,
+      accountId: gaintraceCompanyId,
+      parentOrigin: new URL(process.env.CUSTOMER_APP_URL).origin,
+      mode: "survey",
+      ...(pageUrl && { context: { url: pageUrl } }),
+    }),
+  }
+);
+if (!response.ok) throw new Error("Survey session request failed");
+const { data } = await response.json();
+return Response.json(data);
+```
+
+```bash cURL
+curl -X POST "https://app.gaintrace.com/api/v1/surveys/$SURVEY_ID/session" \
+  -H "Authorization: Bearer $GAINTRACE_SERVER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contactId": "c3d24e5f-6a7b-4c8d-9e0f-1a2b3c4d5e6f",
+    "accountId": "a1f0c2d3-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+    "parentOrigin": "https://app.example.com",
+    "mode": "survey",
+    "context": { "url": "https://app.example.com/billing" }
+  }'
+```
+
+</CodeGroup>
+
+`parentOrigin` is the exact origin of the page that will show the survey. It must be on the allowed list. `contactId` and `accountId` are the GainTrace ids of the person and their Company.
+
+`context` is optional. Send it when the survey has page rules or a trigger. `url` is the page the person is on, without the `#` fragment. It must be on `parentOrigin`, or the request returns `422`. You can also send `event` and `dwellSeconds`, described in [Targeting](#targeting). The body can carry a `subject` too, to tie the answer to a record.
+
+<Warning>
+  Call this endpoint from your server only. A request that carries an `Origin` header is refused with `403`, and cross-origin preflight requests are refused too. Don't ship the key to the browser.
+</Warning>
+
+### The response
+
+When the person qualifies, you get a signed URL:
+
+```json
+{
+  "data": {
+    "eligible": true,
+    "embedUrl": "https://app.gaintrace.com/survey/embed/7b6f2c1e-4d3a-4b5c-9e8f-1a2b3c4d5e6f?t=eyJ...&mode=survey&position=bottom",
+    "sessionId": "b2c3d4e5-7a8b-4c9d-8e0f-2a3b4c5d6e7f",
+    "delayMs": 3000
+  }
+}
+```
+
+The `embedUrl` is valid for one hour. Request a session when you intend to show the survey, not ahead of time.
+
+When the person doesn't qualify, you get `eligible: false` and a `reason`. See [Who sees the survey](#who-sees-the-survey).
+
+### Step 2: add the script to your page
+
+Load the script, ask your backend for the session, and show the survey when it's eligible.
+
+```html
+<script src="https://app.gaintrace.com/sdk/surveys.js" defer></script>
+<script>
+  window.addEventListener("load", async () => {
+    const url = location.href.split("#")[0];
+    const response = await fetch(
+      "/api/feedback-session?url=" + encodeURIComponent(url)
+    );
+    const session = await response.json();
+    if (session.eligible) {
+      GaintraceSurveys.show({
+        url: session.embedUrl,
+        mode: "survey",
+        delay: session.delayMs,
+      });
+    }
+  });
+</script>
+```
+
+In a single-page app, call `GaintraceSurveys.show` after sign-in. Don't call `GaintraceSurveys.destroy()` on sign-out: it acts like **Close survey**, so a survey that has loaded and not been answered counts as a dismissal. A dismissal suppresses in-app surveys for that person for the workspace's `dismissedRecontactDays`.
+
+## Options
+
+`GaintraceSurveys.show(options)` takes one object.
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `url` | Backend session | The `embedUrl` from your backend. Use it as returned |
+| `survey` | Signed token | The survey id. Use it instead of `url` |
+| `mode` | No | `survey` (default) or `test`. For a backend session it must match the `mode` you used to mint the session |
+| `position` | No | `bottom`, `bottom-right`, `bottom-left` or `center`. Defaults to the position in the survey's settings, then `bottom` |
+| `lang` | No | A language code such as `es` or `pt-BR`. It wins over the person's language trait and the browser. For a backend session, send `lang` in the session request instead, because the `embedUrl` already carries it |
+| `delay` | No | Backend session only. Milliseconds to wait before showing, between 0 and 120000. Pass `session.delayMs` |
+
+## Placement
+
+Set the default in `settings.inApp.position`, or override it per call with the `position` option.
+
+| Position | Behavior |
+| --- | --- |
+| `bottom` | A banner centered at the bottom, up to 640px wide. The page stays usable |
+| `bottom-right` | A card in the bottom-right corner, up to 400px wide. The page stays usable |
+| `bottom-left` | A card in the bottom-left corner, up to 400px wide. The page stays usable |
+| `center` | A modal up to 560px wide over a dimmed page. It blocks the page until the person answers or closes it |
+
+On a narrow screen every position shrinks to the window width minus 32px. A banner or corner card lets people answer when it suits them. Use `center` when you need an answer before they continue.
+
+### Return value
+
+`show()` gives you the open survey: an object with `url`, `destroy()` and `snooze()`. With a backend session it returns that object directly. With a signed token it returns a promise that resolves to that object, or to `null`.
+
+- Calling `show()` again with the same URL while a survey is open returns the open one.
+- Calling it with a different URL closes the open survey and starts the new one.
+- `GaintraceSurveys.destroy()` closes the open survey, if any.
+- `destroy()`, and `show()` with a different URL, act like **Close survey**. Once the survey has loaded and the person hasn't answered, it counts as a dismissal. In `test` mode it doesn't.
+
+`show()` throws an error with a message when something is wrong. For a backend session, the URL must be HTTPS (or localhost), must be the embed URL your backend returned, and the session must match this page's origin and the display `mode`. The page's origin must equal the `parentOrigin` you sent. If it doesn't, move the script to an allowed origin or send the right `parentOrigin`.
+
+## Snooze and dismiss
+
+The survey header has two buttons.
+
+- **Close survey** counts as a dismissal. The person won't see an in-app survey again until the `dismissedRecontactDays` rest period ends, 7 days by default.
+- **Ask me later** hides the survey, and it can show again after 24 hours. The snooze applies to that survey and that person. After someone answers, the button goes away.
+
+The open survey object does the same from code: `destroy()` is **Close survey** and `snooze()` is **Ask me later**. Both only record something once the survey has loaded and the person hasn't answered. In `test` mode they just remove the survey. **Escape** closes the survey the same way as **Close survey**.
+
+## Targeting
+
+Targeting decides who sees the survey, on which pages, and when. Set it on the survey in `settings.inApp.targeting`, or in the survey's in-app settings under **Targeting**. It has three parts, and all of them are optional.
+
+```json
+{
+  "settings": {
+    "inApp": {
+      "enabled": true,
+      "allowedOrigins": ["https://app.example.com"],
+      "minAgeDays": 0,
+      "minSessions": 1,
+      "maxDisplays": 3,
+      "delayMs": 3000,
+      "position": "bottom-right",
+      "targeting": {
+        "audience": { "segmentId": "5f1d3c7a-2b4e-4a6c-8d9e-0a1b2c3d4e5f" },
+        "pages": {
+          "include": [{ "match": "starts_with", "value": "/billing" }],
+          "exclude": [{ "match": "equals", "value": "/billing/cancel" }]
+        },
+        "trigger": { "kind": "event", "events": ["export_completed"] }
+      }
+    }
+  }
+}
+```
+
+`PATCH /surveys/{id}` replaces the whole `inApp` object when you send it, so send every `inApp` field, not just `targeting`.
+
+### Who
+
+`audience` is either a saved segment, `{ "segmentId": "..." }`, or rules, `{ "rules": { "company": {...}, "person": {...} } }`. Both rule groups are required. Each group has a `logic` of `and` or `or` and up to 20 `rules`. A rule is `{ field, operator, value }`. An empty group matches everyone.
+
+People rules can use these fields: `email`, `name`, `role`, `contactRole`, `isChampion`, `lastSeenAt`, `engagementScore` and `createdAt`. They can also use `traits.<name>` for a trait on the person. Any other People field returns `422`. Company rules use Company data-model fields.
+
+```json
+{
+  "audience": {
+    "rules": {
+      "company": { "logic": "and", "rules": [] },
+      "person": {
+        "logic": "and",
+        "rules": [{ "field": "traits.plan", "operator": "eq", "value": "enterprise" }]
+      }
+    }
+  }
+}
+```
+
+Archived segments match nobody. Save segments with the [survey segments endpoints](/surveys-api#target-people-with-segments). A person who isn't in the audience gets `not_targeted`.
+
+### Where
+
+`pages` limits the survey to pages that match.
+
+- `include` lists the pages that can show it. A page needs to match any one of them. With no `include` rules, every page can show it.
+- `exclude` lists pages that never show it. An excluded page wins over an included one.
+- Each rule has a `match` of `equals`, `contains` or `starts_with` and a `value`. Values are matched against the page's path and query string, such as `/billing` or `/reports?view=weekly`. They can't contain spaces or `#`, and are at most 512 characters. Each list holds up to 20 rules.
+- Matching is case-sensitive. It ignores the fragment and a trailing slash.
+- `equals` with a value that has no `?` compares only the path, so `/reports` matches `/reports?view=weekly`. Add the query to the value to match it exactly.
+
+On a page that doesn't match, the answer is `page_not_targeted`.
+
+### When
+
+`trigger` decides the moment.
+
+| Trigger | Shows |
+| --- | --- |
+| `{ "kind": "page_load" }` | On the first request on a matching page. This is the default |
+| `{ "kind": "event", "events": ["export_completed"] }` | After your code calls `GaintraceSurveys.track` with one of up to 10 event names |
+| `{ "kind": "time_on_page", "seconds": 30 }` | After the page has been visible for 1 to 600 seconds |
+
+Event names start with a letter or number and then use letters, numbers, dots, dashes, colons and underscores, up to 64 characters.
+
+```javascript
+// After the customer finishes an export
+GaintraceSurveys.track("export_completed");
+```
+
+Until the trigger fires, GainTrace answers `eligible: false` with `reason: "awaiting_trigger"` and an `awaiting` object that lists the `events` or the `timeOnPageSeconds` it waits for.
+
+### How the SDK waits
+
+With the signed token install, the SDK does the waiting for you, in memory only. Nothing is stored.
+
+- When the answer is `page_not_targeted`, it asks again whenever the URL's path or query changes, including single-page app navigation.
+- When the answer is `awaiting_trigger` for time on the page, it counts the seconds the tab is visible on the current URL and asks again when the count reaches the threshold. The count restarts when the path or query changes. A change to only the `#` fragment doesn't restart it.
+- `GaintraceSurveys.track(name)` only does something for a survey that is already waiting for that exact event. Call `show` first, then `track`.
+- Each check is a request to the identify endpoint. The SDK never throws from these background checks. If GainTrace answers `401`, `403`, `404` or `422`, it stops checking that survey.
+- Reloading the page starts again.
+
+With the backend session install, the SDK doesn't wait. Your backend sends `context.url` for page rules, and `context.event` or `context.dwellSeconds` to satisfy a trigger, each time it requests a session.
+
+Test mode (`mode: "test"`) ignores targeting, so you can check the install on any page.
+
+### Order of checks
+
+GainTrace checks that the survey is active, then the origin, the cooldown and recontact rules, dismissals, sampling and snooze. Then it checks targeting: page, audience, trigger. Only after targeting passes does it check `already_seen`, `minimum_age`, `minimum_sessions` and `display_limit`. A visit counts toward `minSessions` only after targeting passes.
+
+## How the survey behaves
+
+- **Focus.** The centered modal traps focus and returns it to the element that had it before.
+- **Reduced motion.** The survey slides up over 200ms. If the person prefers reduced motion, it fades in instead.
+- **Size.** The survey resizes itself to fit its content, between 100px and 4,000px tall. Buttons are at least 44px tall.
+- **Test mode.** With `mode: "test"` you see a preview. Nothing is recorded, and closing it just removes it.
+
+A survey that hasn't finished loading when someone closes it is removed without recording a dismissal.
+
+## Language
+
+In-app surveys show the survey in the language you ask for, using the [translations](/help/surveys/translate) on the survey. GainTrace picks the language in this order:
+
+1. The language you pass. With a signed token, pass `lang` to `GaintraceSurveys.show({ survey, lang })`. With a backend session, send `lang` in the session request. It wins over everything else.
+2. The person's `locale` trait, then their `language` trait.
+3. The browser's language.
+4. The survey's default language.
+
+`lang` must be a language code such as `es` or `pt-BR`, or `show` throws "Pass a language code such as es or pt-BR."
+
+The widget's own buttons (**Ask me later** and **Close survey**) and its screen reader announcement switch to that language too, and right-to-left languages (Arabic, Hebrew, Persian and Urdu) mirror the widget and the survey.
+
+## Who sees the survey
+
+GainTrace applies these rules when a session is requested. A person who fails one gets `eligible: false` with the reason below, and your page shows nothing.
+
+| `reason` | Why |
+| --- | --- |
+| `disabled` | The survey isn't `active`, or in-app collection is off |
+| `cooldown` | The person got a survey of this measure inside the survey's `cooldownDays`, or any survey inside the workspace `recontactDays` |
+| `recently_dismissed` | The person dismissed an in-app survey inside `dismissedRecontactDays` |
+| `company_limit` | The workspace [Company limit](/help/surveys/rules#company-limit) is full for this person's Company, and this person hasn't been asked there yet |
+| `not_sampled` | The person is outside the survey's `samplingPercent`. The same people stay in or out on every visit |
+| `snoozed` | The person chose **Ask me later** in the last 24 hours |
+| `page_not_targeted` | The current page doesn't match the survey's page rules, or no page URL was sent |
+| `not_targeted` | The person isn't in the survey's audience |
+| `awaiting_trigger` | The survey waits for an event or for time on the page. `awaiting` says which |
+| `already_seen` | The person already saw, dismissed or answered this survey today |
+| `minimum_age` | The person was recorded in GainTrace fewer than `minAgeDays` days ago |
+| `minimum_sessions` | The person has fewer than `minSessions` recorded days |
+| `display_limit` | The survey was already shown `maxDisplays` times inside the cooldown window |
+| `unknown_person` | Signed token only. No person in your workspace matched the token |
+
+A person sees each survey at most once per UTC day. Sessions count one per UTC day. In `test` mode these rules are skipped, but the survey must still be active, in-app collection must be on, and the origin must be allowed.
+
+The frequency rule is set for the whole workspace. See [Surveys API](/surveys-api#frequency-and-follow-up-rules).
+
+## Security and CSP
+
+- The survey runs in an iframe from the GainTrace address. GainTrace only lets the origin you named in the session frame it. The iframe is sandboxed with `allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox` and sends no referrer. Popups are allowed so a thank-you button can open a link in a new tab. The survey can't navigate your page.
+- The script only accepts messages from that iframe.
+- If your site sets a Content Security Policy, allow the GainTrace origin in `script-src` for `surveys.js` and in `frame-src` for the survey. For the signed token install, also allow it in `connect-src`, because the page calls the identify endpoint.
+- The signed token install uses the address you load `surveys.js` from for the identify call and for the survey frame. The backend session returns embed URLs on your custom survey domain while the white-label add-on is active, so with that install list the custom domain in `frame-src` as well.
+- The script adds a style element and inline styles to your page. If your `style-src` blocks inline styles, the survey won't render correctly.
+- The script doesn't write to your page's storage. The signed token stays in memory.
+
+## Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| `403` from the session endpoint | You called it from a browser, or `parentOrigin` isn't on the allowed list |
+| `404` from the session endpoint | The survey isn't in this workspace, or the person is archived or doesn't belong to `accountId` |
+| `401` from the identify endpoint | The token's signature, `kid`, algorithm or `exp`. Sign with HS256 and an active key, and a new token on each page load |
+| `403` from the identify endpoint | The workspace has no active identity key, the page's origin isn't on the allowed list, or the survey id is wrong (an unknown survey answers like an origin that isn't allowed) |
+| `eligible: false` for everyone | Read the `reason`. Test with `mode: "test"` to confirm the install |
+| `page_not_targeted` on the right page | Page rules are case-sensitive and match the path and query. For a backend session, send `context.url` |
+| `awaiting_trigger` never ends | Backend session: send `context.event` or `context.dwellSeconds`. Signed token: call `show` before `track`, and use an event name that is on the survey |
+| `show()` throws about origin | The page's origin doesn't match the `parentOrigin` you sent |
+| Survey doesn't appear | Check your CSP for `frame-src`, `script-src` and, for the signed token, `connect-src` |

@@ -1,0 +1,63 @@
+---
+title: "Ask an AI follow-up question"
+sidebarTitle: "AI follow-up"
+description: "Let Trace AI ask a customer one optional follow-up question after they send feedback. It is off by default, capped at one per response and always labelled as AI-generated."
+keywords: ["AI follow-up question", "AI probe", "conversational survey", "EU AI Act", "survey AI disclosure", "Trace AI survey"]
+---
+
+{/* docs-meta: sources=[src/lib/surveys/probe.ts, src/lib/surveys/probe-rules.ts, src/lib/surveys/probe-ai-feature.ts, src/lib/surveys/ui-strings.ts, src/lib/surveys/contracts.ts, src/lib/surveys/api-serializers.ts, src/lib/surveys/actions.ts, src/components/surveys/survey-ai-probe-field.tsx, src/components/surveys/survey-probe-question.tsx, src/components/surveys/survey-probe-answer.tsx] reviewed=2026-10 */}
+
+A customer's score and comment often leave out the reason behind them. With **Ask one AI follow-up question** on, Trace AI can read what a customer just sent and ask one optional question about it, for example for a concrete example or for what would change their score.
+
+## How it works
+
+1. The customer sends their feedback. GainTrace saves it first, so the follow-up can never block or delay a response.
+2. Trace AI may write one question from that customer's own answers. If their answers are already specific, or nothing safe comes back within a few seconds, no question is shown and the customer sees the normal thank-you screen.
+3. The question appears with an **AI-generated question** label and the sentence "AI wrote this question from your answers. Answering is optional, and your feedback is already saved." The customer can answer it with **Send answer** or choose **Skip this question**.
+4. An answer is saved with the response. A customer gets at most one AI follow-up question per response, and the answer can be up to 2,000 characters.
+
+The label and sentence are fixed. You can't remove, reword or translate them, and [custom CSS](/help/surveys/build#custom-css) can't hide them. They tell customers they are dealing with AI, as the EU AI Act's transparency rules (Article 50) require.
+
+## Turn it on
+
+<Steps>
+  <Step title="Open the survey">
+    Open the survey in the designer and select **Branding and privacy**.
+  </Step>
+  <Step title="Turn on the switch">
+    Turn on **Ask one AI follow-up question** and save the survey. It is off for every survey until you turn it on.
+  </Step>
+</Steps>
+
+The follow-up question works on personal email invitation links and the in-app survey. It is never shown on test invitations or in the designer preview, and not for responses sent through the API.
+
+## What Trace AI reads
+
+For each question it writes, Trace AI reads:
+
+- The customer's own answers and comment, with the wording of the questions they answered.
+- Their score, and the survey language, so it asks in the language the customer used.
+
+It never reads the customer's name, email, Company, hidden link fields or the survey's name. Question wording is read without any placeholders filled in, so no name is piped in. See [AI and your data](/help/trace-ai/ai-and-your-data) for what AI providers keep.
+
+## What it asks
+
+Every question is checked before a customer sees it. A question is dropped and nothing is shown if it:
+
+- Isn't exactly one question of 10 to 200 characters ending in a question mark.
+- Asks for or repeats personal or contact details, such as an email address or a phone number.
+- Contains a link, a promotional phrase, an exclamation mark or an em dash.
+- Names survey categories, such as NPS, promoter, detractor or CSAT.
+- Repeats a question the survey already asked.
+
+## Where the answers show
+
+- **Response inbox.** A response panel shows an **AI follow-up** block with the question and the answer, marked as AI-generated.
+- **CSV export.** A survey's CSV has the columns **AI follow-up question** and **AI follow-up answer**.
+- **API, webhooks and MCP.** The response's `answers._probe` holds `{ question, answer }`, and is present only when a follow-up was asked. `answer` is `null` until the customer answers. A `survey_response.updated` webhook fires when they do.
+- **Warehouse export.** The `answers` column carries `_probe` too. See [Export to your warehouse](/help/surveys/warehouse-export).
+- **Themes.** The answer counts toward [written feedback themes](/help/surveys/inbox-and-reports#written-feedback-themes) and their sentiment.
+
+## Plans and limits
+
+Each question asked is one Trace AI request. On paid plans it uses your workspace's AI allowance, and a workspace on the managed model can have up to 2,000 follow-up questions a day. On your own AI key, turn on **Let scheduled AI use this key** in **Settings > Trace AI**, because customers answer when nobody on your team is signed in. The Free plan needs its own key. If the allowance is used up, surveys keep working and customers simply aren't asked a follow-up.

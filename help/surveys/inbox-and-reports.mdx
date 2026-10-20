@@ -1,0 +1,225 @@
+---
+title: "Response inbox and reports"
+sidebarTitle: "Inbox and reports"
+description: "Work through feedback with owners, notes, replies and follow-up tasks, read results across every survey, see themes, coverage and NPS against usage and revenue, and summarize comments with Trace AI."
+keywords: ["survey responses", "response inbox", "survey reports", "NPS report", "margin of error", "follow-up task", "reply to survey response", "overdue responses", "survey export", "imported NPS", "feedback themes", "NPS against usage"]
+---
+
+{/* docs-meta: sources=[src/components/surveys/survey-response-inbox.tsx, src/components/surveys/survey-reply-composer.tsx, src/components/surveys/survey-reports.tsx, src/components/surveys/survey-nps-drivers.tsx, src/components/surveys/survey-coverage.tsx, src/components/surveys/survey-themes.tsx, src/components/surveys/survey-question-results.tsx, src/components/surveys/survey-ai-summary.tsx, src/components/surveys/survey-data-sources.tsx, src/components/surveys/survey-detail.tsx, src/components/surveys/survey-workspace-overview.tsx, src/components/accounts/inferred-satisfaction-panel.tsx, src/lib/surveys/actions.ts, src/lib/surveys/commands.ts, src/lib/surveys/routes.ts, src/lib/surveys/address.ts, src/lib/surveys/replies.ts, src/lib/surveys/reply-actions.ts, src/lib/surveys/reply-ai-feature.ts, src/lib/surveys/reply-rules.ts, src/lib/surveys/reply-email.tsx, src/lib/surveys/reporting.ts, src/lib/surveys/reporting-contracts.ts, src/lib/surveys/nps-drivers.ts, src/lib/surveys/nps-stats.ts, src/lib/surveys/rollup.ts, src/lib/surveys/themes.ts, src/lib/surveys/theme-contracts.ts, src/lib/surveys/question-results.ts, src/lib/surveys/question-types.ts, src/lib/surveys/task-link.ts, src/lib/surveys/probe-rules.ts, src/lib/surveys/ai-features.ts, src/lib/surveys/ai-actions.ts, src/lib/surveys/ai-shape.ts, src/lib/voc/theme-labels.ts, src/lib/agent-tools/tools/surveys.ts, src/lib/tasks/actions.ts] reviewed=2026-10 */}
+
+Every answer to one of your surveys lands in the **Response inbox** on the Surveys page. The same list appears on each survey's **Responses** tab, limited to that survey. A badge on the inbox tab shows how many responses are still open.
+
+## Response statuses
+
+| Status | Meaning |
+| --- | --- |
+| **New** | Nobody has worked on it yet |
+| **In progress** | Someone owns it and is following up |
+| **Resolved** | The loop is closed |
+
+**Needs follow-up** in the status filter shows New and In progress together.
+
+## Find responses
+
+Use the filters above the list:
+
+- **Search** across feedback text, people and Companies.
+- **Status**: All responses, Needs follow-up, Overdue, New, In progress or Resolved. **Overdue** lists open responses older than your [hours to close](/help/surveys/rules#hours-to-close-a-response).
+- **Score band**: All score bands, Negative scores, Neutral scores, Positive scores, or Written / custom for responses without a score.
+- **Theme**: All themes, or one of the [written feedback themes](#written-feedback-themes).
+- **Linked record**: Any linked record, or responses linked to a deal, a ticket, a plan or a custom record. See [Link feedback to deals, tickets, plans and records](/help/surveys/link-feedback-to-records).
+- **Measure**: NPS, CSAT, CES or Custom.
+
+The list shows the comment, survey, score, status, owner and date received. Select a row to open the response. Opening a theme or a linked record from elsewhere adds a chip you can clear, such as **Since** a date or **About** a record.
+
+## Work a response
+
+The response panel shows who answered, their Company and the Company's ARR when known, and every answer. Choice answers read as you would expect: checkbox answers are comma-separated, rankings are numbered, and matrix answers read "Row: answer". Questions hidden by display logic read "Not shown for this score". The names of the Company and the person open their Feedback tabs. If an [AI follow-up question](/help/surveys/ai-follow-up) was asked, an **AI follow-up** block shows the question and the answer, marked as AI-generated.
+
+Then close the loop:
+
+- **Follow-up status**: set New, In progress or Resolved.
+- **Owner**: any member of your workspace, or Unassigned. New responses may already have an owner from your [survey rules](/help/surveys/rules).
+- **Internal note**: record the next step or how you resolved it. Notes are for your team and can be up to 5,000 characters.
+
+Choose **Save review** to save all three.
+
+### Reply to the customer
+
+You can answer a customer from the response panel instead of switching to your mail app. Choose **Draft a reply with Trace AI**, or **Write it yourself**.
+
+- **What Trace AI reads.** That one response's answers, the Company's name, plan and segment, the person's first name and role, and earlier replies on that response. It never sees their email address, ARR, health or churn data.
+- **Guidance.** Optional, up to 300 characters, such as "Offer a call next week". Choose **Redraft** to revise the text in the editor with your guidance. Redraft also works on text you wrote yourself.
+- **What it checks.** Before you send, **Check before you send** lists what is left of anything the draft promises that nothing on file supports (refunds, credits, discounts, fix dates), internal survey labels such as detractor or NPS, links, promotional wording and exclamation marks.
+- **You decide.** Edit the subject and message. **Include their feedback below your reply** is on by default. Nothing is sent until you choose **Send reply**.
+
+The panel shows where the reply comes from and where answers will come back before you send. It comes from your connected Gmail or Outlook mailbox if you have one (see [Email and calendar](/help/integrations/email-calendar)). Otherwise it comes from your workspace's verified sending domain, shown as your name at your brand, or from GainTrace's sending address. Customer answers come back to your sign-in email, except when you send from your own address on your verified domain. Your email signature is added.
+
+Replies follow your email governance: unsubscribed, bounced and do-not-email addresses get nothing, and the reply shows **Not sent** with the reason. A reply skips the weekly email limit, because a person approved it, but it counts toward that limit for later automated emails. Where your workspace holds emails while its sending domain is broken, replies are held too.
+
+After you send, the response moves to In progress (a Resolved response stays Resolved), you become its owner if it had none, and an outbound email appears on the Company timeline. The panel lists each reply with its status, **Sent** or **Not sent**, and a **Drafted with Trace AI** tag when AI wrote it. A reply still in progress shows a neutral **Sending** badge, and you can retry it safely.
+
+Replies aren't offered for anonymous surveys, for responses whose personal details were removed, or for responses without an email address. Drafting uses Trace AI, so paid plans use managed AI and the Free plan needs its own key. Sending works on every plan.
+
+### Create a follow-up task
+
+Choose **Create follow-up task** to turn a response into work. GainTrace creates a task titled "Follow up on" and the survey name, linked to the Company, with the customer's comment as the description. It is due in 2 days, and its priority is higher for an NPS score of 6 or below.
+
+The task goes to the response's owner, or to you when there is no owner. The response moves to In progress, and you become its owner if it had none. Each response can have one task. Afterwards, **Open follow-up task** takes you to it in Tasks, and the task shows a chip with the measure, score and survey name that opens the response.
+
+Completing the task marks its response Resolved, if it is still open, which clears it from **Overdue** and counts toward the share closed on time. Undoing the completion or reopening the task sets the response back to In progress, unless a teammate has resolved it again in the meantime. Dismissing or deleting a task never resolves its response.
+
+A follow-up task needs a response tied to a Company. For responses without one, use an internal note and the owner field.
+
+### Resolve from Slack
+
+If you set up [alerts](/help/surveys/alerts) for Slack and connected Slack with OAuth, your team can assign and resolve responses from the Slack message without opening GainTrace.
+
+## What an identified response adds
+
+When a customer answers through a personal link, GainTrace also adds an entry to the Company's timeline and can start Flows that listen for survey responses. An NPS, CSAT or CES response can raise a signal, as configured in your signal settings. Anonymous surveys don't do any of this. See [Slack and Teams response alerts](/help/surveys/alerts#signals-for-survey-responses) and [Deliver a survey](/help/surveys/deliver#start-a-flow-from-a-response).
+
+## Share a link to a response or view
+
+The address bar always matches what you see on the Surveys page, so you can copy it to share. People without Surveys access can't open these links.
+
+| Address | Opens |
+| --- | --- |
+| `/surveys` | Campaigns |
+| `/surveys?tab=responses`, `?tab=reports` or `?tab=data-sources` | That tab |
+| `/surveys?survey=<survey id>` | One survey. Add `&view=responses`, `&view=distribute` (Email), `&view=distribute-in-app`, `&view=distribute-link` or `&view=delivery` for its tabs |
+| `/surveys?survey=<survey id>&response=<response id>` | One response on the survey's Responses tab |
+| `/surveys?response=<response id>` | One response over the Response inbox |
+| `/surveys?create=1` | The designer for a new survey |
+
+An unknown tab or view opens the default one. A response that was deleted, or that belongs to another workspace, shows "Couldn't find this response". Switch to the right workspace and open the link again. Browser Back steps back through surveys, tabs and opened responses. Closing a response doesn't add a step.
+
+To build a link from a webhook or an API response, use the response's `surveyId` and `id`: `https://<your GainTrace address>/surveys?survey=<surveyId>&response=<id>`.
+
+## Question results
+
+A survey's overview shows results for every question. They are laid out by question type:
+
+| Type | Result |
+| --- | --- |
+| **Rating** and **Numeric scale** | A histogram over the full scale, in numeric order, and the average |
+| **Multiple choice** and **Dropdown** | The count for each answer, in the order of your options |
+| **Checkboxes** | The share of people who picked each answer. The shares can add past 100% |
+| **Ranking** | A score for each item where first place counts the number of items and last place counts 1. Higher is preferred |
+| **Matrix** | The average position for each row, from 1 (the first column) to the number of columns |
+| **Date** | The earliest and latest dates, and the answers for each month |
+| **Consent checkbox** | The count of people who agreed |
+| **Statement** | No result |
+
+For a [product-market fit question](/help/surveys/build#product-market-fit), the share is the people who answered **Very disappointed** out of everyone who answered Very, Somewhat or Not disappointed. **I no longer use it** is left out. Read the share as directional with fewer than 40 answers.
+
+Only written answers (written responses and the comment) feed themes and AI summaries.
+
+## Written feedback themes
+
+GainTrace tags written answers with 14 themes inside GainTrace, without an AI model: Onboarding, Reliability, Performance, Ease of use, Missing features, Integrations, Support, Documentation, Pricing and value, Billing and admin, Security and compliance, Account management, Reporting and analytics, and Mobile. Themes show in two places:
+
+- **What customers write about** on the Surveys page covers every survey.
+- **Written feedback themes** on a survey's overview covers that survey.
+
+Switch **Theme period** between 30 days and 90 days. Each row lists the responses that mention the theme in the period, their share of all responses in the period, and how many are negative, neutral and positive. Sentiment is scored per sentence, so a score below -0.2 counts as negative and above 0.2 as positive. Responses that mention no tracked theme count only toward the total.
+
+The trend compares the share with the previous period of the same length. It reads **Up from X%** or **Down from X%** when the share changed by more than 20%, **Steady** otherwise, and **New this period** when no response in the earlier period mentioned it. It shows nothing when the earlier period had no responses. Select a theme to open the Response inbox filtered to that theme and period. Themes count responses to your own surveys only, not imported scores.
+
+## Reports
+
+The **Reports** tab combines your surveys with NPS you imported, so one view covers everything. Use the filters to narrow it:
+
+| Filter | Options |
+| --- | --- |
+| **From** and **Through** | A date range. Dates use UTC |
+| **Measure** | All, NPS, CSAT, CES or Custom |
+| **Source** | Each source of feedback, such as your native surveys or an imported provider |
+| **Campaign** | One survey or all |
+| **Language** | One of the languages responses arrived in. It shows once responses come in more than one language. See [Translate a survey](/help/surveys/translate) |
+| **Responses to count** | **All responses**, or **Latest per person**, which counts each person's most recent answer per measure in the period. Anonymous responses stay separate |
+
+The summary shows your NPS, the percent satisfied for CSAT, the mean effort for each CES scale, the number of responses and the number of Companies. NPS shows its **95% margin** as a plus-or-minus figure, which tells you how far the number could move by chance. A small selection has a wide margin. Below the summary, four views:
+
+- **Responses**: the latest matching responses as evidence.
+- **By source**: responses and NPS per source.
+- **By company**: each Company in the selection with its responses in the selection and its Company NPS, and **Lowest NPS by company**.
+- **Daily trend**: NPS and response volume over time, with the margin of error as a band.
+
+The summary NPS, **By source** and **Daily trend** count every response in the selection.
+
+### By company
+
+The Company NPS in this view is the same number as the Company's Feedback tab, its header, the Companies list column and the CRM field. The CRM field is described in [HubSpot](/help/integrations/hubspot#write-survey-results-back) and [Salesforce](/help/integrations/salesforce#write-survey-results-back). It follows **Company scores** in [Survey rules](/help/surveys/rules#company-scores) (each person counted once by latest, average or median, the window, and the role weights), and the rule sentence prints above the table. Report filters choose which Companies appear and what **Responses** counts. They don't change Company NPS. The plus-or-minus figure is the 95% margin over the people counted, using the effective number of people when role weights apply. **No NPS in the last N days** means nobody at that Company answered NPS inside the window. **Lowest NPS by company** lists up to 10 Companies in the selection with the lowest Company NPS.
+
+### Export
+
+Choose **Export filtered responses** to download the matching responses as a file. The export includes up to 10,000 responses.
+
+Each survey also has its own overview with a score trend, a score distribution (for NPS, select a score group to open its responses), results for every question, and follow-up progress. **Export CSV** on a survey downloads its responses with the internal note and the answers. It has one column for each question, one for each matrix row and one for each ranking item holding its position. Checkbox answers are joined with "; ", dates are written as YYYY-MM-DD, and a consent answer reads "Yes". It also has **AI follow-up question** and **AI follow-up answer** columns, and the full JSON in **Answers**.
+
+## NPS against usage and revenue
+
+Under the summary on **Reports**, the **NPS against usage and revenue** panel plots each Company's NPS against a usage metric, so you can see whether unhappy customers are also the ones using the product less, and how much revenue sits in each group. Report filters don't apply to this panel.
+
+- **Company NPS** follows your [Company scores](/help/surveys/rules#company-scores) rules.
+- **Usage metric.** Pick the metric in the menu. Product events, active People and active days count the 30 days before each Company's latest NPS answer. Health inputs such as engagement score, DAU/WAU ratio and seat utilization are current values. Other metrics use their latest recorded value.
+- **Bubble size** is the Company's ARR in your reporting currency, and the area is proportional to ARR. Very small bubbles are drawn at a minimum size, which the legend states. A hollow bubble has no ARR.
+- **Quadrants** split at the median usage and at NPS 0, and list the Companies and ARR in each: high or low usage, with NPS 0 or above or below 0.
+- **Revenue-weighted NPS** counts each Company in proportion to its ARR. Role weights from your rules still apply inside a Company. The plain NPS and the revenue-weighted NPS both show their 95% margin and range.
+
+The panel also states what it left out: Companies with no usage data are left off the chart, and Companies with no ARR, or with ARR in a currency that has no exchange rate, are left out of revenue weighting. It shows at most the 2,000 Companies with the most ARR. The margin uses a normal approximation, and when every answer falls in one group it uses a small-sample adjustment.
+
+## Who you hear from
+
+The overview on the Surveys page shows how much of your customer base your scores rest on, over the window set in [Company scores](/help/surveys/rules#company-scores):
+
+- **Companies**: how many Companies have a scored answer, out of all Companies that aren't archived.
+- **ARR**: the share of ARR at those Companies, in your reporting currency. ARR in a currency with no exchange rate yet is left out, and the card names that currency.
+- **Decision makers**: at how many of those Companies a decision maker or executive sponsor answered.
+- **Renewing in 90 days with no feedback in 6 months**: Companies with a renewal date in the next 90 days that nobody has heard from in 180 days, largest ARR first.
+- **Inferred only**: appears when [inferred satisfaction](/help/surveys/inferred-satisfaction) is on and calibrated. It counts Companies that have an inferred score but no survey answer. They aren't counted in the numbers above.
+
+Scores imported from other tools count toward coverage too.
+
+## A Company's feedback
+
+The **Feedback** tab on a Company shows its NPS, CSAT and effort score built under your [Company scores](/help/surveys/rules#company-scores) rule, how many people each rests on, how many of the Company's people answered, and whether a decision maker or executive sponsor did. Below that are the Company's survey responses. With inferred satisfaction on, an **Inferred** panel appears under the scores. See [Feedback across GainTrace](/help/surveys/across-gaintrace).
+
+## Summarize comments with Trace AI
+
+On a survey's overview, **What customers are saying** reads the written answers for you. Choose **Summarize feedback**. Trace AI returns a short summary and up to six themes. Each theme has a sentiment of positive, negative or mixed, a count such as "12 of 40 written answers", and a quote.
+
+- It reads the written answers from the latest 200 responses, and never names or emails.
+- Counts and quotes come from your real responses. A theme that doesn't match a response is dropped.
+- With no written answers yet, it tells you there isn't enough written feedback to summarize.
+- Results are marked as AI-generated. Check the responses before you act on them.
+
+### Ask Trace AI about results
+
+You can also ask [Trace AI](/help/trace-ai/trace-ai) (<kbd>Cmd</kbd>+<kbd>J</kbd>) about your surveys, for example "What is our Relationship NPS?" or "Which unhappy responses are overdue?". It uses the same numbers as Reports and the Company Feedback tab, and the same hours-to-close rule as the **Overdue** filter. It links to the response in Surveys. It only reads surveys, so drafting a survey or inviting people stays in Surveys. Trace AI reads surveys only for roles with Surveys access.
+
+Survey answers reach an AI model only when you ask Trace AI about them, choose **Summarize feedback**, choose **Draft a reply with Trace AI**, or turn on the AI follow-up question for a survey. Collecting, scoring, routing and reporting responses don't use AI. GainTrace separately tags written answers with themes and sentiment inside GainTrace, without an AI model. See [AI and your data](/help/trace-ai/ai-and-your-data) and [Data residency](/help/admin/data-residency).
+
+## Imported scores
+
+Open the **Data sources** tab to bring in feedback you already have:
+
+| Source | What it does |
+| --- | --- |
+| **Import from other survey tools** | Pull answers from Typeform, SurveyMonkey, Qualtrics and Retently on a schedule, or import a CSV file, including a Delighted export. See [Import from other survey tools](/help/surveys/import-from-other-tools) |
+| **CSV history** | Import NPS scores with emails, comments and original response dates. Choose **Import NPS history**. A finished import has a button, **Open survey reports**, that opens Reports |
+| **Data warehouse** | Map your warehouse's NPS response table and keep it in sync with your customer records |
+| **REST API** | Send responses from your own app or another survey provider with a server API key. Keep the key on your server. See [Authentication](/authentication) |
+
+Imported scores:
+
+- Appear in **Reports**, tagged with their source.
+- Don't trigger follow-up emails for old responses.
+- Count toward your [frequency rule](/help/surveys/rules), the NPS cooldown and your Company scores.
+- Appear on the person's **Feedback** tab.
+- Don't appear in the **Response inbox**. The inbox is for responses to your own surveys.
+
+Native NPS answers are never counted twice in reports.
+
+To send everything you collect to your own warehouse, see [Export to your warehouse](/help/surveys/warehouse-export).

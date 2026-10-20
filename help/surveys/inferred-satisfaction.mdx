@@ -1,0 +1,48 @@
+---
+title: "Inferred satisfaction"
+sidebarTitle: "Inferred satisfaction"
+description: "Let Trace AI estimate how satisfied people sound in their emails, calls and support tickets, check that estimate against your own survey answers, and see it next to your survey scores, always labelled Inferred."
+keywords: ["inferred satisfaction", "inferred CSAT", "AI sentiment", "satisfaction from conversations", "survey coverage", "calibration"]
+---
+
+{/* docs-meta: sources=[src/lib/surveys/inferred-contracts.ts, src/lib/surveys/inferred-evidence.ts, src/lib/surveys/inferred-calibration.ts, src/lib/surveys/inferred-batching.ts, src/lib/surveys/inferred-ai-feature.ts, src/lib/surveys/inferred-satisfaction.ts, src/lib/surveys/inferred-actions.ts, src/lib/surveys/inferred-satisfaction-job.ts, src/app/api/cron/survey-inferred-satisfaction/route.ts, src/components/surveys/inferred-satisfaction-setting.tsx, src/components/accounts/inferred-satisfaction-panel.tsx, src/components/surveys/survey-coverage.tsx] reviewed=2026-10 */}
+
+Most customers never answer a survey. Inferred satisfaction fills part of that gap by having Trace AI read what a person has already written and said to you, and estimate how satisfied they sound on a scale of 1 (very dissatisfied) to 5 (very satisfied).
+
+An inferred score is an estimate, not an answer. It is always labelled **Inferred**, it shows its agreement with your real survey answers, and it never changes your NPS, CSAT, CES or Company scores.
+
+## What it reads
+
+For each person, Trace AI reads the last 90 days of:
+
+- Their own inbound emails.
+- Call and meeting transcripts from Gong, Fireflies and Granola, using only the person's own sentences plus the meeting summary.
+- Support tickets and chats, such as cases from Zendesk, Freshdesk and Intercom.
+
+A person needs at least 2 of these items to get a score. It never reads survey answers, CSAT ratings, survey invitations or replies, notes or tasks, so your survey answers can't leak into the estimate.
+
+## It only shows once it agrees with your surveys
+
+GainTrace checks the estimate against your own results before it shows one. It pairs each person's estimate with their latest NPS, CSAT or CES answer from the same 90 days, whether the answer came from a native survey or an import. From those pairs it fits a mapping from the raw estimate to your survey scale, and measures how often the result lands in the same group as the real answer. Each survey answer is measured in its own scale: NPS 0-6, 7-8 and 9-10, and CSAT and CES by their scale. Each person is left out of their own check, so the figure isn't flattering.
+
+Scores publish only once 20 or more people can be compared this way. Until then the Company page says how many people you have so far. After that, every inferred score is shown with a sentence such as "Agrees with this workspace's survey answers 72% of the time (n 31)".
+
+## Turn it on
+
+An owner or admin turns it on in **Settings > Surveys**, under **Inferred satisfaction**, with **Infer satisfaction from conversations**. It is off by default.
+
+- It runs once a day. The first estimates arrive after the next run.
+- A status line shows **Not calibrated yet (n of 20)** or **Calibrated on N people, X% agreement**, and the date and outcome of the last run.
+- It uses your Trace AI allowance. On your own AI key, allow background AI calls on the key. If the allowance is used up, the status reads **Paused: the AI allowance is used up** and the run resumes when you have allowance again. Other pause reasons include a missing AI key, a billing problem, and rate limits, which retry the next day.
+- Turning it off deletes the stored estimates and clears the calibration, and a run in progress stops before its next batch.
+
+## Where you see it
+
+- **Company > Feedback.** Below the survey scores, an **Inferred satisfaction** panel shows the Company's score out of 5, how many people it rests on, and how they split between negative, neutral and positive. Each person is listed with their own score, a one-line reason, how many conversations it rests on and the date of the latest, and their latest survey answer beside it, or "No survey answer".
+- **Surveys > Who you hear from.** An **Inferred only** line counts Companies that have an inferred score but no survey answer. Those Companies aren't counted in the survey coverage numbers.
+
+Inferred scores are never added to NPS, CSAT, CES, Company scores, CRM write-back fields or webhooks. The [API](/surveys-api) and MCP return them read-only, with the calibration beside them.
+
+## What reaches the AI
+
+Trace AI sends at most 6 items of 700 characters per person, for up to 8 people in one call, as quoted data. People appear to the model only as `p1` to `p8`. The person's own name and any email address in the quoted text are replaced with placeholders. Other names inside quoted text, such as colleagues and Company names, can still appear. Evidence that hasn't changed isn't sent again, and each call counts as a Trace AI request. See [AI and your data](/help/trace-ai/ai-and-your-data) for what AI providers keep.

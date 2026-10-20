@@ -1,0 +1,58 @@
+---
+title: "Migrate from Delighted"
+sidebarTitle: "Migrate from Delighted"
+description: "Bring your Delighted NPS, CSAT and CES history into GainTrace from the CSV exports you saved, then recreate your survey and cadence."
+keywords: ["Delighted migration", "Delighted CSV import", "Delighted alternative", "import NPS history", "survey migration"]
+---
+
+{/* docs-meta: sources=[src/components/surveys/survey-csv-import-sheet.tsx, src/lib/surveys/imports/csv.ts, src/lib/surveys/imports/csv-hash.ts, src/lib/surveys/imports/service.ts, src/lib/surveys/imports/write.ts, src/lib/surveys/external-responses.ts, src/app/api/v1/nps-responses/route.ts] reviewed=2026-10 */}
+
+Delighted shut down on 30 June 2026, so GainTrace can't connect to it and pull your answers. What you can bring over is the **Survey responses** CSV exports you saved from Delighted earlier. This page covers moving that history and rebuilding the rest.
+
+## Before you start
+
+- **Have your CSV export.** Use a **Survey responses** export you saved from Delighted before it closed.
+- **Have your People in GainTrace.** An import only matches respondents. It never creates People or Companies. Sync your CRM or import your People and Companies first, so each respondent's email finds a home. A respondent GainTrace can't match to a Company is skipped, with a reason.
+- **Know your measures.** Delighted exports can mix survey types. GainTrace imports NPS, CSAT and CES.
+
+## Import your history
+
+<Steps>
+  <Step title="Open the import">
+    Go to **Surveys > Data sources**, find **Import from other survey tools**, and choose **Import a CSV file**.
+  </Step>
+  <Step title="Choose the Delighted format">
+    Keep **Delighted export** as the file format and choose your file.
+  </Step>
+  <Step title="Check the column mapping">
+    GainTrace suggests which of your columns is **Email**, **Score**, **Response date** and **Comment**, and optionally **Response ID**. Look at every one. GainTrace guesses Delighted's column names from what is publicly known, and Delighted's own help site is no longer available to check them against, so confirm each guess against your file.
+  </Step>
+  <Step title="Set the measure and scale">
+    Choose **From the Survey type column** to import each row as its own survey type, or choose NPS, CSAT or CES for the whole file. For CSAT and CES, set the scale to 1 to 5 or 1 to 7. NPS is always 0 to 10.
+  </Step>
+  <Step title="Import">
+    Check the preview of the first rows and the count of rows that can't be imported, then choose **Import**.
+  </Step>
+</Steps>
+
+Rows whose survey type isn't NPS, CSAT or CES, such as PMF, eNPS, 5-star, smileys and thumbs surveys, are skipped, and the sheet tells you why. A score outside the scale is skipped, never rescaled.
+
+Every answer keeps its original date. A CSV import is quiet history: it sends no webhooks, starts no Flows and posts no alerts, so your team isn't alerted to old detractors. The answers show in Reports, on the person's **Feedback** tab and in your Company scores, and they count toward your [frequency rule](/help/surveys/rules#frequency), so people aren't surveyed again right after a Delighted survey went out.
+
+### Importing twice is safe
+
+If the file has a **Response ID** column that you map, that ID identifies each row. Without one, GainTrace identifies a row by its email, score, date and measure. Importing the same file again, or an overlapping export, updates changed rows and never duplicates them.
+
+## If you script it
+
+If you'd rather load history from your own code, send each response to `POST /api/v1/nps-responses` with a secret server API key, `provider` set to `delighted` and the Delighted response ID as `externalId`. It dedupes against the CSV import when the CSV has a **Response ID** column that you mapped. See the [Surveys API](/surveys-api).
+
+## Rebuild your survey
+
+Imported history doesn't recreate your survey, so set up what comes next:
+
+1. Create an NPS survey from a template. See [Build a survey](/help/surveys/build).
+2. Set the **Days between surveys for one person** rule so cadence matches what you used before. See [Survey rules](/help/surveys/rules#frequency).
+3. Choose how people get it: [email invitations](/help/surveys/deliver), a [recurring Flow](/help/surveys/deliver#flows-that-send-surveys) or an [in-app survey](/help/surveys/in-app).
+
+For other tools that still have an API, see [Import from other survey tools](/help/surveys/import-from-other-tools).

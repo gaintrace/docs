@@ -60,7 +60,7 @@ A flow has exactly one trigger. These are the trigger types you can pick:
 | **Add to Sequence** | Enrolls a person in a connected external sequencer: Saleshandy, Instantly, Apollo.io, Smartlead, HeyReach, or AimFox. You choose which fields to include and what happens if the prospect already exists. |
 | **Send Transactional Email** | Drafts a one-off email to a customer. See the send modes below. |
 | **Send Slack Message** | Posts a message to Slack through the webhook configured in **Settings > Signal Push**. |
-| **Send Survey** | Emails an NPS, CSAT, CES, or custom survey with one-click score links. Survey sends are always drafted for approval in **Triage**; there is no auto-send for surveys. |
+| **Send Survey** | Emails an NPS, CSAT, CES, or custom survey with one-click score links. By default each survey invitation waits for approval in **Triage**. An admin can choose to send as the Flow runs in **Settings > Surveys > Sending and identity**. See [Deliver a survey](/help/surveys/deliver#invitations-from-flows). |
 | **Understand**, **Summarize**, **AI Draft** | AI steps that classify data, summarize a record, or draft a message for later steps to use. AI steps count against your workspace's AI allowance. |
 | **No Operation** | Does nothing. Useful as a placeholder on an empty branch. |
 
@@ -127,7 +127,7 @@ Run history is kept for 14 days, then pruned. In very high-volume workspaces old
 - **Run timeout.** A run that exceeds 10 minutes is marked failed.
 - **Concurrency.** A workspace runs at most 10 flows at once; a run starting beyond that is rejected and the trigger does not queue. Test runs do not count against this limit.
 - **AI limits.** AI steps and plain-language flow creation share your workspace's AI allowance, with an additional cap of 1,000 AI executions per workspace per day.
-- **Auto-send emails.** A flow with an auto-send email step can't be activated; switch the step to one of the draft modes first. Surveys are always approval-only.
+- **Auto-send emails.** A flow with an auto-send email step can't be activated; switch the step to one of the draft modes first. Survey sends follow the workspace's **Invitations from Flows** setting.
 - **Missing channels.** A Slack step without a configured Slack destination, or a sequence step without a connected sequencer, records an error on that step; with the default **Skip this step** setting the rest of the flow still runs.
 
 ## Good to know
@@ -143,7 +143,7 @@ Run history is kept for 14 days, then pruned. In very high-volume workspaces old
 No. Test runs suppress every external side effect and show what each step would have done instead.
 
 **Can a flow email customers without anyone approving?**
-Not by default. Email steps default to draft for approval in **Triage**, and a flow with an auto-send step is blocked from activating. Surveys always require approval.
+Not by default. Email steps default to draft for approval in **Triage**, and a flow with an auto-send step is blocked from activating. Survey sends wait for approval unless an admin chose to send them as the Flow runs.
 
 **What happens to a flow that is waiting on a delay when I pause it?**
 Pausing stops new runs from starting. Waits themselves are durable and resume from where they left off when due.

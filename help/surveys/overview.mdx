@@ -1,0 +1,141 @@
+---
+title: "Surveys overview"
+sidebarTitle: "Overview"
+description: "Measure NPS, CSAT, CES or your own questions, see how each score is calculated, and turn every response into a next step."
+keywords: ["surveys", "NPS", "CSAT", "CES", "customer feedback", "survey templates", "Trace AI survey draft"]
+---
+
+{/* docs-meta: sources=[src/lib/surveys/contracts.ts, src/lib/surveys/templates.ts, src/lib/surveys/library.ts, src/lib/surveys/library-contracts.ts, src/components/surveys/survey-library.tsx, src/lib/surveys/ai-features.ts, src/lib/surveys/ai-shape.ts, src/lib/surveys/ai-actions.ts, src/lib/surveys/routes.ts, src/components/layout/nav-config.ts, src/components/settings/SurveysSettingsSection.tsx, src/components/surveys/survey-builder.tsx, src/components/surveys/survey-detail.tsx, src/components/surveys/surveys-workspace.tsx, src/components/surveys/survey-data-sources.tsx, src/components/surveys/metric-scale-choice.tsx, src/lib/auth/permissions.ts] reviewed=2026-10 */}
+
+**Surveys** collect feedback from the people at your Companies and turn each answer into something your team can act on. Surveys has its own place in the left rail, between **Records** and **Automation**, and you can also reach it from <kbd>Cmd</kbd>+<kbd>K</kbd>. Owners, admins and members can all view, build, run and export surveys.
+
+The rules that apply to every survey (how often one person is asked, who owns new feedback, how Company scores are built, and whether invitations wait for approval) are in the **Survey rules** and **Sending and identity** buttons at the top of the Surveys page. They are also in **Settings > Surveys**. Links that pointed at the old `/settings/surveys` address still open Surveys. See [Survey rules](/help/surveys/rules).
+
+The Surveys page has four tabs:
+
+| Tab | What it is for |
+| --- | --- |
+| **Campaigns** | Create, edit, duplicate and run surveys |
+| **Response inbox** | Work through new feedback, one response at a time. See [Inbox and reports](/help/surveys/inbox-and-reports) |
+| **Reports** | Results across every survey and every imported source |
+| **Data sources** | Bring in feedback you already have from a CSV file, another survey tool, your warehouse or the API. See [Import from other survey tools](/help/surveys/import-from-other-tools) |
+
+Each survey is a **campaign**. A campaign has a measure, up to 20 questions, a delivery method and a status of Draft, Active or Closed.
+
+## Choose a measure
+
+| Measure | Scale | Ask it |
+| --- | --- | --- |
+| **NPS** | 0-10 | Periodically, about the company as a whole |
+| **CSAT** | 1-5 (faces, stars or numbers) or 1-7 (numbers) | Right after an interaction, naming the interaction |
+| **CES** | 1-5 (ease) or 1-7 (agreement with a statement) | After a task the customer finished |
+| **Custom** | Your own questions and answer types | Any time |
+
+The first question of an NPS, CSAT or CES survey is the score question. It is always required and always keeps the standard scale for its measure. Every other question is a follow-up.
+
+## How scores are calculated
+
+GainTrace counts only responses that carry a score. A response without a score still appears in the inbox, but it never changes the number.
+
+| Measure | Result | How |
+| --- | --- | --- |
+| **NPS** | A number from -100 to 100 | The share of promoters (9-10) minus the share of detractors (0-6). Passives (7-8) count in the total only |
+| **CSAT** | Percent satisfied | The share of scored responses in the top two values of the scale (4-5 on a 1-5 scale, 6-7 on a 1-7 scale) |
+| **CES** | Mean score | The average score. Higher means less effort |
+| **Custom** | Average score | The average of the first numeric answer. Custom surveys have no score groups |
+
+Everywhere in Surveys, a response falls into one of three **score groups**:
+
+| Measure | Negative | Neutral | Positive |
+| --- | --- | --- | --- |
+| **NPS** | 0-6 (detractors) | 7-8 (passives) | 9-10 (promoters) |
+| **CSAT and CES** | The lower half of the scale (1-2 on a 1-5 scale, 1-3 on a 1-7 scale) | The middle | The top two values (4-5 on a 1-5 scale, 6-7 on a 1-7 scale) |
+
+Score groups drive the inbox filter, [alerts](/help/surveys/alerts) and [automatic assignment](/help/surveys/rules).
+
+For surveys sent by email, the **response rate** is the share of invitations sent that got an answer.
+
+## Start from a template
+
+When you create a survey, choose **Browse templates** to start from one of 20 ready-made surveys for a customer moment. Each template sets the measure, the questions and the follow-ups, and you can edit everything before you save.
+
+Templates are grouped by moment:
+
+- **Relationship**: relationship NPS, executive sponsor NPS, product NPS for end users, check-in satisfaction
+- **Onboarding**: onboarding, kickoff call and training satisfaction, and setup effort
+- **Support**: support conversation satisfaction and support effort
+- **Product**: feature satisfaction, integration effort, product-market fit, most wanted improvement
+- **Renewal and growth**: pre-renewal NPS, business review satisfaction, value check, advocacy NPS
+- **Churn and risk**: cancellation reasons, downgrade feedback
+
+Each template says when to send it, for example "About 120 days before renewal".
+
+### Your own templates
+
+On a survey's page, choose **Save as template**, name it and pick an optional folder. A template saves the questions, wording, branding and thank-you screen. It doesn't save alerts, in-app settings, the launch audience or the sender. Every teammate then sees it under **Your templates** at the top of the gallery. Names are unique in a workspace.
+
+Saving a template needs Surveys write permission. Saved templates are also listed over the API at `GET /api/v1/survey-templates` and saved with `POST /api/v1/survey-templates` (secret key, `read:surveys` and `write:surveys` scopes), and over MCP with `gt_survey_template_list`.
+
+### Question library
+
+Use **Add from library** in the designer to add a question that teams reuse often. The library has 15 entries:
+
+- Main reason for the score, what to improve, what we do well, area that matters most, reason for a low score, likelihood to renew
+- Product-market fit (Sean Ellis), features used, rate each part of working with us, what matters most, your team, next planning date
+- Privacy acknowledgement, intro statement, follow-up permission
+
+Each entry is a normal question that you can edit.
+
+### Your question library
+
+Select a question in the designer and choose **Save question to library**, with a label and an optional folder. Display conditions and jumps aren't saved. **Add from library** lists your folders first, then **GainTrace library**. Saving needs Surveys write permission.
+
+A question added from your library shows "From your library". Edit it, then choose **Update library question** to carry the new wording into every draft survey that uses it and has no responses yet. Active and closed surveys keep their wording. A draft whose questions would no longer be valid is skipped, and the confirmation counts it.
+
+See [Build a survey](/help/surveys/build#product-market-fit) for the product-market fit question.
+
+## Draft with Trace AI
+
+In the template gallery, describe the survey you need, for example "Ask admins how hard the Salesforce setup was", and choose **Draft with Trace AI**. Trace AI proposes a measure, a name and a short set of questions. You review and edit the draft in the designer, and nothing is saved until you save it.
+
+- Your request can be 3 to 500 characters.
+- The draft gets the standard scale for its measure and at most a few follow-ups.
+- Trace AI declines requests that are not about a feedback survey.
+- The draft goes through the same checks as any survey, including the [promotional-copy guard](/help/surveys/build#keep-surveys-purely-feedback).
+
+Trace AI sees only the request you type. See [AI and your data](/help/trace-ai/ai-and-your-data) for what AI providers keep.
+
+## Survey status
+
+| Status | What it means |
+| --- | --- |
+| **Draft** | Not collecting. You can change everything |
+| **Active** | The link, invitations and in-app prompts accept responses |
+| **Closed** | New responses are paused. You can reopen the survey |
+
+A launched survey can be closed or reopened, but it can't return to Draft. You can delete a survey only when it is not Active.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Build a survey" href="/help/surveys/build">
+    Question types, display logic, branding and the thank-you screen.
+  </Card>
+  <Card title="Deliver it" href="/help/surveys/deliver">
+    Email invitations, personal links, invitation review, reminders and Flows.
+  </Card>
+  <Card title="Choose who gets it" href="/help/surveys/target">
+    Saved segments, rules, page rules and triggers.
+  </Card>
+  <Card title="Collect in your product" href="/help/surveys/in-app">
+    Show the survey inside your own app.
+  </Card>
+  <Card title="Work the feedback" href="/help/surveys/inbox-and-reports">
+    Owners, notes, replies, tasks, reports and the Trace AI summary.
+  </Card>
+  <Card title="Feedback across GainTrace" href="/help/surveys/across-gaintrace">
+    Company and People records, Tasks, search and Slack.
+  </Card>
+</CardGroup>
+
+More guides: [translate a survey](/help/surveys/translate), [accessibility](/help/surveys/accessibility) and the [conformance report](/help/surveys/accessibility-conformance-report), [ask an AI follow-up question](/help/surveys/ai-follow-up), [inferred satisfaction](/help/surveys/inferred-satisfaction), [custom survey domain and white-label](/help/surveys/custom-domain), [link feedback to deals, tickets, plans and records](/help/surveys/link-feedback-to-records), [import from other survey tools](/help/surveys/import-from-other-tools), [migrate from Delighted](/help/surveys/migrate-from-delighted) and [export to your warehouse](/help/surveys/warehouse-export).

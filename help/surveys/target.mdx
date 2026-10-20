@@ -1,0 +1,92 @@
+---
+title: "Choose who gets a survey"
+sidebarTitle: "Target"
+description: "Invite a saved segment or a set of Company and People rules by email, and decide who sees an in-app survey, on which pages and when."
+keywords: ["survey targeting", "survey segments", "audience rules", "in-app survey triggers", "page rules", "time on page", "event trigger", "survey audience"]
+---
+
+{/* docs-meta: sources=[src/lib/surveys/targeting-contracts.ts, src/lib/surveys/targeting.ts, src/lib/surveys/audience.ts, src/lib/surveys/in-app-targeting.ts, src/lib/surveys/targeting-actions.ts, src/lib/surveys/commands.ts, src/components/surveys/survey-audience-picker.tsx, src/components/surveys/survey-segment-invite.tsx, src/components/surveys/survey-in-app-targeting.tsx, src/components/surveys/survey-in-app-setup.tsx, public/sdk/surveys.js] reviewed=2026-10 */}
+
+Instead of picking people one at a time, you can describe the audience. The same Company and People rules work for email invitations and for in-app surveys, and you can save a set of rules as a **segment** to reuse on other surveys.
+
+## Build an audience
+
+An audience is one of three things:
+
+| Audience | What it is |
+| --- | --- |
+| **Everyone** | Every eligible person. Only the in-app channel offers it |
+| **Saved segment** | A set of rules you saved earlier |
+| **Rules** | Company rules, People rules, or both. A person must satisfy both groups |
+
+Each group takes up to 20 rules, which you combine with **and** or **or**. Company rules use your Company fields. People rules can use these People fields:
+
+| Field | Type |
+| --- | --- |
+| **Email** and **Name** | Text |
+| **Job title** | Text |
+| **Contact role** | Decision maker, champion, end user, billing, influencer, executive sponsor, technical or other |
+| **Is champion** | Yes or no |
+| **Last seen** and **Created** | Date |
+| **Engagement score** | Number |
+| `traits.<name>` | A customer attribute you sent as a People trait, such as `traits.plan` |
+
+Any other People field is refused. Rules are checked against current data each time, so people join and leave an audience as their data changes.
+
+### Save a segment
+
+Choose **Save as segment** once you have at least one rule, and give the segment a name of up to 120 characters. Names are unique in your workspace. Choose **Archive segment** to retire one. A survey that still uses an archived segment matches nobody until you choose another audience.
+
+## Invite an audience by email
+
+On the survey's **Distribute** tab, choose **Email**, then switch **Invitation audience** from **People** to **Segment or rules**.
+
+1. Choose a saved segment or build Company and People rules. An audience with no rules is refused, so nobody is invited by accident.
+2. Wait a moment for the count. GainTrace shows how many people match and a sample of 50.
+3. Choose **Send to N people**, or **Request approval for N people** when your workspace holds invitations for approval.
+
+A request can reach at most 1,000 people. If more people match, narrow the rules or split the audience into segments. Only active people with an email address at active Companies are included.
+
+[Cooldowns, your frequency rule, invitation review and send windows](/help/surveys/deliver#invitation-review) still apply. Invitations that Trace AI or an agent requests for a segment always wait for approval in Triage.
+
+## Target an in-app survey
+
+Open the survey's **Distribute** tab, choose **In-app**, and use the **Rules** tab. Below the placement and sampling settings are three questions.
+
+### Who sees it
+
+Choose **Everyone**, a **Saved segment** or **Rules**. The audience is checked each time the survey is requested for a signed-in person.
+
+### Where
+
+Choose **Add page** to show the survey only on certain pages, and **Add excluded page** to keep it off others. Each rule has a match type and a path:
+
+| Match | Meaning |
+| --- | --- |
+| **is** | The page path equals the rule. If the rule includes a query, such as `/reports?tab=usage`, the query must match too |
+| **contains** | The page path and query contain the text |
+| **starts with** | The page path and query start with the text |
+
+Rules match the path and query, and ignore the part of the address after `#` and any trailing slash. Matching is case-sensitive. With no page rules the survey can show on every page, with page rules it shows only where one matches, and an excluded page always wins. You can add up to 20 page rules and 20 excluded pages.
+
+### When
+
+| Trigger | The survey shows |
+| --- | --- |
+| **Page load** | After the **Display delay** you set. This is the default |
+| **After an event** | After your product calls `GaintraceSurveys.track('event_name')` with one of up to 10 event names. Names use letters, numbers, dots, dashes, colons and underscores, up to 64 characters, and are case-sensitive |
+| **After time on page** | After 1 to 600 seconds of visible time on the page. The count pauses while the tab is hidden and restarts when the page address changes |
+
+In a single-page app, GainTrace checks the rules again when the address changes.
+
+<Info>
+  Event and time triggers need the signed token install. With the backend session install, page and audience rules apply only when your server passes the page address, and event and time triggers aren't available. See [In-app surveys](/help/surveys/in-app#choose-an-install-method).
+</Info>
+
+### What else still applies
+
+Targeting works on top of the other in-app rules. A person must pass the audience, the page and the trigger, and also the minimum customer age, the minimum daily sessions, the display limits, the sample share, the survey's cooldown and your [frequency rule](/help/surveys/rules). Days of product use count toward the minimum daily sessions only after the page and audience rules pass. Test mode ignores targeting, so you can always check how the survey looks.
+
+## Targeting through the API
+
+The [Surveys API](/surveys-api) can list and create segments, request invitations for a segment or for rules, and save in-app targeting on a survey. Agents that use MCP can list segments and request invitations for a segment, and a real request always waits in Triage for approval.

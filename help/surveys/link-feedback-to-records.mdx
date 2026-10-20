@@ -1,0 +1,50 @@
+---
+title: "Link feedback to deals, tickets, plans and records"
+sidebarTitle: "Link to records"
+description: "Tie a survey response to the deal, support ticket, plan or custom record it is about, and see that feedback on the record itself."
+keywords: ["survey subject", "deal survey", "ticket CSAT", "plan feedback", "link survey to record", "transactional survey"]
+---
+
+{/* docs-meta: sources=[src/lib/surveys/subjects.ts, src/lib/surveys/subject-contracts.ts, src/lib/surveys/flow-subject.ts, src/lib/surveys/subject-actions.ts, src/lib/surveys/api-responses.ts, src/lib/surveys/in-app.ts, src/lib/surveys/identify-token.ts, src/lib/surveys/send.ts, src/lib/surveys/delivery-jobs.ts, src/lib/surveys/webhooks.ts, src/components/flows/SendSurveyFields.tsx, src/components/surveys/survey-subject-chip.tsx, src/components/surveys/subject-survey-responses.tsx, src/components/surveys/subject-feedback-count.tsx, src/components/surveys/survey-response-inbox.tsx, src/components/plans/room/room-internal.tsx, src/app/(dashboard)/data/model/[slug]/records/page.tsx, src/app/api/v1/survey-responses/route.ts] reviewed=2026-10 */}
+
+Most surveys ask about a person's overall experience. Some ask about one thing: how a sales process went, how a support ticket was handled, or how a plan is working. When you tie a response to that record, you can see what customers said about a specific deal, ticket, plan or record, and find it again from the record.
+
+## What a response can be about
+
+A response can be about one record of these kinds:
+
+| Record | Examples |
+| --- | --- |
+| **Deal** | A deal in your CRM, such as a HubSpot or Salesforce deal |
+| **Ticket** | Tickets from Zendesk, Freshdesk, HubSpot, Salesforce and Intercom, and issues from Jira and Zoho Desk |
+| **Plan** | A Company's live plan in GainTrace |
+| **Custom record** | A record in a model of your own, from **Data > Model > Records** |
+
+## Set the record
+
+- **In a Flow.** In a **Send Survey** step, set **Ask about** to **The deal that started this flow** (use it with the **Deal stage changed** trigger) or **The Company's live plan**. The step stops with a clear error when the record is missing, and the Triage approval names the record. For tickets and custom records, link the response through the API.
+- **With the API.** Send a `subject` with `POST /api/v1/surveys/{id}/responses`. It takes a GainTrace id, or an `externalId` from your CRM or help desk with an optional `source` such as `hubspot`, `salesforce`, `zendesk`, `freshdesk`, `intercom`, `jira` or `zoho-desk`, or a custom record by its model and `externalId`. See the [Surveys API](/surveys-api).
+- **In an in-app survey.** Send the `subject` when your server creates the survey session, or add a `subject` claim to the signed token. See [In-app surveys](/help/surveys/in-app).
+
+The subject only comes from your Flow, your server or your signed token. A customer's own answers can't set it, so nobody can point a response at a record.
+
+## Rules
+
+- The record has to be in your workspace. If the person and the record both belong to a Company, the Companies must match.
+- A plan that was archived can't be linked. Use a live one.
+- Anonymous surveys never keep the record.
+- A Flow or an approval sends the same survey at most once for each person and record, so an invitation is skipped when one was already sent for that email and record.
+- Customers never see the name of the record. The invitation link carries ids only.
+
+## Where it shows
+
+Members, admins and owners see linked feedback. People without Surveys access don't.
+
+- **Response inbox.** A response about a record shows a chip with the record's name. Use the **Linked record** filter to see responses linked to a deal, a ticket, a plan or a custom record. Opening `/surveys?subject=deal:<id>` shows only the responses about that record, with an **About** chip you can clear.
+- **Response panel.** A button opens the record. For a ticket with a link to its source, **Open in** the source system opens it there.
+- **Company > Feedback.** Each response shows a chip with its record.
+- **Company > Revenue.** Each deal shows how many responses are about it.
+- **Plan room.** On a plan's **Internal** tab, the **Survey feedback** section lists the responses about that plan.
+- **Custom records.** The side panel for a record in **Data > Model > Records** has a **Survey feedback** section.
+
+Webhooks and the API carry the link too. `survey_response.created` and `survey_response.updated` include a `subject` with the record's type and id, and `GET /api/v1/survey-responses` accepts `subjectType` and `subjectId` to filter. Imported NPS never has a subject.

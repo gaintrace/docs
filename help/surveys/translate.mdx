@@ -1,0 +1,106 @@
+---
+title: "Translate a survey"
+sidebarTitle: "Translate"
+description: "Offer one survey in several languages, translate it with Trace AI and review the result, see which language a customer gets, and how answers stay comparable across languages."
+keywords: ["survey translation", "multilingual survey", "survey languages", "right to left survey", "lang parameter", "survey default language", "translate survey with AI", "localized survey emails"]
+---
+
+{/* docs-meta: sources=[src/app/s/short-link-page.tsx, src/lib/surveys/languages.ts, src/lib/surveys/translations.ts, src/lib/surveys/ui-strings.ts, src/lib/surveys/contracts.ts, src/lib/surveys/commands.ts, src/lib/surveys/actions.ts, src/app/api/survey/[id]/route.ts, src/app/survey/[id]/survey-client.tsx, src/lib/warehouse/export/survey-rows.ts, src/components/surveys/survey-languages.tsx, src/lib/surveys/translate-actions.ts, src/lib/surveys/translate-ai-feature.ts, src/lib/surveys/invite-language.ts, src/lib/surveys/person-language.ts, src/lib/surveys/in-app.ts, src/app/survey/embed/[id]/page.tsx, public/sdk/surveys.js, src/lib/surveys/reporting.ts, src/components/surveys/survey-reports.tsx] reviewed=2026-10 */}
+
+A survey can carry translations of its questions, answer choices and thank-you screen. A customer who opens the survey then sees it in their own language, and their answers still land in one set of results.
+
+## Add languages in the designer
+
+Select **Languages** in the survey designer.
+
+- **Default language** is the language you write the survey in. Answers are always stored in it.
+- Choose **Add language** to add a translation. One survey can have up to 15 languages.
+- Each language shows how much of the survey is translated, and flags how many questions changed since that language was written, for example "2 questions changed".
+- Select a language to edit its page heading, questions, descriptions, link buttons, answer choices, statements, scale end labels, thank-you screens, named endings and page words.
+- Remove a language with **Remove**. An Undo appears in case you didn't mean it.
+- When the default language isn't English, set **Page words in** that language so buttons such as **Next** and **Send feedback** read in one language.
+
+Translations stay editable after a survey is launched, although its questions lock. Saving the survey saves its translations.
+
+## Translate with Trace AI
+
+Choose **Translate N missing phrases with Trace AI** in a language to fill the gaps. Trace AI fills a phrase when it's empty or when it belongs to a question you changed since it was translated. It doesn't touch a phrase you wrote that is still current. Phrases for a question you changed are proposed again for you to review.
+
+1. Trace AI proposes a translation for each phrase, up to 600 phrases at a time.
+2. Review the list. Edit any proposal, then choose to apply it, or choose **Discard**.
+3. Save the survey. Nothing reaches customers until you do.
+
+A translation must keep placeholders such as `{{first_name}}` exactly as written, or Trace AI rejects that phrase. People with Surveys write permission can use it.
+
+Translation sends only the survey's own wording and the target language to the model. It never sends responses, names, emails or Company data. It runs on your own AI key on the Free plan and on the managed model, metered against your AI allowance, on paid plans. The detail is in [AI and your data](/help/trace-ai/ai-and-your-data#survey-feedback).
+
+If an admin turned off **Survey AI** in **Settings > Surveys**, the button shows but the request is refused with "Can't use Trace AI on survey feedback. An admin turned off Survey AI in Settings > Surveys."
+
+## Where translations apply
+
+Translations apply to every place a customer meets the survey:
+
+- The personal link in an invitation.
+- The embedded survey.
+- The in-app survey, including its **Ask me later** and **Close survey** buttons.
+- Invitation and reminder emails: the subject, greeting, button and score labels.
+
+## Which language a customer gets
+
+GainTrace picks the language in this order:
+
+1. The language the link or your app asks for. On a personal link that is `?lang=`, for example `https://app.gaintrace.com/s/aB3dE5gH7jK9?lang=fr`. In your app it is `lang` in `GaintraceSurveys.show` or in the backend session request. See the [in-app SDK guide](/surveys-in-app-sdk#language).
+2. The person's language, from their `locale` trait and then their `language` trait. You can set it with `PATCH /api/v1/contacts/{id}` or a Segment identify. This applies to personal links, in-app surveys and email.
+3. The customer's browser language settings.
+4. The survey's default language.
+
+Email has no browser step. Invitations and reminders use the person's language trait, or else the default language, and the links in the email carry `lang=` when the survey has several languages, so the page matches the email.
+
+A language matches when the codes are the same, or when they share a base language, so a browser asking for `fr-CA` gets French. Chinese picks Simplified or Traditional from the script or region in the request.
+
+A survey that has no translation for any of the customer's languages shows in its default language. If you set no default language, it is English.
+
+## Languages you can use
+
+GainTrace supports these 44 languages, by code: English (`en`), Arabic (`ar`), Bulgarian (`bg`), Bengali (`bn`), Catalan (`ca`), Czech (`cs`), Danish (`da`), German (`de`), Greek (`el`), Spanish (`es`), Estonian (`et`), Persian (`fa`), Finnish (`fi`), Filipino (`fil`), French (`fr`), Hebrew (`he`), Hindi (`hi`), Croatian (`hr`), Hungarian (`hu`), Indonesian (`id`), Italian (`it`), Japanese (`ja`), Korean (`ko`), Lithuanian (`lt`), Latvian (`lv`), Malay (`ms`), Dutch (`nl`), Norwegian (`no`), Polish (`pl`), Portuguese (Brazil) (`pt-BR`), Portuguese (Portugal) (`pt-PT`), Romanian (`ro`), Russian (`ru`), Slovak (`sk`), Slovenian (`sl`), Serbian (`sr`), Swedish (`sv`), Thai (`th`), Turkish (`tr`), Ukrainian (`uk`), Urdu (`ur`), Vietnamese (`vi`), Chinese (Simplified) (`zh-CN`) and Chinese (Traditional) (`zh-TW`).
+
+Arabic, Hebrew, Persian and Urdu lay the survey out right to left on the survey page, the embedded survey, the in-app widget and in email. The page also tells assistive technology which language it is in.
+
+## What you can translate
+
+For each language you can supply:
+
+- The survey title, which is the heading of the page.
+- The text of each question, its description and its link label.
+- Answer choices, matrix rows and the labels at each end of a scale.
+- The thank-you title, message and button label, including the versions for each score group and for each named ending.
+- The survey page's own words, such as **Next**, **Send feedback**, the optional-field hint and the thank-you defaults.
+
+Anything you leave out shows in the default language. Translated copy follows the same rules as the default copy. The [promotional wording guard](/help/surveys/build#keep-surveys-purely-feedback) applies in every language, and a translated question must keep the same placeholders, such as `{{first_name}}`, as the original.
+
+Two parts of the survey can't be translated or reworded. The label and the sentence that tell a customer an [AI follow-up question](/help/surveys/ai-follow-up) was written by AI always show in English.
+
+### Answer lists must be complete
+
+A translated list of answer choices or matrix rows must have exactly as many entries as the original, each different from the others. If it doesn't, the customer sees the original list for that question instead of a half-translated one.
+
+### When you change a question
+
+Each translation remembers the wording of the question it was written for. If you change a question's text, description, link label, answer choices, rows or scale labels in the designer, its translations stop showing and the question appears in the default language until you update them. The Languages panel flags these questions, and **Translate with Trace AI** refreshes them. This keeps a customer from answering a translation of an older question.
+
+## How answers are stored
+
+Answers are stored in the survey's default language. When a customer picks a translated choice, GainTrace saves the matching default-language choice, so a choice, checkbox, dropdown, matrix or ranking result adds up across languages. Free-text answers are saved as the customer typed them.
+
+Each response records the language the customer answered in.
+
+- **Reports** has a **Language** filter once responses arrive in more than one language. See [Inbox and reports](/help/surveys/inbox-and-reports).
+- The API returns `language` on each response.
+- Trace AI and MCP survey reports can break results down by language.
+- The [warehouse export](/help/surveys/warehouse-export) has a `language` column.
+
+## Add translations with the API
+
+Use `PATCH /api/v1/surveys/{id}` with a secret server API key that has the `write:surveys` scope. Send `settings.defaultLanguage` and `settings.translations`, keyed by language code. Each translation can have `title`, `questions`, `thankYou`, `endings`, `ui` and `reviewedAt`. `endings` is keyed by ending id, and each entry can have `title`, `message` and `linkLabel`. In `questions`, entry *n* holds the translation of question *n*, or `null` to skip it. GainTrace fills in the internal marker that ties a translated question to the wording it was written for, so you don't need to send it.
+
+Send the whole `translations` object each time you update, because it replaces the one saved before. You can change translations after a survey is launched, but not its questions. See the [Surveys API](/surveys-api) for the exact fields.

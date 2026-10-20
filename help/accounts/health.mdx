@@ -4,13 +4,13 @@ description: "How GainTrace computes each company's health score, where the scor
 keywords: ["health score", "customer health", "health score weights", "at risk", "churning", "GainTrace health"]
 ---
 
-{/* docs-meta: routes=[/companies, /companies/[id], /settings/health-scores] verified 2026-08 */}
+{/* docs-meta: sources=[src/lib/health/feedback-input.ts, src/lib/health/provision.ts]; routes=[/companies, /companies/[id], /settings/health-scores] reviewed=2026-10 */}
 
 Every Company in GainTrace carries a health score from 0 to 100 and a status: **Healthy**, **At Risk**, **Churning**, or **Not scored**. This article explains what feeds the score, where it appears, how to change the weighting, and what to expect when a company has little data.
 
 ## How a score is computed
 
-Health is a weighted average of up to six dimensions, each normalized onto a 0 to 100 scale, plus an adjustment from recent signals. It is a transparent calculation over your synced data, not an AI prediction: the same inputs always produce the same score, and Trace AI does not set the number.
+Health is a weighted average of up to eight dimensions, each normalized onto a 0 to 100 scale, plus an adjustment from recent signals. It is a transparent calculation over your synced data, not an AI prediction: the same inputs always produce the same score, and Trace AI does not set the number.
 
 Each dimension needs a real data source behind it. A dimension with no data for a company is skipped, and the remaining weights renormalize, so the score reflects only what GainTrace actually knows.
 
@@ -19,10 +19,13 @@ Each dimension needs a real data source behind it. A dimension with no data for 
 | Usage | How much of what they bought the company actually uses | Product usage from a connected source: utilization of committed seats or quota where available, otherwise how consistently users are active | 25% |
 | Adoption | The share of your defined features the company has adopted | Feature definitions under **Features**, plus product usage data | 20% |
 | Engagement | Depth of engagement with the company | An engagement score GainTrace computes from synced activity | 15% |
-| Sentiment | How the customer feels about you | An advocacy score GainTrace computes from synced activity and sentiment trends. NPS responses affect health through the signal adjustment, not this dimension | 15% |
+| Sentiment | How the customer feels about you | An advocacy score GainTrace computes from synced activity and sentiment trends. NPS, CSAT and CES feed Customer feedback instead | 15% |
+| Customer feedback | What customers tell you in surveys | A Company's NPS, CSAT and CES under your [Company score rules](/help/surveys/rules#company-scores), each put on a 0 to 100 scale and averaged by the number of People behind each. A Company with no answers in the window skips this dimension | 0% until you set it |
 | Revenue | The company's contract value | ARR | 15% |
 | CSM pulse | A CSM's own 0 to 10 read on the company | Counts only for companies where a pulse has been recorded | 30% |
 | Support | Support burden | Not yet wired to support data. GainTrace skips this dimension for every company and redistributes its weight, even when a support tool like Intercom is connected. Support conversations still affect health through sentiment and signals | 10% (not counted yet) |
+
+New workspaces start **Customer feedback** at 0%, so survey scores don't change health until you give it a weight under **Settings > Health scores**. While it has weight, NPS signals no longer adjust health, so a score counts once. See [Surveys across GainTrace](/help/surveys/across-gaintrace).
 
 Weights are shares, not absolutes. If a company has data for only three dimensions, those three weights are rescaled to cover the whole score.
 

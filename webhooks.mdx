@@ -3,6 +3,8 @@ title: "Webhooks"
 description: "Subscribe to workspace events with signed, retried delivery."
 ---
 
+{/* docs-meta: sources=[src/lib/webhooks/events.ts, src/lib/webhooks/deliver.ts, src/lib/webhooks/dispatch.ts, src/lib/webhooks/record-events.ts, src/lib/webhooks/record-change-set.ts, src/lib/webhooks/outbox.ts, src/lib/api/webhooks.ts, src/lib/api/contacts.ts, src/lib/api/companies.ts, src/lib/api/signals.ts, src/lib/settings/actions.ts, src/lib/surveys/webhooks.ts, src/lib/surveys/imports/webhooks.ts, src/lib/sync/ingest.ts, src/lib/sync/archival.ts, src/app/api/v1/{companies,contacts,signals,webhooks}/**] reviewed=2026-10 */}
+
 Webhooks let GainTrace notify your systems the moment something happens in your workspace, instead of you polling for changes. You register an HTTPS endpoint, subscribe to a set of events, and GainTrace delivers a signed POST to that endpoint as each event occurs.
 
 ## Events
@@ -11,14 +13,22 @@ Subscribe to any of these, or to `*` for all of them.
 
 | Event | Fires when |
 | --- | --- |
-| `company.created` | A company is created via the API |
-| `company.updated` | A company is updated or upserted |
-| `contact.created` | A contact is created |
-| `contact.updated` | A contact is updated |
-| `contact.deleted` | A contact is deleted |
-| `signal.created` | A signal is recorded against a company |
+| `company.created` | A Company is created, by anyone or anything: the API (including the Company that `POST /people` creates for an unknown `accountExternalId`), a teammate in the app, a connection sync or a CSV import |
+| `company.updated` | A field in the Company payload changes, from any of those sources or from a Flow's Update field step |
+| `contact.created` | A Person is created, from any of those sources |
+| `contact.updated` | A field in the Person payload changes, from any of those sources. A Person who leaves a Company, or whom a connection stops listing, arrives here with `archivedAt` in `changedFields` |
+| `contact.deleted` | A Person record is deleted through the API, or by a Trace AI action you confirm in the app |
+| `signal.created` | A signal is raised: by GainTrace's signal detection, a lifecycle or scoring job, a teammate or Trace AI in the app, or `POST /signals` and `POST /signals/batch` |
 | `member.invited` | A teammate is invited to the workspace |
 | `member.joined` | An invited teammate joins |
+| `survey_response.created` | Someone answers a survey (email, in-app or link), or a score arrives by API or import |
+| `survey_response.updated` | A response changes after it was created: the respondent finishes a multi-step survey (the first event may carry only the score), the respondent answers the AI follow-up question, a teammate replies, the response gets an owner, status or follow-up task, or an imported score is re-sent. Use the latest `updated` payload for the full set of answers |
+| `survey.launched` | A survey starts collecting responses |
+| `survey.closed` | A survey stops collecting responses |
+
+The `contact.*` event names stay as they are even though the product calls these records People. Every `company.*`, `contact.*` and `signal.created` event names where it came from in a `source` field, so you can ignore changes your own integration made. See [Sources](#sources). A Company that `POST /people` creates for an unknown `accountExternalId` fires `company.created` but doesn't start Company-created Flows.
+
+Creating or changing a subscription needs the read scope for each event: `read:companies` for `company.*`, `read:contacts` for `contact.*`, `read:signals` for `signal.created`, and `read:surveys` for `survey.*` and `survey_response.*`. `member.*` events need none, and `*` needs all four. A key without one gets a `403`.
 
 ## Create a subscription
 
@@ -63,15 +73,28 @@ Every delivery is a JSON POST with this envelope:
 {
   "event": "signal.created",
   "timestamp": "2026-07-06T10:32:11.000Z",
+  "source": "system",
   "data": {
     "id": "b2c9...",
     "accountId": "a1f0...",
+    "companyId": "e5f6...",
     "type": "usage_drop",
     "severity": "warning",
-    "title": "Weekly active users down 40%"
+    "title": "Weekly active users down 40%",
+    "description": null,
+    "status": "open",
+    "occurredAt": "2026-07-06T10:32:11.000Z",
+    "snoozedUntil": null,
+    "dismissedAt": null,
+    "metadata": null
   }
 }
 ```
+
+- `timestamp` is when the change happened. For a sync it is the time the record changed, which can be minutes before delivery.
+- `source` says what caused the event. It is on `company.*`, `contact.*` and `signal.created` events. See [Sources](#sources).
+- `changedFields` is on `company.updated` and `contact.updated` when GainTrace knows which fields changed. It lists the public field names (for API writes, the fields sent in the request), such as `["plan"]`. It is absent when the fields aren't known.
+- `data` is the record as the matching `GET` returns it. For `signal.created` that is `GET /signals/{id}`, so `accountId` is the legacy record id and `companyId` is the Company id.
 
 These headers accompany it:
 
@@ -80,7 +103,105 @@ These headers accompany it:
 | `X-GainTrace-Signature` | `sha256=<hmac>` over the raw body (see below) |
 | `X-GainTrace-Event` | The event name |
 | `X-GainTrace-Delivery` | Unique delivery id (safe to dedupe on) |
-| `X-GainTrace-Timestamp` | ISO 8601 send time |
+| `X-GainTrace-Timestamp` | ISO 8601 time of this delivery attempt. It changes on each retry, unlike the payload `timestamp` |
+
+## Sources
+
+The `source` field on a `company.*`, `contact.*` or `signal.created` event names what caused it:
+
+| `source` | Cause |
+| --- | --- |
+| `api` | A request made with a GainTrace API key |
+| `app` | A teammate in the GainTrace app, including actions you confirm in Trace AI |
+| `sync:<provider>` | A connection sync, for example `sync:hubspot`, or `sync:segment` for records that arrive from Segment |
+| `import` | A CSV import |
+| `flow` | A Flow's Update field step |
+| `system` | GainTrace itself: signal detection, lifecycle stage changes and scoring jobs |
+
+`survey.*`, `survey_response.*` and `member.*` events have no `source` on the envelope. A `survey_response` payload has its own `source` inside `data`, which names where the answer came from.
+
+```json
+{
+  "event": "company.updated",
+  "timestamp": "2026-10-14T09:12:00.000Z",
+  "source": "sync:hubspot",
+  "changedFields": ["plan"],
+  "data": { "id": "a1f0...", "externalId": "acme", "name": "Acme", "plan": "Enterprise", "archivedAt": null }
+}
+```
+
+For changes from the app, syncs, imports, Flows and GainTrace jobs, an update only fires when a field in the public payload changes. An API `PATCH` or upsert always fires an update, with `changedFields` set to the public fields in the request, whether or not their values changed. A change to a value GainTrace computes, such as `healthScore`, `healthStatus`, `contactCount`, `dealCount` or `lastActivityAt` on a Company, or `lastSeenAt` and `engagementScore` on a Person, doesn't fire an event.
+
+### Syncs, imports and bursts
+
+A connection sync, a CSV import or a batch job can change thousands of records at once. GainTrace keeps the volume manageable:
+
+- **One event per record per run.** A record that was created and then updated in the same run arrives once, as `*.created`, with its final state.
+- **Unchanged records send nothing.** A record a sync re-reads without any public change fires no event.
+- **Batches are paced.** Events from syncs, imports and batch jobs such as signal detection are sent after the run finishes, in paced batches. They start within about a minute, and a large first sync arrives over time. One endpoint's backlog doesn't delay another endpoint's events. A run that stops early is flushed after 15 idle minutes.
+- **Order isn't guaranteed.** Use `timestamp` to order events, and `GET` the record when you need its current state.
+- **Dedupe on the delivery id.** `X-GainTrace-Delivery` stays the same across retries. GainTrace queues a sync, import or signal event once per endpoint.
+
+### Company, person and member payloads
+
+- `company.created` and `company.updated` send the Company as `GET /companies/{id}` returns it.
+- `contact.created` and `contact.updated` send the Person as `GET /people/{id}` returns it.
+- `contact.deleted` sends only the record that was removed. Deleting a Person by `externalId` or `email` removes their records at every Company, and sends one event for each. Changing a Person's `email` through the API moves the whole Person, so you get a `contact.updated` with `changedFields` of `["email"]` for each Company they belong to.
+- `member.invited` and `member.joined` send the teammate's `email` and `role`.
+
+```json
+{ "event": "contact.deleted", "timestamp": "2026-10-14T09:30:00.000Z", "source": "api", "data": { "id": "4c1d...", "accountId": "a1f0..." } }
+```
+
+```json
+{ "event": "member.joined", "timestamp": "2026-10-14T09:31:00.000Z", "data": { "email": "sam@acme.com", "role": "member" } }
+```
+
+### Survey response payload
+
+`survey_response.*` events carry the response as your team sees it in the response inbox:
+
+```json
+{
+  "event": "survey_response.created",
+  "timestamp": "2026-10-14T09:12:44.000Z",
+  "data": {
+    "id": "0d5e...",
+    "surveyId": "7b6f...",
+    "surveyName": "Relationship NPS",
+    "measure": "nps",
+    "source": "gaintrace",
+    "channel": "email",
+    "score": 4,
+    "scaleMax": 10,
+    "band": "negative",
+    "comment": "Reports take too long to load.",
+    "answers": { "q0": 4, "q1": "Reports take too long to load." },
+    "questionAnswers": [
+      { "key": "q0", "number": 1, "text": "How likely are you to recommend us to a colleague?", "type": "rating", "value": 4, "display": "4" },
+      { "key": "q1", "number": 2, "text": "What is the main reason for your score?", "type": "text", "value": "Reports take too long to load.", "display": "Reports take too long to load." }
+    ],
+    "companyId": "a1f0...",
+    "personId": "c3d2...",
+    "subject": { "type": "ticket", "id": "5d1e..." },
+    "respondentEmail": "ana@acme.com",
+    "respondentName": "Ana Ruiz",
+    "status": "new",
+    "ownerId": null,
+    "taskId": null,
+    "submittedAt": "2026-10-14T09:12:43.000Z",
+    "reviewedAt": null
+  }
+}
+```
+
+- `band` is `positive`, `neutral`, `negative` or `unscored` (custom surveys and responses without a score): NPS uses promoters (9-10), passives (7-8) and detractors (0-6); CSAT and CES use the top two points and the bottom half of their scale.
+- `channel` is `email`, `in_app`, `api` or `import` for new answers. `qr`, `kiosk` and `link` are historical values that appear only on answers collected before public links were removed. Imported and API-ingested NPS has `surveyId: null` and names its provider in `source`, for example `api:retently`.
+- `questionAnswers` pairs each answer with its question text, in question order. Statements and unanswered questions are left out. The `answers` keys `q0`, `q1` and so on match its `key`.
+- `subject` is the deal, ticket, plan or custom record the response is about, or `null`.
+- Imported scores (`channel` of `import`) carry the provider's id as `externalId`, an empty `answers` and no `questionAnswers`. They cover NPS, CSAT and CES.
+- Anonymous surveys send `personId`, `respondentEmail`, `respondentName` and `subject` as `null`.
+- Internal reviewer notes never leave GainTrace.
 
 ## Verify the signature
 
@@ -132,10 +253,11 @@ Reserved and signing headers (`Content-Type`, `X-GainTrace-*`, `Host`, ...) cann
 
 ## Delivery and retries
 
-- **Immediate.** Delivery is attempted the moment the event fires, not on a schedule.
+- **Immediate.** Delivery is attempted the moment the event fires. Events from a sync, an import or a batch job wait for the delivery sweeper instead, which runs every minute. See [Syncs, imports and bursts](#syncs-imports-and-bursts).
 - **Respond fast.** Return a `2xx` within 10 seconds. A non-`2xx`, a timeout, or a connection error counts as a failure.
-- **Retried with backoff.** Failed deliveries retry with exponential backoff over roughly the next few hours.
-- **Auto-disabled.** After a long run of consecutive failures the endpoint is disabled (`disabledAt` is set and `active` becomes `false`). Fix your receiver, then re-enable it.
+- **No redirects.** GainTrace does not follow redirects. A `3xx` response counts as a failure, so register the final URL.
+- **Retried with backoff.** A failed delivery is retried after 1, 2, 4, 8 and 16 minutes (6 attempts in total, about 30 minutes), then marked failed.
+- **Auto-disabled.** After 15 consecutive failed deliveries the endpoint is disabled (`disabledAt` is set and `active` becomes `false`). A successful delivery resets the count. Fix your receiver, then re-enable it.
 
 ```bash
 curl -X PATCH https://app.gaintrace.com/api/v1/webhooks/6f1c... \

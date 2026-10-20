@@ -3,13 +3,25 @@ title: "Trace AI"
 description: "Ask questions about your accounts and let Trace AI draft the follow-up."
 ---
 
-{/* docs-meta: routes=[Trace AI panel] reviewed=2026-07 */}
+{/* docs-meta: sources=[src/lib/agent-tools/tools/surveys.ts, src/lib/ai/tool-sets.ts, src/lib/ai/chat/tools.ts, src/lib/agent-tools/trace-ai.ts] routes=[Trace AI panel] reviewed=2026-10 */}
 
 **Trace AI** is the assistant built into GainTrace. Open it from the button in the bottom-right corner or press Cmd J. It can see your workspace data, so you can ask about your accounts in plain language and get an answer grounded in what's actually there.
 
 ## Ask about your accounts
 
 Type a question, or press / to pick a starter prompt like Portfolio pulse, Accounts at risk, or Plan my day. Trace AI reads your data to answer across health, signals, revenue, contacts, and activity, and the answer streams in as it works.
+
+### Ask about survey feedback
+
+Trace AI also answers questions about your surveys. It can give:
+
+- NPS, CSAT and CES results per survey, with how many responses each rests on. Results on fewer than 30 responses are directional.
+- One Company's scores under your rollup rules.
+- Who you hear from, and which renewals you haven't heard from.
+- Your survey rules, and each question's results for one survey.
+- Responses, including open ones that are past your hours-to-close rule.
+
+For example: "What is our Relationship NPS?", "Which unhappy responses are overdue?", "What is Northwind's NPS?" or "Which renewals haven't we heard from?" Trace AI can link to a response in Surveys. It only reads surveys, and only for roles with Surveys read access. Drafting a survey or sending invitations stays in Surveys. To see what reaches the AI model, read [AI and your data](/help/trace-ai/ai-and-your-data#survey-feedback).
 
 Your conversations are saved, so you can reopen them from the history or export one to a file. Use the **Model** dropdown if you'd like to switch models.
 

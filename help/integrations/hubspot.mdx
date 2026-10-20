@@ -5,9 +5,16 @@ description: "Sync HubSpot contacts, companies, and deals into GainTrace to powe
 keywords: ["HubSpot integration", "GainTrace HubSpot", "sync HubSpot", "HubSpot customer success", "CRM integration"]
 ---
 
-{/* docs-meta: catalog=IntegrationsExperience.tsx (sourceId hubspot); verified 2026-07 */}
+{/* docs-meta: catalog=IntegrationsExperience.tsx (sourceId hubspot); verified 2026-10; sources=[src/lib/gt/hubspot-patch.ts, hubspot-app/src/app/app-hsmeta.json, src/lib/crm/connection-actions.ts, src/lib/crm/survey-fields.ts, src/lib/crm/survey-writeback-actions.ts, src/lib/crm/survey-dispatch.ts, src/lib/crm/survey-push.ts, src/components/integrations/SurveyWriteBackSettings.tsx] reviewed=2026-10 */}
 
 HubSpot is where most teams keep their companies, contacts, and deals, so it's the first source many admins connect. Once it's in, GainTrace has the account and owner data it needs to build health, surface signals, and track renewals.
+
+## Before you start
+
+The person who connects HubSpot needs two things:
+
+- In GainTrace, the **Owner** or **Admin** role.
+- In HubSpot, super admin access, or the **HubSpot Marketplace access** permission plus HubSpot permissions for the data GainTrace reads, such as contacts, companies and deals. They approve GainTrace's access in HubSpot.
 
 ## What syncs
 
@@ -25,18 +32,59 @@ GainTrace pulls these HubSpot objects and maps them to your workspace:
     Go to **Integrations** in the left nav and pick **HubSpot**.
   </Step>
   <Step title="Authorize">
-    Use **Connect with OAuth** and approve GainTrace in the HubSpot window that opens. If you'd rather use a private app token, switch to manual and paste it instead.
+    Use **Connect with OAuth** and approve GainTrace in the HubSpot window that opens. HubSpot lists what GainTrace is asking for, split into required and optional permissions (see [Permissions GainTrace asks for](#permissions-gaintrace-asks-for)). If you'd rather use a private app token, switch to manual and paste it instead.
   </Step>
   <Step title="Let it sync">
     GainTrace starts pulling your data right away. You can watch and manage the connection under **Data > Sources**.
   </Step>
 </Steps>
 
+## Permissions GainTrace asks for
+
+Required permissions let GainTrace read your core CRM data. Optional ones each turn on one feature: if HubSpot doesn't grant one, only that feature stays off and everything else syncs.
+
+| What it covers | HubSpot scopes | Required | Used for |
+| --- | --- | --- | --- |
+| Companies, contacts and deals | `crm.objects.companies.read`, `crm.objects.contacts.read`, `crm.objects.deals.read` and the matching `crm.schemas.*.read` | Yes | Syncing Companies, People and deals with their properties |
+| Owners | `crm.objects.owners.read` | Yes | Matching HubSpot owners to your team |
+| Tickets | `crm.objects.tickets.read`, `crm.schemas.tickets.read` | Optional | Support history on each Company |
+| Products and line items | `e-commerce` | Optional | Products and line items on deals |
+| Write to companies, contacts and deals | `crm.objects.companies.write`, `crm.objects.contacts.write`, `crm.objects.deals.write` | Optional | Two-way sync and sending GainTrace values, such as survey results, back to HubSpot |
+| Create properties | `crm.schemas.companies.write`, `crm.schemas.contacts.write` | Optional | Creating GainTrace's own company and contact properties for you |
+| Custom objects | `crm.schemas.custom.read`, `crm.objects.custom.read` | Optional | Syncing your HubSpot custom objects |
+
+To grant an optional permission later, reconnect HubSpot in **Integrations** and approve it. GainTrace checks what a connection is actually allowed to do before it turns on write-back, and tells you which scopes are missing.
+
 ## What you can do with it
 
 With HubSpot connected, health scores start reflecting real account data, signals fire on changes like a deal slipping or an owner going quiet, and renewals show up in Revenue. Your CSMs open a company and see the full picture without leaving GainTrace.
 
+## Write survey results back
+
+GainTrace can send survey results to HubSpot, so your team sees a customer's feedback where they already work. Open the connection under **Data > Sources** and find **Survey results** in its settings. The connection must send data to HubSpot (two-way or outbound sync), or the switches stay off.
+
+- **Send survey results** sends, for each HubSpot contact, the latest score, comment and answered date for NPS, CSAT and CES, the NPS category, and the last measure they answered. A person's fields show their latest answer across every Company they belong to, and the same values go to every HubSpot contact linked to that person. For each HubSpot company it sends Company NPS (-100 to 100), CSAT (the percent satisfied, 0 to 100), CES and the date anyone last answered, using your [Company score rules](/help/surveys/rules#company-scores). Results are sent within a minute of an answer and rechecked every 10 minutes.
+- **Log each response** adds a note with the score and comment to the contact and company. It covers only responses after you turn it on.
+
+An older answer never replaces a newer one already in HubSpot. If a send fails, the item is listed under the switches, you can download the errors as a CSV, and the next sync sweep sends it again.
+
+These fields are only sent to HubSpot. GainTrace never reads them back in.
+
+Choose **Create GainTrace properties in HubSpot** and GainTrace creates these properties and maps them. This needs the optional **Create properties** permission; without it, reconnect HubSpot to grant it, or create the properties in HubSpot yourself and map them.
+
+| Object | Properties |
+| --- | --- |
+| Contact | `gaintrace_nps_score`, `gaintrace_nps_category`, `gaintrace_nps_comment`, `gaintrace_nps_date`, `gaintrace_csat_score`, `gaintrace_csat_comment`, `gaintrace_csat_date`, `gaintrace_ces_score`, `gaintrace_ces_comment`, `gaintrace_ces_date`, `gaintrace_last_survey_measure` |
+| Company | `gaintrace_nps`, `gaintrace_csat`, `gaintrace_ces`, `gaintrace_last_survey_date` |
+
+<Note>
+  This write-back is tested against simulated HubSpot APIs. It hasn't been verified against a live HubSpot account.
+</Note>
+
+See [Inbox and reports](/help/surveys/inbox-and-reports) for where the same scores show in GainTrace.
+
 ## Good to know
 
 - HubSpot updates flow in near real time through webhooks, with a regular background sync as a safety net.
-- This connector supports two-way sync. With the write permissions granted, GainTrace can push updates back to HubSpot as well as read from it.
+- This connector supports two-way sync. With the [write permissions](#permissions-gaintrace-asks-for) granted, GainTrace can push updates back to HubSpot as well as read from it.
+- In October 2026 GainTrace moved to a new HubSpot app. A connection made before then can't renew its access. Disconnect it under **Data > Sources**, then connect HubSpot again from **Integrations**. Your synced Companies and People stay in GainTrace, but the old connection's settings (field mappings, sync direction, filters and survey write-back switches) go with it, so set them up again on the new connection.

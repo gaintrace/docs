@@ -1,0 +1,53 @@
+---
+title: "Custom survey domain and white-label"
+sidebarTitle: "Custom domain"
+description: "Serve your surveys from your own domain and hide the Powered by GainTrace line with the White-label portals and surveys add-on."
+keywords: ["custom survey domain", "white-label surveys", "Powered by GainTrace", "survey domain", "CNAME", "short survey link domain", "in-app survey script domain"]
+---
+
+{/* docs-meta: sources=[src/lib/surveys/short-links.ts, src/lib/surveys/white-label.ts, src/lib/portal-domains/routing.ts, src/lib/portal-domains/actions.ts, src/lib/portal-domains/survey-owner.ts, src/lib/brand-kit/actions.ts, src/components/settings/customer-portal/DomainTab.tsx, src/components/settings/customer-portal/BrandingTab.tsx, src/components/surveys/survey-powered-by.tsx, src/config/billing.ts, src/proxy.ts, src/lib/surveys/in-app.ts, src/app/api/survey/[id]/identify/route.ts] reviewed=2026-10 */}
+
+By default, survey links, emails and the in-app survey script all use GainTrace's address, and survey pages carry a small "Powered by GainTrace" line. The **White-label portals and surveys** add-on lets you put your own domain on all of them and hide that line. It is the same add-on that puts your customer portal on your own domain. You buy it in **Settings > Billing**.
+
+<Note>
+  Custom domains aren't generally available yet. If adding a domain shows "Custom domains aren't available yet. Contact support to be enabled.", email support@gaintrace.com. Hiding Powered by GainTrace and sending from your own email domain need only the add-on.
+</Note>
+
+## Set up your domain
+
+Open **Settings > Customer portal > Domain**. Owners and admins can set this up.
+
+1. Enter a subdomain of a domain you own, such as `portal.acme.com`. If you already connected a domain for your customer portal, surveys use that same domain, so there is nothing more to add.
+2. Connect it automatically when your DNS provider supports it, or add the DNS records shown, a CNAME and a TXT, in your DNS provider's dashboard. Choose **Check now** when you have added them.
+3. Some domains need extra verification records. Add them too, and keep them in place so your certificate can renew.
+4. Wait for the steps **DNS verified** and **Certificate issued** to finish.
+
+Without the add-on, GainTrace refuses to connect a domain and tells you to add it.
+
+## What moves to your domain
+
+Once the domain is verified and the add-on is active, these use `https://<your domain>`:
+
+- The short personal survey links in invitation emails, such as `https://<your domain>/s/aB3dE5gH7jK9`. A short link opens only on the domain of the workspace that sent it.
+- Survey invitation, test and reminder emails.
+- The in-app survey's embed addresses, and the SDK script, which becomes `https://<your domain>/sdk/surveys.js`.
+
+New links use your domain from then on. Links you already sent on the GainTrace address keep working for good. The survey page, the embedded survey and the calls they make are served on your domain for your workspace's surveys only. Your domain never serves the GainTrace API (`/api/v1`), sign-in or the app itself, so the [API](/surveys-api) base address doesn't change.
+
+GainTrace doesn't set analytics cookies or record sessions on survey pages served from your domain.
+
+If you use the in-app survey with a custom domain, your Content Security Policy needs both addresses. List your domain and the GainTrace app address in `script-src`, `frame-src` and `connect-src`. See [In-app surveys](/help/surveys/in-app#signed-token).
+
+## Hide "Powered by GainTrace"
+
+Open **Settings > Customer portal > Branding** and turn off **Show "Powered by GainTrace"**. The switch is available only with the add-on. It hides the line on survey pages, the in-app survey, the embedded survey and survey emails, and on your customer room. On the embedded survey, the line is plain text, not a link, when it shows.
+
+Without the add-on, the line always shows. If the add-on ends, the line comes back.
+
+## If the add-on ends
+
+- New survey links use the GainTrace address straight away.
+- Your domain keeps serving for 30 days.
+- After 30 days, survey page links on your domain redirect to the same page on the GainTrace address. Survey API calls and in-app script tags that point at your domain stop working, so switch the script `src` back to the GainTrace address before then.
+
+Resubscribing before the end of the 30 days keeps the domain live.

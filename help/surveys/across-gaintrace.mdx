@@ -1,0 +1,99 @@
+---
+title: "Feedback across GainTrace"
+sidebarTitle: "Across GainTrace"
+description: "Where survey feedback shows up outside Surveys: the Company header and Companies list, each person's Feedback tab, Tasks, search and Slack."
+keywords: ["Company NPS", "person feedback tab", "Companies list NPS column", "survey tasks", "Cmd+K survey search", "customer feedback in Boards", "survey Slack notifications"]
+---
+
+{/* docs-meta: sources=[src/lib/surveys/erasure.ts, src/components/accounts/company-survey-score.tsx, src/components/accounts/survey-feedback-tab.tsx, src/components/accounts/activity-survey-detail.tsx, src/lib/surveys/company-score-contracts.ts, src/lib/surveys/company-scores.ts, src/app/(dashboard)/companies/columns.ts, src/app/(dashboard)/companies/page.tsx, src/components/people/person-feedback-tab.tsx, src/lib/surveys/person-feedback.ts, src/lib/surveys/person-feedback-contracts.ts, src/lib/surveys/task-link.ts, src/lib/tasks/actions.ts, src/lib/surveys/advocacy.ts, src/lib/surveys/search.ts, src/lib/surveys/search-contracts.ts, src/lib/search/actions.ts, src/lib/command/actions.ts, src/lib/lifecycle/conditions.ts, src/lib/boards/resolution/registry.ts, src/lib/surveys/alerts.ts, src/components/integrations/SlackSettingsSection.tsx] reviewed=2026-10 */}
+
+Survey answers aren't kept in Surveys alone. They show up where your team already works, so the person who owns a Company sees how it feels without opening a report. Everything here needs access to Surveys. Members without it don't see the score, the column or the tab.
+
+## On a Company
+
+### The header score
+
+A Company's header shows its **NPS**, or its **CSAT** when it has no NPS, or its **CES** when it has neither. The number is built from each person's answers under your [Company scores](/help/surveys/rules#company-scores) rules. Hover or focus the score to see how many people it rests on, how many of the Company's people answered, whether a decision maker or executive sponsor did, and the sentence that describes the rule. Select it to open the Feedback tab. **No answers** means nobody has answered NPS, CSAT or CES inside your window.
+
+The header and the Feedback tab are recalculated each time the Company opens. The tooltip says when it was calculated. Imported scores count, and anonymous answers never do.
+
+### The Feedback tab
+
+The **Feedback** tab shows the Company's NPS, CSAT and effort score, how many people each rests on, and its survey responses. Selecting a survey name opens that response, and selecting a person's name opens their Feedback tab. A response about a deal, ticket, plan or record carries a chip for it. See [Link feedback to deals, tickets, plans and records](/help/surveys/link-feedback-to-records). With [inferred satisfaction](/help/surveys/inferred-satisfaction) on, an **Inferred** panel sits below the scores.
+
+### Activity
+
+When a response is complete, or 30 minutes after a score-only answer, a **Survey response** entry appears in the Company's activity, dated when the person answered. It shows the measure, the score with its group (Promoter, Passive and Detractor, or Positive, Neutral and Negative), the comment as it stands now, including one added after the score, and an **Open in Surveys** link. A response that was deleted reads "This response was deleted." Members without Surveys access see that a response arrived but not its score or comment. Replies your team sends from the response panel appear as email entries.
+
+## On the Companies list
+
+The **NPS** column shows each Company's NPS as a meter and a number, with a minus sign when it's negative. It uses the same rules as the header, so the two agree. You can:
+
+- Sort by it. Companies without answers always sort last, in either direction.
+- Filter by **NPS** in the advanced filter with the number operators, **is empty** for Companies with no NPS answer in the window, or **is set**.
+- Hide the column in the column menu.
+
+The list refreshes every 15 minutes and whenever a Company is opened, so it can trail the Feedback tab by a few minutes. A new workspace shows "Not calculated yet" for up to 15 minutes after its first answer.
+
+## On a person
+
+Open a person and choose the **Feedback** tab, or go to `/people/<id>?tab=feedback`. It shows:
+
+- **Latest score.** For each measure (NPS, CSAT, CES), the latest score with its group, its date and how many answers it rests on.
+- **Survey email.** Whether the person can receive survey invitations, and if not, why: archived, no email address, or unsubscribed, bounced, marked as spam or on the do-not-email list. Suppression applies to the whole workspace, not to one survey. Admins manage the list in **Settings > Customer portal > Reminders > Suppressed addresses**.
+- **Last surveyed** and **Next survey.** When they were last surveyed and by what, and when they're next eligible under your [frequency rule](/help/surveys/rules#frequency), with any longer cooldown a survey sets itself. A pause after an in-app dismissal shows too.
+- **Answers.** Every answer, from your surveys and imported ones, with its comment, survey, channel, source, follow-up task and Company. Selecting the survey name opens the response. An answer given at a previous Company reads **At** that Company.
+- **Invitations.** Every invitation with its status: **Awaiting approval** (with **Review in Triage**), **Scheduled**, **Retrying: send failed**, **Sent**, **Test run, not delivered**, **Not sent: do-not-email list**, **Not sent: weekly email limit**, **Held: email sending paused**, **Skipped: surveyed recently**, **Not sent: survey inactive**, **Not sent: no email address** and **Failed to send**.
+
+An answer belongs to a person when it is linked to them or carries their email address. An answer matched only by email, such as an imported answer that carries the person's email but isn't linked to their record, is labelled **Matched by email address**. Answers to anonymous surveys never appear on a person, and neither do answers whose personal details were removed.
+
+## When a person is deleted
+
+Deleting a Person erases their survey data in the same step. This applies when you delete them through the REST API (`DELETE /people/{id}`, or `DELETE /people` by `externalId` or `email`) or ask Trace AI to delete them. Then:
+
+| Data | What happens |
+| --- | --- |
+| Answers to your surveys | Anonymized. Their name, email, staff note, comments, free-text answers, earlier answers, the page they answered on and any hidden-field values are removed. Scores and choice answers stay, so totals and reports stay correct |
+| Imported answers | Deleted |
+| Delivery history | The invitation rows stay so response rates hold, but the email address and the link to the person are removed |
+| Personal survey links | The person's short links are deleted and stop working |
+
+Things to know:
+
+- A Person can belong to several Companies. Deleting one Company membership of someone who belongs to another keeps their answers at the other Companies. Answers that carry only an email address are erased only when no other live record in the workspace has that email.
+- Archiving erases nothing. When a record is archived, for example because it was deleted in your CRM, its survey data stays.
+- Opt-outs hold. The suppression list isn't touched, so a deleted person who unsubscribed is still not emailed.
+- To remove old answers on a schedule instead, turn on the **Survey responses** policy in [Governance](/help/admin/governance#data-retention).
+
+## In Tasks
+
+A task created from a response, a follow-up task or a promoter ask, shows a chip with the measure, score and survey name. Selecting it opens the response. Opening the task from the inbox shows who answered, their Company, the score and the response status. Members without Surveys access see the task but not the survey details.
+
+- Completing the task marks its response **Resolved** if it is still open. That clears it from **Overdue** and counts toward the share closed on time.
+- Undoing the completion or reopening the task sets the response back to **In progress**, unless a teammate has resolved it again.
+- Dismissing or deleting a task never resolves its response.
+- A promoter ask is linked to the promoter's response. Only one ask per person can be open.
+
+See [Response inbox and reports](/help/surveys/inbox-and-reports#create-a-follow-up-task) and [Ask promoters to advocate](/help/surveys/alerts#ask-promoters-to-advocate).
+
+## In search
+
+Press <kbd>Cmd</kbd>+<kbd>K</kbd> (<kbd>Ctrl</kbd>+<kbd>K</kbd> on Windows) and search.
+
+- **Campaigns.** Type part of a survey name, or `nps`, `csat` or `ces`, to list matching surveys with their measure and status (Draft, Active or Closed).
+- **Answers.** Type at least 3 characters of a comment, a respondent's name or email, a person's name or a Company name. Your own answers and imported ones are both searched. Each row shows the comment, the Company or person, the measure and the score. Your own answers open the response. An imported answer opens the person's Feedback tab, or the Company's when no person matched.
+- **Narrow the search.** Add `type:survey` or `type:response`.
+- **Shortcut words.** `nps`, `csat`, `ces`, `feedback`, `customer feedback`, `voc` and `survey responses` jump to Surveys. `import nps` opens the NPS import.
+- **Commands.** **Create survey** opens the designer and **Open response inbox** opens the Response inbox. **Create survey** needs permission to edit surveys.
+
+Members whose role has no Surveys access don't see survey results or commands. Answers whose personal details were removed can't be searched.
+
+## In Slack
+
+Survey alerts post to a channel or to Slack and Teams, and Slack can also message a Company's CSM directly about low and high NPS. See [Slack and Teams response alerts](/help/surveys/alerts#direct-messages-for-the-companys-csm).
+
+## In Boards, lifecycle stages and churn risk
+
+- **Boards.** The **Customer feedback** metrics are NPS, CSAT, CES and the number of survey responses. They're built the way the Feedback tab score is, and the line under a widget states the method and how many people it counts. Answers with no Company drop out when you filter or break down by Company, and the widget says how many. NPS charts can be a number, a line or an area, because scores can be negative. Trends show the score as of each date, and comparisons are in points.
+- **Lifecycle stages.** Conditions on NPS, CSAT and CES use the same Company score as the Feedback tab, and a Company with no answers never matches. See your lifecycle settings.
+- **Churn risk.** Trace AI reads a Company's NPS and CSAT as the Feedback tab shows them, and not CES. See [Where Company scores are used](/help/surveys/rules#where-company-scores-are-used).
