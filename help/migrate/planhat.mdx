@@ -1,0 +1,111 @@
+---
+title: "Migrate from Planhat"
+sidebarTitle: "Planhat"
+description: "Connect Planhat with a private app token and move Companies, People, owners, conversations, tasks, objectives, NPS and revenue records into GainTrace."
+keywords: ["Planhat migration", "migrate from Planhat", "Planhat to GainTrace", "Planhat alternative", "Planhat API token", "Planhat private app", "export Planhat data"]
+---
+
+{/* docs-meta: routes=[/setup/migrate]; sources=[src/components/migration/sources.ts, src/components/migration/ConnectStation.tsx, src/components/migration/derive.ts, src/lib/migration/vendors/planhat.ts, src/lib/migration/vendors/planhat-depth.ts, src/lib/migration/depth/plans.ts, src/lib/migration/revenue-history.ts, src/lib/migration/types.ts, src/lib/gt/planhat/http.ts, src/lib/gt/planhat/source.ts, specs/migration-api-contracts/planhat.md] reviewed=2026-10 */}
+
+GainTrace reads Planhat through its API with a private app token, so you don't need to export files. This page covers what you need from Planhat, what comes over and what stays behind. For how the whole switch works, see [Switch from another tool](/help/migrate/overview).
+
+## Before you start
+
+- **A Planhat user with the ServiceAccount permission.** Private apps are created in Planhat's **App Center**, and only users with this permission see the option.
+- **Read access for the data you want to move.** A private app's permissions limit what its token can read. Users, companies, end users and custom fields are required: without them, **Check access** or the scan stops. Grant conversations and tasks together, because the timeline reads both. Read access to objectives, NPS, licenses, opportunities, invoices and churn is optional: anything else the token can't read is left out, and the scan tells you which.
+- **Owner or admin in GainTrace.** See [Before you start](/help/migrate/overview#before-you-start) for the rest.
+
+## Create the token
+
+<Steps>
+  <Step title="Create a private app in Planhat">
+    In Planhat, open **App Center**, choose **+ New app**, then **+ Private app**. Name it for GainTrace, set its permissions to read the data you want to move, and save.
+  </Step>
+  <Step title="Generate the API access token">
+    On the app's **Info** tab, set the token's expiry date far enough out to last until you switch over. The default is 30 days and the maximum is 365. Then choose **Generate new token** and copy it. Planhat shows the token only once.
+  </Step>
+  <Step title="Connect in GainTrace">
+    Go to **Setup > Switch from another tool**, choose **Planhat**, paste the token into **API token** and choose **Check access**.
+  </Step>
+</Steps>
+
+<Warning>
+Planhat tokens expire on the date you set. You can replace the token on the Connect step until the import starts, but not after. A token that expires mid-import, or before you switch over, stops the import and **Import changes** from reading Planhat. Set the expiry to cover your whole switch.
+</Warning>
+
+GainTrace stores the token encrypted, uses it only to read, and deletes it when you switch over or stop the import. To cut off access sooner, disable the private app in Planhat or delete its token.
+
+If your Planhat account is hosted in the EU, paste the same token. GainTrace also tries Planhat's EU API address.
+
+## What comes over
+
+| Planhat | GainTrace |
+|---|---|
+| Companies, with custom fields | **Companies**. Custom fields are stored with each Company, but the Company page doesn't show them yet. |
+| End users, including archived ones | **People**. Archived end users land archived. |
+| Users who own companies, wrote conversations or own tasks | Owners you map in Review |
+| Conversations | The Company's timeline, with the original date, and the author when Planhat names one |
+| Tasks that are done, and calendar events | The Company's timeline |
+| Open tasks | The **Tasks** page |
+| Objectives | **Plans**. Each Company's objectives land in one plan. See [Objectives and plans](#objectives-and-plans). |
+| NPS responses | **Surveys > Reports**, Company scores and each person's **Feedback** tab, at the original answer date |
+| Licenses, opportunities, invoices and churn records | The Company's [revenue](/help/records/revenue), with ARR and MRR. See [Revenue](#revenue). |
+
+Planhat tasks carry no risk or escalation flag, so nothing from Planhat goes to Triage.
+
+### Objectives and plans
+
+Planhat's API gives an objective a name, a health and a Company, but no plan, status or due date. Both choices in Review put each Company's objectives into one plan:
+
+- With **Merge into one live plan**, they go into the Company's merged plan. It lands archived if the Company already has a live plan made in GainTrace.
+- With **Keep as separate plans**, they go into a plan named "Objectives from Planhat", which lands live beside any existing plan.
+
+### Revenue
+
+A Company's ARR is its ARR in Planhat. If it has none, ARR is the total of its licenses still in force. MRR works the same way, or is ARR divided by 12.
+
+Planhat doesn't name a currency on a Company, so GainTrace takes it from the Company's licenses. GainTrace keeps one currency per Company. If a Company's licenses use more than one currency, or none has a currency (including a Company with no licenses), its ARR, MRR and revenue history aren't set. Its licenses, deals and invoices still land. Results lists it under **Skipped** with the reason. Fix the currency on its licenses in Planhat, then import changes.
+
+## What stays in Planhat
+
+These appear in Review under **What stays in Planhat**, and on the rebuild checklist once the scan finishes:
+
+| Item | Why | Rebuild it in |
+|---|---|---|
+| Workflows and playbooks | Planhat's API docs don't expose workflow templates or playbooks. | [Flows](/help/automation/flows) |
+| Health profiles | The API returns each Company's current health, not the criteria behind it. | [Health scoring](/help/accounts/health) |
+| Health score history | The API returns only current health. Past scores live in metrics, which the API can't list. | Nothing to rebuild. GainTrace scores every Company from now on. |
+| Segment criteria | The API docs don't expose saved segments or their filters. | Saved views on **Companies** |
+| Company phases | The phase is stored as text with the Company, not as a lifecycle stage. | [Lifecycle stages](/help/getting-started/for-admins#9-define-lifecycle-stages) |
+| Projects | A Planhat project is a customer-side item with dates, not a success plan, and has no objectives or steps. | Stays in Planhat |
+| Which project or plan an objective belongs to | The API doesn't link objectives to plans. | Review plans in **Plans** |
+| Product usage metrics | The API reads metrics one Company and one metric at a time, with no way to list them. | Send usage from your product or warehouse. See [Integrations](/help/integrations/integrations). |
+| Archived conversations | The API has no filter for archived conversations, so some may not come over. | Stays in Planhat |
+| File attachments | The API docs don't expose attached files. | Download them from Planhat |
+| Field change history | The API docs don't say who changed a field or when. | Stays in Planhat |
+| Custom objects (custom models) | Custom model records aren't part of this import yet. | Stays in Planhat |
+
+## If something goes wrong
+
+| Message | What to do |
+|---|---|
+| Couldn't connect to Planhat. The API token was rejected. | Copy the token from your Planhat private app and paste it again. If you no longer have it, or it has expired, generate a new one. |
+| Can't read Planhat data. The connected account doesn't have permission to read it. | Give the private app read access to users, companies, end users and custom fields, then choose **Check access**, or **Scan again** if you're past Connect. |
+| This token can't read *something*. Add the permission to the private app, then scan again. | Give the private app read access to that data in Planhat, then choose **Scan again**. Everything else can still move. |
+| No companies found | The token probably belongs to a different Planhat workspace. Choose **Change credentials**. |
+| Planhat is rate limiting requests. | Nothing. GainTrace pauses and continues on its own. |
+
+For every other message, see [If something goes wrong](/help/migrate/overview#if-something-goes-wrong).
+
+## Good to know
+
+- **Only reads.** GainTrace never writes to Planhat. Its reads show in Planhat as actions by your private app.
+- **Rate limits.** GainTrace paces its reads to stay under Planhat's API quota. Other integrations using Planhat's API at the same time can slow the import.
+- **Old NPS answers.** By default, Planhat's API returns only NPS responses from the last 360 days. GainTrace asks for older ones, but Planhat doesn't document how far back it goes, so compare the NPS count in Review with Planhat.
+- **Quiet import.** Nothing imported from Planhat triggers flows, webhooks or signal detection. See [Imports are quiet](/help/migrate/overview#imports-are-quiet).
+
+## Related articles
+
+- [Switch from another tool](/help/migrate/overview)
+- [Success plans](/help/success/success-plans)
+- [Revenue](/help/records/revenue)

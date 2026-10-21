@@ -1,0 +1,144 @@
+---
+title: "Migrate from Gainsight"
+sidebarTitle: "Gainsight"
+description: "Connect Gainsight CS with an access key and move Companies, People, CSMs, timeline, CTAs, success plans, scorecard history, NPS and contract values into GainTrace, with CSV exports for what the API can't supply."
+keywords: ["Gainsight migration", "migrate from Gainsight", "Gainsight to GainTrace", "Gainsight alternative", "Gainsight access key", "Gainsight CTA migration", "Gainsight scorecard history export", "Gainsight NXT"]
+---
+
+{/* docs-meta: routes=[/setup/migrate]; sources=[src/components/migration/sources.ts, src/components/migration/ConnectStation.tsx, src/components/migration/ReviewStation.tsx, src/components/migration/FileLane.tsx, src/components/migration/derive.ts, src/lib/migration/vendors/gainsight.ts, src/lib/migration/files/specs.ts, src/lib/migration/files/uploads.ts, src/lib/migration/contract-values.ts, src/lib/migration/depth/plans.ts, src/lib/gt/gainsight/rows.ts, specs/migration-api-contracts/gainsight.md] reviewed=2026-10 */}
+
+GainTrace reads Gainsight CS through its REST API with an access key. Some history isn't available through the API in every account, so you can add it from CSV exports. This page covers what you need from Gainsight, what comes over and what stays behind. For how the whole switch works, see [Switch from another tool](/help/migrate/overview).
+
+## Before you start
+
+- **A Gainsight Super Admin.** Only an active Super Admin can create Gainsight's access key.
+- **Your Gainsight domain.** This is the address you sign in at, such as `https://acme.gainsightcloud.com`, or your custom domain.
+- **Owner or admin in GainTrace.** See [Before you start](/help/migrate/overview#before-you-start) for the rest.
+
+<Warning>
+Gainsight allows one access key per organization. If your organization already has one, use it. If you reset the key instead, every other integration using the old key stops working until it's updated with the new one.
+</Warning>
+
+## Connect Gainsight
+
+<Steps>
+  <Step title="Get the access key">
+    If your organization already has an access key, use it. Otherwise, a Super Admin goes to **Administration > Connectors 2.0** in Gainsight, chooses **Create Connection**, selects **Gainsight API** and chooses the access key authentication type.
+  </Step>
+  <Step title="Open the import">
+    In GainTrace, go to **Setup > Switch from another tool** and choose **Gainsight CS**.
+  </Step>
+  <Step title="Enter your details">
+    Enter your **Gainsight domain** and paste the **Access key**, then choose **Check access**.
+  </Step>
+</Steps>
+
+GainTrace stores the key encrypted, uses it only to read, and deletes it when you switch over or stop the import. Gainsight access keys don't expire on their own.
+
+## What comes over
+
+| Gainsight | GainTrace |
+|---|---|
+| Companies, with custom fields | **Companies**. Custom fields are stored with each Company, but the Company page doesn't show them yet. |
+| Company persons | **People** |
+| Each Company's CSM, and users who own CTAs or wrote timeline entries | Owners you map in Review |
+| Timeline activities | The Company's timeline, with the original date, and the author when Gainsight records one |
+| Closed CTAs | The Company's timeline, as history |
+| Open risk and escalation CTAs | **Triage**, as open signals |
+| Open objective CTAs and their tasks | **Plans**, as objectives with their tasks as steps |
+| Other open CTAs and their tasks | The **Tasks** page |
+| Success plans | **Plans**. Closed plans are kept as archived history. |
+| Scorecard history | A **Before GainTrace** card on each Company's **Overview** |
+| NPS responses | **Surveys > Reports**, Company scores and each person's **Feedback** tab, at the original answer date |
+| CSAT responses | The same places as NPS, from an uploaded export only |
+| Opportunities | The Company's deals, when your account has an opportunity object GainTrace can recognize |
+| ARR, MRR and renewal date on the Company | The Company's ARR, MRR and renewal date, once you confirm the currency |
+
+### How CTAs are routed
+
+GainTrace routes each open CTA by its type name, ignoring case. A type whose name includes "Risk" or "Escalation" goes to Triage. A type whose name includes "Objective" goes to Plans. Every other open CTA goes to the Tasks page, so a risk type with another name, such as "Churn", lands there too. Closed CTAs land on the timeline, dated when they were last modified, or by their due date when Gainsight has no modified date. Imported Triage items trigger no flows or webhooks.
+
+Gainsight lists tasks one CTA at a time, so GainTrace reads tasks under open CTAs only. Tasks under closed CTAs stay in Gainsight.
+
+### Success plans
+
+Review asks whether to merge each Company's success plans into one live plan or keep them separate. See [Success plans](/help/migrate/overview#success-plans). GainTrace doesn't yet read which success plan an objective CTA belongs to, so objectives import into one plan per Company and keep their steps.
+
+### Scorecard history
+
+GainTrace imports up to the last two years of each Company's overall score, as far back as Gainsight has kept it, one point per week (the latest score that week). The points stay in Gainsight's own scale on a separate **Before GainTrace** card, and are never mixed with GainTrace's health score. If the API can't supply scorecard history in your account, Review asks for a file instead.
+
+### Contract values and currency
+
+GainTrace doesn't read a currency from Gainsight. Gainsight records one per record only when multi-currency is enabled in your org, and the import doesn't use it. In Review, under **Contract values**, confirm the currency, with your workspace currency suggested. Once you confirm it, ARR, MRR and the renewal date come over. A value you changed in GainTrace is kept. To start without a currency, untick **Bring over contract values and renewal dates**.
+
+## Add history from files
+
+Some history leaves Gainsight only as an export. **Files from Gainsight** appears in Review, and on Results until you switch over. Each kind of file has a **How to export** guide. Upload files before you start the import and they're applied when it finishes. After the import, upload them and choose **Apply *N* files**, which reads only the files and doesn't call Gainsight again. Uploads are paused while a scan or import is running.
+
+Review marks a file as **Needs a file** when the API can't supply that history in your account. Otherwise files are optional.
+
+| File | Adds | Required columns |
+|---|---|---|
+| Timeline | The body of each timeline note, when your account's API doesn't return note bodies. The entries themselves come through the API. | Activity GSID, Notes |
+| Scorecard history | Past overall scores. You enter the lowest and highest score your scorecard uses. | Company GSID, Overall Score, Created Date |
+| Survey responses | NPS responses with their original dates | Company GSID, NPS Score, Responded Date, Email |
+| CSAT responses | CSAT responses with their original dates. You enter the score scale, as whole numbers, because Gainsight doesn't document one. | Company GSID, CSAT Score, Responded Date, Email |
+
+<Steps>
+  <Step title="Build a report in Gainsight">
+    Build a report on the matching object: Activity Timeline, Account Scorecard History, NPS® Survey Response or CSAT Survey Response MDA Object. Add the required columns. Gainsight's own names for the ID columns, such as GSID and Company ID, are recognized. For timeline notes, a Rules Engine export to Amazon S3 with the same two columns also works.
+  </Step>
+  <Step title="Export it as CSV">
+    Format dates as `yyyy-MM-dd`. Column names match regardless of case, spacing or a registered-mark symbol, so "NPS® Score" and "nps score" both work. Extra columns are ignored.
+  </Step>
+  <Step title="Upload it">
+    Choose **Upload export**. For scorecard history and CSAT, enter the lowest and highest score first. Rows are matched to imported records by GSID.
+  </Step>
+</Steps>
+
+Each file can be up to 8 MB. Export a smaller date range, or split a large export and upload each part. Rows that match nothing imported, or can't be read, are listed under **Skipped** in Results.
+
+GainTrace holds uploaded files privately and deletes its copy as soon as a file is applied. The export contains customer notes and scores, so delete it from your computer once the import finishes.
+
+## What stays in Gainsight
+
+These appear in Review under **What stays in Gainsight**, and on the rebuild checklist once the scan finishes:
+
+| Item | Why | Rebuild it in |
+|---|---|---|
+| Rules Engine rules, Journey Orchestrator programs and playbooks | Gainsight's API lists playbooks by name only, not their tasks, and its docs don't expose Rules Engine rules or Journey Orchestrator programs. | [Flows](/help/automation/flows) |
+| Scorecard measures and weights | Gainsight's objects describe measures and grading schemes, but not the weight each scorecard gives a measure. | [Health scoring](/help/accounts/health) |
+| Reports and dashboards | The API docs don't expose saved reports or dashboards. | Saved views on **Companies** |
+| Company team roles | Only each Company's CSM moves. Gainsight allows 100 Company Team requests an hour. | Stays in Gainsight |
+| Which success plan an objective belongs to | GainTrace doesn't yet read the success plan linked to an objective CTA. | Review plans in **Plans** |
+| Tasks under closed CTAs | Tasks are listed one CTA at a time at 100 calls a minute. | Stays in Gainsight |
+| Opportunities and renewals | Listed only when your account has no opportunity object GainTrace can recognize. | Connect billing in [Integrations](/help/integrations/integrations) |
+| Product usage and adoption data | The API docs don't cover adoption data. | Send usage from your product or warehouse. See [Integrations](/help/integrations/integrations). |
+| File attachments | The API docs don't expose attached files. | Download them from Gainsight |
+| Field change history | The API docs don't say who changed a field or when. | Stays in Gainsight |
+| Custom objects | Custom object records aren't part of this import yet. | Export them from Gainsight |
+
+## If something goes wrong
+
+| Message | What to do |
+|---|---|
+| Couldn't connect to Gainsight. The access key was rejected, so it may have been reset. | Ask a Gainsight Super Admin for the current key. Don't reset it again, because that breaks your other Gainsight integrations. |
+| Can't read *something* from Gainsight. The API user doesn't have the "Read access to ..." permission. | The access key can't read that data. Check with your Gainsight admin that your org's package and settings include it, then choose **Scan again**. Everything else can still move. |
+| Gainsight's daily limit for reading users is used up. The import resumes after it resets. | Nothing. Gainsight limits its user API to 100 requests an hour and 1,000 a day, so a large import can pause until the limit resets. |
+| Gainsight is rate limiting requests. | Nothing. GainTrace pauses and continues on its own. |
+| Files can be at most 8 MB. | Export a smaller date range, or split the export into several files. |
+
+For every other message, see [If something goes wrong](/help/migrate/overview#if-something-goes-wrong).
+
+## Good to know
+
+- **Only reads.** GainTrace never writes to Gainsight.
+- **API limits.** Gainsight limits most API reads per minute and per day, and the limits can vary by package. GainTrace paces its reads to stay under them. Other integrations using the same limits can slow the import.
+- **Quiet import.** Nothing imported from Gainsight triggers flows, webhooks or signal detection. Risk and escalation CTAs land in Triage without alerting anyone. See [Imports are quiet](/help/migrate/overview#imports-are-quiet).
+
+## Related articles
+
+- [Switch from another tool](/help/migrate/overview)
+- [Triage](/help/accounts/triage)
+- [Success plans](/help/success/success-plans)

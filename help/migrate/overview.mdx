@@ -1,0 +1,233 @@
+---
+title: "Switch from Gainsight, ChurnZero or Planhat"
+sidebarTitle: "Switch from another tool"
+description: "Move Companies, People, owners, timeline history, open work, plans, health history and survey responses from Gainsight, ChurnZero or Planhat into GainTrace, then rebuild what their APIs can't export."
+keywords: ["Gainsight migration", "ChurnZero migration", "Planhat migration", "switch customer success platform", "migrate CS platform", "import from Gainsight", "Gainsight alternative", "ChurnZero alternative", "Planhat alternative"]
+---
+
+{/* docs-meta: routes=[/setup/migrate, /setup/migrate/[runId]]; sources=[src/components/migration/MigrateHome.tsx, src/components/migration/ConnectStation.tsx, src/components/migration/ScanStation.tsx, src/components/migration/ReviewStation.tsx, src/components/migration/OwnersSection.tsx, src/components/migration/PlanModeSection.tsx, src/components/migration/ContractValuesSection.tsx, src/components/migration/ImportStation.tsx, src/components/migration/ResultsStation.tsx, src/components/migration/SwitchOverDialog.tsx, src/components/migration/RebuildChecklist.tsx, src/components/migration/rebuild.ts, src/components/migration/derive.ts, src/lib/migration/types.ts, src/lib/migration/errors.ts, src/lib/migration/side-effects.ts, src/lib/migration/runs.ts, src/lib/migration/owners.ts, src/lib/migration/observer.ts, src/lib/migration/finalize.ts, src/lib/migration/provenance.ts, src/lib/migration/contract-values.ts, src/lib/migration/depth/plans.ts, src/lib/sync/plan-holds.ts, src/lib/auth/permissions.ts] reviewed=2026-10 */}
+
+**Switch from another tool** connects to Gainsight, ChurnZero or Planhat with an API credential and only reads from it. It counts what's there, shows you what will move and where it will land, and then imports it into GainTrace. Records keep their original dates, owners and authors where the source provides them. Nothing is written to GainTrace until you start the import, and nothing is ever written back to the old tool.
+
+No vendor's API lets everything out. Automations, health score formulas, segment criteria and attachments stay behind in every tool. GainTrace lists what stays behind and gives you a checklist for rebuilding it.
+
+<Note>
+Switch from another tool is built from Planhat's, ChurnZero's and Gainsight's published API documentation and tested against simulated versions of their APIs. It hasn't yet been verified against a live customer account. Before you start the import, compare the counts in Review with the old tool, and spot-check a few Companies afterward.
+</Note>
+
+Moving from a tool that isn't listed? Import your Companies and People from a file at **Data > Import CSV**.
+
+## Before you start
+
+- **Be a workspace owner or admin.** Only owners and admins can run an import. Anyone else sees the name of an admin to ask.
+- **Get a credential from the old tool.** Each tool has its own requirements, and ChurnZero needs a paid API add-on. See [Planhat](/help/migrate/planhat), [ChurnZero](/help/migrate/churnzero) or [Gainsight](/help/migrate/gainsight).
+- **Invite your team first.** Each owner in the old tool is matched to a GainTrace member by email. If your CSMs are already members, their Companies are assigned to them automatically. See [Members](/help/admin/members).
+- **Check your plan's Company limit.** If the old tool has more Companies than your plan has room for, the extra ones are held until you upgrade. See [Plan limits](#plan-limits).
+
+## How a switch works
+
+Go to **Setup > Switch from another tool** and choose the tool you're leaving. The import moves through five steps, shown across the top of the page:
+
+<Steps>
+  <Step title="Connect">
+    Enter the credential and choose **Check access**. GainTrace confirms it can sign in. The credential is stored encrypted, used only to read from the old tool, and deleted when you switch over or stop the import.
+  </Step>
+  <Step title="Scan">
+    Choose **Continue to scan**. GainTrace counts the Companies, People, owners, timeline entries, tasks, plans, survey responses and history in the old tool, and lists any kind of record the credential can't read, by name. Nothing is written yet. Counting can take a few minutes, or longer for a large account, and you can leave the page and come back.
+  </Step>
+  <Step title="Review">
+    Choose **Review what moves**. You see each kind of record, how many there are, and where each one lands in GainTrace. You also see what stays in the old tool and why. Check the owner for each person who owns Companies, answer any question this tool needs (plans, currency), then choose **Start import**.
+  </Step>
+  <Step title="Import">
+    The import runs in the background, one kind of record at a time. You can leave the page. GainTrace emails the person who started it when the first import finishes, and **Setup** shows its progress.
+  </Step>
+  <Step title="Results">
+    See what was imported, updated and skipped, with the reason for every skip. Download the skipped rows as a CSV to fix them at the source.
+  </Step>
+</Steps>
+
+After the first import, keep using the old tool if you need to. Choose **Import changes** to bring over new and changed records. When you're ready, choose **Switch over** to finish. See [Import changes, then switch over](#import-changes-then-switch-over).
+
+## What moves from each tool
+
+The scan decides what moves from your account, so treat this table as the upper bound. Review shows the exact counts, and anything your credential can't read is marked **Needs access**.
+
+| | Planhat | ChurnZero | Gainsight |
+|---|---|---|---|
+| Companies | Yes | Yes | Yes |
+| People | Yes | Yes | Yes |
+| Owners | Company owners | Account owners | Each Company's CSM |
+| Timeline | Conversations, done tasks, calendar events | Notes, meetings, emails, closed tasks | Timeline activities, closed CTAs |
+| Open tasks | Tasks page | Tasks page | Tasks page, with risk and escalation CTAs going to Triage |
+| Success plans | Objectives only | No | Success plans and objective CTAs |
+| Health score history | No | ChurnScore history | Scorecard history |
+| Survey responses | NPS | NPS, CSAT, CES | NPS, and CSAT by file |
+| Revenue | Licenses, opportunities, invoices, churn, ARR, MRR | ARR, MRR and renewal date | Opportunities, ARR, MRR and renewal date |
+
+Usage data and custom objects don't move from any of the three. Send product usage to GainTrace directly from your product or warehouse instead. See [Integrations](/help/integrations/integrations).
+
+Custom fields on Companies are stored with each imported Company, but the Company page doesn't show them yet.
+
+### Where records land
+
+| From the old tool | In GainTrace |
+|---|---|
+| Companies and People | **Companies** and **People**. Each Company's **Sources** list shows "Imported from" the tool. |
+| Owners | The member you choose in Review, or the owner's email kept as text |
+| Notes, meetings, emails, calls and finished tasks | The Company's timeline, with the original date, and the author when the old tool records one |
+| Open tasks and CTAs | The **Tasks** page |
+| Gainsight risk and escalation CTAs | **Triage**, as open signals |
+| Success plans and objectives | **Plans** |
+| Past health scores | A **Before GainTrace** card on the Company's **Overview**, in the old tool's own scale |
+| Survey responses | **Surveys > Reports**, Company scores and each person's **Feedback** tab, at the original answer date. They don't appear in the response inbox. |
+| Licenses, deals, invoices and churn | The Company's [revenue](/help/records/revenue) |
+
+Imported health history is never mixed into GainTrace's own score. From the import onward, GainTrace scores every Company with its own engine. See [Health scores](/help/accounts/health).
+
+### Companies and People you already have
+
+If you've already connected a CRM or imported a CSV, an imported Company joins the existing Company with the same website domain, and an imported person joins the existing person with the same email. Results counts these as updated, not imported.
+
+ChurnZero doesn't send a website, so ChurnZero Companies are always added as new Companies, even when one with the same name already exists. Compare the Company count in Review with your **Companies** list before you start the import.
+
+## Imports are quiet
+
+Imported records fire no flows, webhooks, reminders or signal detection, and send no notifications of their own. Your team isn't alerted about years of old detractors or risk changes, and connected tools such as HubSpot don't receive copies of imported tasks. GainTrace places imported Companies in your lifecycle stages without firing stage-change flows.
+
+A few things do happen:
+
+- The person who started the import (who chose the tool) gets one email and one in-app notice when the first import finishes. **Import changes** doesn't notify.
+- If your plan limit holds Companies or People, workspace owners and admins get the same notice as for any sync that reaches the limit.
+- Gainsight risk and escalation CTAs become open items in **Triage**, because that's the work they represent. They trigger no flows or webhooks.
+- Imported open tasks assigned to a member appear in that member's daily digest, like any other due task.
+
+## Review choices
+
+### Owners
+
+Review lists every owner in the old tool and how many Companies each one owns. An owner whose email matches a GainTrace member is matched for you. Every other owner starts as **Keep** their email **as text**. Change any of them before you start the import:
+
+| Choice | What happens |
+|---|---|
+| A member | Their Companies are assigned to that member. |
+| **Invite** | They get an invitation when the import starts, and their Companies are assigned to them when they accept. Needs permission to invite members. |
+| **Keep** their email **as text** | The Company shows their email as owner until you reassign it. If the old tool has no email for them, their Companies stay unassigned. |
+
+**Invite all unmatched** invites every unmatched owner who has an email. Nobody is invited unless you choose it, because an invitation sends an email.
+
+### Success plans
+
+When the scan finds plans or objectives, Review asks how they land:
+
+- **Merge into one live plan** (default). Each Company gets one live plan with all its objectives. Each active plan from the old tool is noted in that plan's history.
+- **Keep as separate plans.** Each active plan becomes its own live plan, so a Company can have several. Objectives that GainTrace can't link to a plan land in one plan per Company called "Objectives from" the tool.
+
+Either way, closed plans are kept as archived history. A plan someone made in GainTrace is never changed. With **Merge**, if a Company already has a live plan made in GainTrace, the merged plan lands archived beside it. With **Keep as separate plans**, imported plans land live beside it.
+
+Imported plans aren't shared with customers and send no reminders until someone shares them. Once plans have landed, this choice is locked, because switching would duplicate them. See [Success plans](/help/success/success-plans).
+
+### Contract values and currency
+
+ChurnZero doesn't record which currency its contract amounts are in, and GainTrace doesn't read a currency from Gainsight. For both, Review asks you to confirm one under **Contract values**, with your workspace currency suggested. The import can't start until you choose **Confirm currency**. Once you do, each Company's ARR and MRR come over (Gainsight's own MRR, or ARR divided by 12), with its renewal date.
+
+To start without answering, untick **Bring over contract values and renewal dates**. They then stay in the old tool.
+
+### Plan limits
+
+If the old tool has more Companies than your plan tracks, Review says how many will be held, and the start button reads **Import *N* companies**. The import brings in as many as fit and holds the rest. Held Companies import automatically after you upgrade, as long as you haven't switched over yet. With [pay-as-you-go](/help/admin/billing#pay-as-you-go) on, Companies over the limit import and are billed instead of held.
+
+An import doesn't count toward your plan's connected-source limit and doesn't appear in your list of connections.
+
+## While it runs
+
+The import page shows each kind of record with its state: **Waiting**, **Importing**, **Done**, **Done with skips**, **Paused** or **Failed**.
+
+- **Paused** means the old tool's API asked GainTrace to slow down, or a daily API limit ran out. The page says when the next read happens, and the import continues on its own.
+- **Failed** means the import stopped, for example because the old tool was unreachable. Choose **Resume import** to continue from where it stopped. Resume uses the same credential, which can't be replaced once the import has started.
+- **Stop import** ends the import. Records already imported stay, but the stored credential is deleted, so importing again means connecting from scratch, which can create duplicates. See [Start over](#start-over).
+
+## Results
+
+Results opens with the totals for the last pass: imported, updated, skipped, and **kept your edit**. The table shows each kind of record with its count in the old tool and how many were imported, updated and skipped, so every record the old tool returned is accounted for. Records its API never returned, such as some archived Planhat conversations, don't appear here.
+
+- **Skipped** lists every record that didn't land, grouped by reason, with the source ID and a plain explanation. For example, a task whose Company wasn't in the import, or a survey response with no email.
+- **Kept your edit** lists fields changed in GainTrace since the last import where the old tool now has a different value. GainTrace kept your value and didn't overwrite it.
+- **Download skipped rows (CSV)** exports both lists so you can fix records in the old tool and import changes.
+
+Then check the result against the old tool:
+
+- Compare the Companies and People counts in Results with the old tool's own totals.
+- Open three Companies you know well and check the owner, ARR and renewal date, the latest timeline entry and the latest survey response.
+- Read every reason under **Skipped**, fix what you can in the old tool, then choose **Import changes**.
+
+## Import changes, then switch over
+
+Until you switch over, the old tool stays connected. Choose **Import changes** on the migration page or in Results to bring over new and changed records. A field you changed in GainTrace since the last import is never overwritten. It's listed under **Kept your edit** instead.
+
+When your team works in GainTrace day to day, choose **Switch over**. GainTrace stops importing changes and deletes the stored credential. Everything already imported stays, and each Company's **Sources** list shows that it was imported from the old tool. Importing from that tool again means connecting it from scratch, which can create duplicates. See [Start over](#start-over).
+
+<Warning>
+Companies still held by your plan limit don't import after you switch over. Upgrade and import changes first if you want them.
+</Warning>
+
+Records deleted in the old tool aren't removed from GainTrace by **Import changes**. Archive or delete them in GainTrace yourself.
+
+## Start over
+
+An import can't be undone. Records already imported stay when you stop the import or switch over. A new import from the same tool connects from scratch: it matches existing Companies by domain and People by email, but can add timeline entries, tasks, survey responses and revenue records again. Settle owners, plans and currency in Review before you start, and use **Import changes** rather than a new import to pick up fixes.
+
+## Rebuild what can't move
+
+Once the scan finishes, the migration page shows a rebuild checklist. It lists everything the old tool's API doesn't let out, why, and where to rebuild it in GainTrace:
+
+| What stays | Rebuild it in |
+|---|---|
+| Automations, playbooks and journeys | [Flows](/help/automation/flows) |
+| Health score formulas | [Health scoring](/help/accounts/health) |
+| Segments, reports and dashboards | Saved views on **Companies** |
+| Survey definitions | [Surveys](/help/surveys/build) |
+| Plan templates | **Plans > Templates** |
+| Usage and billing data | [Integrations](/help/integrations/integrations) |
+| Attachments | Download them from the old tool |
+
+Tick each item as you finish it. Ticks are saved, including after you switch over. Each tool's page lists its exact items.
+
+## If something goes wrong
+
+Messages name the tool you're leaving, shown here as *Tool*. Each tool's page lists the sign-in and permission messages specific to it.
+
+| Message | What to do |
+|---|---|
+| *Tool* is rate limiting requests. | Nothing. The import resumes automatically. |
+| *Tool*'s daily limit is used up. | Nothing. The import resumes after the limit resets. |
+| Failed to reach *Tool*. | Resume the import in a few minutes. |
+| Failed to read *Tool* data. The response has an unexpected shape. | Contact support with the Run ID shown in the message. |
+| Failed to import from *Tool*. | Resume the import. Contact support with the Run ID if it keeps failing. |
+| No companies found | The credential probably belongs to a different account or workspace. Choose **Change credentials**. For ChurnZero, also check that the API user has **Bulk Read - Accounts**. |
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Does the import change anything in the old tool?">
+    No. GainTrace only reads. Keep using the old tool until you switch over.
+  </Accordion>
+  <Accordion title="Can I run the import more than once?">
+    Yes, within one import. Until you switch over, **Import changes** updates the records it brought in before instead of adding copies, and your GainTrace edits win. A new import after you stop or switch over starts fresh and can create duplicates. See [Start over](#start-over).
+  </Accordion>
+  <Accordion title="How long does it take?">
+    The scan can take a few minutes, or longer for a large account. The import's length depends on how much data you have and on the old tool's API limits. GainTrace paces its reads and waits whenever the old tool asks it to slow down. A large account can take hours, or more than a day when a daily API limit runs out. You don't need to keep the page open.
+  </Accordion>
+  <Accordion title="Will my team get flooded with alerts?">
+    No. Imported records trigger no flows, webhooks or signal detection. The person who started the import is notified once when the first import finishes, owners you choose to invite get an invitation email, and imported open tasks show in their assignee's daily digest. Gainsight risk and escalation CTAs appear in Triage without alerting anyone. See [Imports are quiet](#imports-are-quiet).
+  </Accordion>
+  <Accordion title="Can I import from a tool that isn't listed?">
+    Not through **Switch from another tool**. Import Companies and People from a CSV at **Data > Import CSV**, and see [Import from other survey tools](/help/surveys/import-from-other-tools) for survey history.
+  </Accordion>
+</AccordionGroup>
+
+## Related articles
+
+- [Migrate from Planhat](/help/migrate/planhat)
+- [Migrate from ChurnZero](/help/migrate/churnzero)
+- [Migrate from Gainsight](/help/migrate/gainsight)
+- [Set up your workspace](/help/getting-started/for-admins)

@@ -1,0 +1,124 @@
+---
+title: "Migrate from ChurnZero"
+sidebarTitle: "ChurnZero"
+description: "Connect ChurnZero's REST API and move ChurnZero Accounts and Contacts into Companies and People, with owners, notes, meetings, tasks, survey responses, ChurnScore history and contract values."
+keywords: ["ChurnZero migration", "migrate from ChurnZero", "ChurnZero to GainTrace", "ChurnZero alternative", "ChurnZero REST API", "ChurnZero API key", "ChurnZero Bulk Read"]
+---
+
+{/* docs-meta: routes=[/setup/migrate]; sources=[src/components/migration/sources.ts, src/components/migration/ConnectStation.tsx, src/components/migration/ContractValuesSection.tsx, src/components/migration/derive.ts, src/lib/migration/vendors/churnzero.ts, src/lib/migration/contract-values.ts, src/lib/migration/errors.ts, src/lib/gt/churnzero/check.ts, specs/migration-api-contracts/churnzero.md] reviewed=2026-10 */}
+
+GainTrace reads ChurnZero through its REST API with an API username and key. This page covers what you need in ChurnZero, what comes over and what stays behind. For how the whole switch works, see [Switch from another tool](/help/migrate/overview).
+
+## Before you start
+
+ChurnZero's REST API is a paid add-on. Your ChurnZero admin needs to set up three things:
+
+- **The ChurnZero REST API add-on.** It must be enabled on your ChurnZero account. If you aren't sure, ask your ChurnZero CSM.
+- **An API user with the Developer Tools permission.** The API key belongs to this user, and the user needs ChurnZero's **Developer Tools** user permission.
+- **Bulk Read permissions.** Bulk Read is set per object on the API user's permission group. Grant Notes, Meetings, Messages and Tasks together: if only some of them are granted, the import stops when it reaches a missing one and names the permission. Any other permission you leave off just leaves that data behind.
+
+| Bulk Read permission | Brings over |
+|---|---|
+| Bulk Read - User Accounts | Owners |
+| Bulk Read - Accounts | Companies (required) |
+| Bulk Read - Contacts | People (required) |
+| Bulk Read - Notes | Notes on the timeline |
+| Bulk Read - Meetings | Meetings on the timeline |
+| Bulk Read - Messages | Emails on the timeline |
+| Bulk Read - Tasks | Open and closed tasks |
+| Bulk Read - Surveys | Survey responses |
+| Bulk Read - Churn Scores | ChurnScore history |
+
+You also need to be a workspace owner or admin in GainTrace. See [Before you start](/help/migrate/overview#before-you-start).
+
+## Connect ChurnZero
+
+<Steps>
+  <Step title="Create an API key">
+    In ChurnZero's **Admin** area, open **API Keys** (under **Data**) and create a key for the API user. Copy the key.
+  </Step>
+  <Step title="Open the import">
+    In GainTrace, go to **Setup > Switch from another tool** and choose **ChurnZero**.
+  </Step>
+  <Step title="Enter your details">
+    - **ChurnZero URL**: the address in your browser once you're signed in to ChurnZero, such as `https://acme.us1app.churnzero.net`. The query link that **Generate Query** creates on ChurnZero's API Keys page starts with it too.
+    - **API username**: the ChurnZero user that owns the API key.
+    - **API key**: the key you copied.
+  </Step>
+  <Step title="Check access">
+    Choose **Check access**. GainTrace signs in and confirms the add-on and the Developer Tools permission. The scan then lists any object missing its Bulk Read permission by name.
+  </Step>
+</Steps>
+
+GainTrace stores the key encrypted, uses it only to read, and deletes it when you switch over or stop the import.
+
+## What comes over
+
+| ChurnZero | GainTrace |
+|---|---|
+| Accounts, with custom fields | **Companies**, always as new Companies. ChurnZero doesn't send a website, so Accounts aren't matched to Companies you already have. Custom fields are stored with each Company, but the Company page doesn't show them yet. |
+| Contacts | **People** |
+| User Accounts that own Accounts | Owners you map in Review |
+| Notes and meetings | The Company's timeline, with the original date. Meetings keep their owner as author. Notes have no author. |
+| Messages | The Company's timeline as emails, with the sender as author when a ChurnZero user sent it. Announcements and internal emails are left out. |
+| Closed tasks | The Company's timeline |
+| Open tasks | The **Tasks** page |
+| NPS, CSAT and CES survey responses | **Surveys > Reports**, Company scores and each person's **Feedback** tab, at the original answer date |
+| ChurnScore history | A **Before GainTrace** card on each Company's **Overview** |
+| Total contract amount and next renewal date | The Company's ARR, MRR (ARR divided by 12) and renewal date, once you confirm the currency |
+
+ChurnZero tasks carry no risk or escalation flag, so nothing from ChurnZero goes to Triage. Responses to custom survey types don't come over, because ChurnZero scores every custom response as "completed" rather than with a rating.
+
+### ChurnScore history
+
+GainTrace imports up to the last two years of each Company's primary ChurnScore, as far back as ChurnZero has kept it, one point per week (the latest score that week). The points stay in ChurnZero's own scale, on a separate **Before GainTrace** card, and are never mixed with GainTrace's health score. From the import onward, GainTrace scores every Company with its own engine.
+
+Some ChurnZero instances keep only the current ChurnScore for each Account. In that case there's no history to import, and Review lists **Health score history** under what stays.
+
+### Contract values and currency
+
+ChurnZero doesn't say which currency its amounts are in. In Review, under **Contract values**, confirm the currency, with your workspace currency suggested. Once you confirm it, each Company's total contract amount becomes its ARR, with MRR set to ARR divided by 12, and its next renewal date becomes its renewal date. A value you changed in GainTrace is kept.
+
+Until you confirm a currency, the import can't start. To start without one, untick **Bring over contract values and renewal dates**. Both values then stay in ChurnZero.
+
+## What stays in ChurnZero
+
+These appear in Review under **What stays in ChurnZero**, and on the rebuild checklist once the scan finishes:
+
+| Item | Why | Rebuild it in |
+|---|---|---|
+| Plays, alerts and journeys | ChurnZero's API doesn't expose Plays or Alerts. Journeys can be read but don't map to flows yet. | [Flows](/help/automation/flows) |
+| ChurnScore factors | The API lists each factor's name and type, but not the points it's worth or its thresholds. | [Health scoring](/help/accounts/health) |
+| Segment criteria | The API lists segments by name but not their filters. | Saved views on **Companies** |
+| Success plans | The API has no success plan object. Tasks on a success plan come over as ordinary tasks. | Plan templates in **Plans** |
+| Surveys | The API lists your surveys, but only their responses import. | [Surveys](/help/surveys/build) |
+| Note authors | The API doesn't say who wrote a note, so imported notes have no author. | Stays in ChurnZero |
+| Unpublished notes | Draft notes are private to their author. | Stays in ChurnZero |
+| Product subscriptions and history | The API has no subscription history, and its product subscriptions carry no price. | Connect billing in [Integrations](/help/integrations/integrations) |
+| Product usage events | ChurnZero stores usage as event rows, often millions. | Send usage from your product or warehouse. See [Integrations](/help/integrations/integrations). |
+| File attachments | The API doesn't expose attached files. | Download them from ChurnZero |
+| Custom tables | They can be read through the API but don't import yet. | Stays in ChurnZero |
+
+## If something goes wrong
+
+| Message | What to do |
+|---|---|
+| ChurnZero URL must look like https://acme.us1app.churnzero.net. | Enter the address from your browser once you're signed in, including the region part such as `us1app`. |
+| Couldn't sign in to ChurnZero. Check the username and API key, and that the URL is the one you sign in at. | Check all three. The username must be the user that owns the key. |
+| Can't read ChurnZero data. The ChurnZero REST API add-on isn't enabled, or the API user lacks the "Developer Tools" permission. | Ask your ChurnZero admin to enable the add-on or grant the permission, then choose **Check access** again. |
+| Can't read *something* from ChurnZero. The API user doesn't have the "Bulk Read - ..." permission. | Grant the named permission in ChurnZero, then choose **Scan again**. Everything else can still move. If this stops an import, grant the permission and choose **Resume import**. |
+| ChurnZero is rate limiting requests. | Nothing. GainTrace pauses and continues on its own. |
+
+For every other message, see [If something goes wrong](/help/migrate/overview#if-something-goes-wrong).
+
+## Good to know
+
+- **Only reads.** GainTrace never writes to ChurnZero.
+- **Shared rate limit.** ChurnZero applies one per-minute limit to your ChurnZero instance, shared by every tool that reads through ChurnZero's REST API, such as Power BI. GainTrace paces its reads to stay under it, but other tools reading at the same time can slow the import or be slowed by it.
+- **Quiet import.** Nothing imported from ChurnZero triggers flows, webhooks or signal detection. See [Imports are quiet](/help/migrate/overview#imports-are-quiet).
+
+## Related articles
+
+- [Switch from another tool](/help/migrate/overview)
+- [Health scores](/help/accounts/health)
+- [Revenue](/help/records/revenue)

@@ -48,6 +48,15 @@
             ]
           },
           {
+            "group": "Switching to GainTrace",
+            "pages": [
+              "help/migrate/overview",
+              "help/migrate/planhat",
+              "help/migrate/churnzero",
+              "help/migrate/gainsight"
+            ]
+          },
+          {
             "group": "Records",
             "pages": [
               "help/records/companies",
